@@ -1,0 +1,412 @@
+{
+  "users": [
+    {
+      "id": "usr_inspector_01",
+      "name": "R. K. Sharma",
+      "designation": "Legal Metrology Officer (Zonal)",
+      "email": "inspector@gov.in",
+      "password": "inspector123",
+      "role": "inspector",
+      "badgeNumber": "LM-DEL-2024-890",
+      "department": "Directorate of Legal Metrology, Delhi Circle"
+    },
+    {
+      "id": "usr_admin_01",
+      "name": "Dr. S. Mukherjee",
+      "designation": "Joint Controller, Legal Metrology",
+      "email": "admin@gov.in",
+      "password": "admin123",
+      "role": "admin",
+      "badgeNumber": "LM-HQ-9901",
+      "department": "Department of Consumer Affairs, MoCA"
+    }
+  ],
+  "products": [
+    {
+      "id": "prod_1788882879029",
+      "product_name": "SuperClean Power Detergent 500gms",
+      "brand": "SuperClean Chemicals Ltd.",
+      "category": "Household & Cleaning",
+      "image_url": "/uploads/sample_placeholder.png",
+      "uploaded_by": "usr_inspector_01",
+      "created_at": "2026-09-08T15:54:39.029Z"
+    },
+    {
+      "id": "prod_001",
+      "product_name": "Amul Pure Pasteurised Butter 100g",
+      "brand": "Amul",
+      "category": "Dairy & Food",
+      "image_url": "/uploads/butter_sample.png",
+      "uploaded_by": "usr_inspector_01",
+      "created_at": "2026-09-05T15:31:19.547Z"
+    },
+    {
+      "id": "prod_002",
+      "product_name": "SuperClean Detergent Powder 500gms",
+      "brand": "SuperClean Chemicals Ltd.",
+      "category": "Household & Cleaning",
+      "image_url": "/uploads/detergent_sample.png",
+      "uploaded_by": "usr_inspector_01",
+      "created_at": "2026-09-06T15:31:19.548Z"
+    },
+    {
+      "id": "prod_003",
+      "product_name": "Alpina Swiss Dark Truffles 150g",
+      "brand": "Alpina Confiserie AG",
+      "category": "Confectionery (Imported)",
+      "image_url": "/uploads/imported_sample.png",
+      "uploaded_by": "usr_inspector_01",
+      "created_at": "2026-09-07T15:31:19.548Z"
+    }
+  ],
+  "scans": [
+    {
+      "id": "scan_1788882879030",
+      "product_id": "prod_1788882879029",
+      "extracted_text": "SUPERCLEAN POWER DETERGENT\nNet Weight: 500 gms\nMax Retail Price: Rs. 145.00\nMfd by: SuperClean Chemicals Pvt Ltd, Plot 44, Okhla Ind Area, New Delhi - 110020\nMfg Date: 05/2024\nCustomer Care: 011-26987455",
+      "parsed_fields": {
+        "manufacturer": {
+          "raw": "SuperClean Chemicals Pvt Ltd, Plot 44, Okhla Ind Area, New Delhi - 110020, Mfg Date: 05/2024, Customer Care: 011-26987455",
+          "name": "SuperClean Chemicals Pvt Ltd",
+          "address": "SuperClean Chemicals Pvt Ltd, Plot 44, Okhla Ind Area, New Delhi - 110020, Mfg Date: 05/2024, Customer Care: 011-26987455",
+          "has_pincode": true
+        },
+        "commodity_name": "SUPERCLEAN POWER DETERGENT",
+        "net_quantity": {
+          "value": 500,
+          "unit": "gms",
+          "standardized_unit": "g",
+          "raw": "500 gms",
+          "is_standard": false,
+          "error": "Illegal non-standard symbol 'gms'. Standard symbol for gram is 'g' (no 's', no period)."
+        },
+        "mfg_date": {
+          "date": "05/2024",
+          "is_compliant": true,
+          "error": null
+        },
+        "mrp": {
+          "value": 145,
+          "raw": "MRP Rs. 145",
+          "includes_taxes": false,
+          "error": "Missing mandatory statutory clause '(inclusive of all taxes)'. Mandatory under Rule 6(1)(e)."
+        },
+        "consumer_care": {
+          "phone": "011-26987455",
+          "email": null,
+          "address": null,
+          "is_complete": false
+        },
+        "country_of_origin": null,
+        "unit_sale_price": null,
+        "readability": {
+          "clarity": "HIGH",
+          "estimated_font_size": ">= 3.0mm (Compliant)",
+          "word_count": 33,
+          "line_count": 6
+        }
+      },
+      "compliance_status": "NON_COMPLIANT",
+      "compliance_score": 35,
+      "inspector_id": "usr_inspector_01",
+      "created_at": "2026-09-08T15:54:39.030Z"
+    },
+    {
+      "id": "scan_001",
+      "product_id": "prod_001",
+      "extracted_text": "AMUL PASTEURISED BUTTER\\nNet Qty: 100 g\\nMfd. By: Gujarat Cooperative Milk Marketing Federation Ltd., Anand - 388001, Gujarat.\\nPkd: 08/2024\\nMRP Rs. 58.00 (inclusive of all taxes)\\nFor feedback/queries, email: customercare@amul.coop, Call: 1800-258-3333, Anand, Gujarat.\\nCountry of Origin: India",
+      "parsed_fields": {
+        "manufacturer": "Gujarat Cooperative Milk Marketing Federation Ltd., Anand - 388001, Gujarat",
+        "commodity_name": "Pasteurised Butter",
+        "net_quantity": {
+          "value": 100,
+          "unit": "g",
+          "raw": "100 g",
+          "is_standard": true
+        },
+        "mfg_date": "08/2024",
+        "mrp": {
+          "value": 58,
+          "raw": "MRP Rs. 58.00 (inclusive of all taxes)",
+          "includes_taxes": true
+        },
+        "consumer_care": {
+          "phone": "1800-258-3333",
+          "email": "customercare@amul.coop",
+          "address": "Anand, Gujarat"
+        },
+        "country_of_origin": "India",
+        "font_size_score": "ADEQUATE (3.2mm)"
+      },
+      "compliance_status": "COMPLIANT",
+      "compliance_score": 100,
+      "inspector_id": "usr_inspector_01",
+      "created_at": "2026-09-05T15:31:19.548Z"
+    },
+    {
+      "id": "scan_002",
+      "product_id": "prod_002",
+      "extracted_text": "SUPERCLEAN POWER DETERGENT\\nNet Weight: 500 gms\\nMfg Date: 05/2024\\nMax Retail Price: Rs. 145.00\\nMfd by: SuperClean Chemicals Pvt Ltd, Plot 44, Okhla Ind Area, New Delhi - 110020\\nCustomer Care: 011-26987455",
+      "parsed_fields": {
+        "manufacturer": "SuperClean Chemicals Pvt Ltd, Plot 44, Okhla Ind Area, New Delhi - 110020",
+        "commodity_name": "Power Detergent",
+        "net_quantity": {
+          "value": 500,
+          "unit": "gms",
+          "raw": "500 gms",
+          "is_standard": false,
+          "error": "Illegal unit 'gms'"
+        },
+        "mfg_date": "05/2024",
+        "mrp": {
+          "value": 145,
+          "raw": "Max Retail Price: Rs. 145.00",
+          "includes_taxes": false,
+          "error": "Missing tax declaration clause"
+        },
+        "consumer_care": {
+          "phone": "011-26987455",
+          "email": null,
+          "address": "New Delhi - 110020"
+        },
+        "country_of_origin": null,
+        "font_size_score": "ADEQUATE"
+      },
+      "compliance_status": "NON_COMPLIANT",
+      "compliance_score": 52,
+      "inspector_id": "usr_inspector_01",
+      "created_at": "2026-09-06T15:31:19.548Z"
+    }
+  ],
+  "violations": [
+    {
+      "id": "viol_001",
+      "scan_id": "scan_002",
+      "rule_code": "Rule 6(1)(c)",
+      "violation_type": "ILLEGAL_METRIC_UNIT",
+      "severity": "CRITICAL",
+      "description": "Net quantity specified using illegal non-standard unit symbol 'gms'. Under Rule 12 and 13 of Legal Metrology (Packaged Commodities) Rules 2011, standard symbol 'g' must be used.",
+      "statutory_provision": "Section 36(1) of Legal Metrology Act, 2009",
+      "suggested_action": "Issue Statutory Notice Form 1; compoundable at ₹25,000"
+    },
+    {
+      "id": "viol_002",
+      "scan_id": "scan_002",
+      "rule_code": "Rule 6(1)(e)",
+      "violation_type": "MISSING_TAX_INCLUSION_CLAUSE",
+      "severity": "CRITICAL",
+      "description": "MRP declaration 'Rs. 145.00' omits mandatory statutory phrase '(inclusive of all taxes)' or '(incl. of all taxes)'.",
+      "statutory_provision": "Section 36(1) & (2) of Legal Metrology Act, 2009",
+      "suggested_action": "Issue Statutory Show Cause Notice"
+    },
+    {
+      "id": "viol_003",
+      "scan_id": "scan_002",
+      "rule_code": "Rule 6(1)(n)",
+      "violation_type": "INCOMPLETE_CONSUMER_CARE",
+      "severity": "MAJOR",
+      "description": "Consumer care details omit mandatory contact email address. Only telephone number is provided.",
+      "statutory_provision": "Rule 6(1)(n) of Legal Metrology (PC) Rules, 2011",
+      "suggested_action": "Direct manufacturer to rectify packaging in next batch"
+    },
+    {
+      "id": "viol_1788882879032_135",
+      "scan_id": "scan_1788882879030",
+      "rule_code": "Rule 6(1)(c)",
+      "rule_id": "RULE_6_1_C",
+      "violation_type": "NON_STANDARD_UNIT_SYMBOL",
+      "severity": "CRITICAL",
+      "description": "Net quantity uses illegal symbol 'gms'. Illegal non-standard symbol 'gms'. Standard symbol for gram is 'g' (no 's', no period).",
+      "statutory_provision": "Rule 12 & 13 of Legal Metrology (PC) Rules, 2011 read with Sec 36(1) LM Act",
+      "penalty_fine": "₹25,000 to ₹50,000",
+      "field": "net_quantity"
+    },
+    {
+      "id": "viol_1788882879033_470",
+      "scan_id": "scan_1788882879030",
+      "rule_code": "Rule 6(1)(e)",
+      "rule_id": "RULE_6_1_E",
+      "violation_type": "MISSING_TAX_CLAUSE",
+      "severity": "CRITICAL",
+      "description": "Maximum Retail Price declaration fails to mention mandatory statutory clause '(inclusive of all taxes)' or '(incl. of all taxes)'.",
+      "statutory_provision": "Rule 6(1)(e) of Legal Metrology (PC) Rules, 2011",
+      "penalty_fine": "₹25,000",
+      "field": "mrp"
+    },
+    {
+      "id": "viol_1788882879034_385",
+      "scan_id": "scan_1788882879030",
+      "rule_code": "Rule 6(1)(n)",
+      "rule_id": "RULE_6_1_N",
+      "violation_type": "MISSING_CONSUMER_CARE_EMAIL",
+      "severity": "MAJOR",
+      "description": "Consumer care details omit mandatory email address. Both telephone and email are legally mandatory.",
+      "statutory_provision": "Rule 6(1)(n) of Legal Metrology (PC) Rules, 2011",
+      "penalty_fine": "₹25,000",
+      "field": "consumer_care"
+    }
+  ],
+  "reports": [
+    {
+      "id": "rep_1788882879034",
+      "scan_id": "scan_1788882879030",
+      "report_number": "LMCR-2026-15924",
+      "product_id": "prod_1788882879029",
+      "status": "NON_COMPLIANT",
+      "score": 35,
+      "inspector_name": "R. K. Sharma",
+      "generated_at": "2026-09-08T15:54:39.034Z",
+      "rule_checks_summary": {
+        "total_rules_checked": 9,
+        "rules_passed": 6,
+        "rules_failed": 3
+      },
+      "statutory_notice": {
+        "noticeNumber": "SCN/LM/2026/3544",
+        "noticeDate": "2026-09-08",
+        "recipient": "SuperClean Chemicals Pvt Ltd",
+        "address": "SuperClean Chemicals Pvt Ltd, Plot 44, Okhla Ind Area, New Delhi - 110020, Mfg Date: 05/2024, Customer Care: 011-26987455",
+        "subject": "Show Cause Notice for Violations under Legal Metrology (Packaged Commodities) Rules, 2011",
+        "commodityName": "SUPERCLEAN POWER DETERGENT",
+        "violationsCount": 3,
+        "statutoryProvisionsViolated": "Rule 6(1)(c), Rule 6(1)(e), Rule 6(1)(n)",
+        "penalSectionApplicable": "Section 36(1) and Section 36(2) of Legal Metrology Act, 2009",
+        "compoundingFeeProposed": "₹75,000",
+        "noticePeriodDays": 15,
+        "legalDirectives": [
+          "Show cause within 15 days of receipt why legal proceedings should not be initiated in the competent Court of Metropolitan Magistrate / Judicial Magistrate.",
+          "Immediately withdraw the offending batch from distribution channels until compliant over-stickering or re-labeling is approved.",
+          "Option to compound the offences under Section 48 of the Legal Metrology Act, 2009 before the Designated Controller."
+        ]
+      }
+    },
+    {
+      "id": "rep_001",
+      "scan_id": "scan_001",
+      "report_number": "LMCR-2024-00109",
+      "status": "COMPLIANT",
+      "score": 100,
+      "inspector_name": "R. K. Sharma",
+      "generated_at": "2026-09-05T15:31:19.548Z",
+      "statutory_notice": null
+    },
+    {
+      "id": "rep_002",
+      "scan_id": "scan_002",
+      "report_number": "LMCR-2024-00110",
+      "status": "NON_COMPLIANT",
+      "score": 52,
+      "inspector_name": "R. K. Sharma",
+      "generated_at": "2026-09-06T15:31:19.548Z",
+      "statutory_notice": {
+        "noticeNumber": "SCN/LM/DEL/2024/0082",
+        "recipient": "SuperClean Chemicals Pvt Ltd",
+        "address": "Plot 44, Okhla Ind Area, New Delhi - 110020",
+        "noticePeriodDays": 15,
+        "penaltyProposed": "₹25,000",
+        "legalGrounds": "Violations of Rule 6(1)(c), Rule 6(1)(e), and Rule 6(1)(n) under Legal Metrology (Packaged Commodities) Rules, 2011 punishable under Section 36(1) of Legal Metrology Act, 2009."
+      }
+    }
+  ],
+  "rules": [
+    {
+      "id": "RULE_6_1_A",
+      "ruleCode": "Rule 6(1)(a)",
+      "title": "Manufacturer / Packer / Importer Details",
+      "category": "Manufacturer Information",
+      "description": "Every package shall bear the name and complete physical address of the manufacturer, or where manufacturer is not packer, name and address of manufacturer and packer.",
+      "severity": "CRITICAL",
+      "penaltySection": "Section 36(1) of Legal Metrology Act, 2009",
+      "fineRange": "₹25,000 for first offence, up to ₹50,000 for second offence",
+      "isActive": true
+    },
+    {
+      "id": "RULE_6_1_B",
+      "ruleCode": "Rule 6(1)(b)",
+      "title": "Generic or Common Name of Commodity",
+      "category": "Product Identification",
+      "description": "Every package shall bear the common or generic names of the commodity contained in the package.",
+      "severity": "MAJOR",
+      "penaltySection": "Section 36(1) of Legal Metrology Act, 2009",
+      "fineRange": "₹25,000 for first offence",
+      "isActive": true
+    },
+    {
+      "id": "RULE_6_1_C",
+      "ruleCode": "Rule 6(1)(c)",
+      "title": "Net Quantity Declaration",
+      "category": "Net Quantity",
+      "description": "Every package shall bear the net quantity in terms of standard unit of weight, measure or number (Rules 12 and 13). Non-standard units (e.g., 'gms', 'gm', 'g.', 'ml.', 'kilos') are strictly prohibited.",
+      "severity": "CRITICAL",
+      "penaltySection": "Section 36(1) of Legal Metrology Act, 2009",
+      "fineRange": "₹25,000 to ₹50,000",
+      "isActive": true
+    },
+    {
+      "id": "RULE_6_1_D",
+      "ruleCode": "Rule 6(1)(d)",
+      "title": "Month & Year of Manufacture / Packing / Import",
+      "category": "Date Information",
+      "description": "Every package shall bear the month and year in which commodity is manufactured or pre-packed or imported (Format: MM/YYYY or Month YYYY).",
+      "severity": "CRITICAL",
+      "penaltySection": "Section 36(1) of Legal Metrology Act, 2009",
+      "fineRange": "₹25,000 for first offence",
+      "isActive": true
+    },
+    {
+      "id": "RULE_6_1_E",
+      "ruleCode": "Rule 6(1)(e)",
+      "title": "Maximum Retail Price (MRP) & Tax Clause",
+      "category": "Pricing",
+      "description": "Every package shall declare Maximum Retail Price (MRP) including the mandatory phrase: 'inclusive of all taxes' or 'incl. of all taxes'. Dual MRP or omitting tax declaration is illegal.",
+      "severity": "CRITICAL",
+      "penaltySection": "Section 36(1) & 36(2) of Legal Metrology Act, 2009",
+      "fineRange": "₹25,000 to ₹1,00,000 or imprisonment",
+      "isActive": true
+    },
+    {
+      "id": "RULE_6_1_M",
+      "ruleCode": "Rule 6(1)(m)",
+      "title": "Country of Origin",
+      "category": "Origin Details",
+      "description": "For imported commodities, the name of the country of origin or manufacture shall be prominently mentioned.",
+      "severity": "MAJOR",
+      "penaltySection": "Section 36(1) of Legal Metrology Act, 2009",
+      "fineRange": "₹25,000 for first offence",
+      "isActive": true
+    },
+    {
+      "id": "RULE_6_1_N",
+      "ruleCode": "Rule 6(1)(n)",
+      "title": "Consumer Care Details",
+      "category": "Consumer Redressal",
+      "description": "Every package shall bear name, address, telephone number and email address of person/office to be contacted in case of consumer complaints.",
+      "severity": "MAJOR",
+      "penaltySection": "Section 36(1) of Legal Metrology Act, 2009",
+      "fineRange": "₹25,000 for first offence",
+      "isActive": true
+    },
+    {
+      "id": "RULE_7",
+      "ruleCode": "Rule 7",
+      "title": "Minimum Height of Numerals & Letters (Font Size)",
+      "category": "Display & Readability",
+      "description": "The height of any numeral and letter shall not be less than the minimum statutory heights prescribed in the Second Schedule based on net quantity/package area.",
+      "severity": "MINOR",
+      "penaltySection": "Section 36(1) of Legal Metrology Act, 2009",
+      "fineRange": "₹20,000 to ₹25,000",
+      "isActive": true
+    },
+    {
+      "id": "RULE_6_11",
+      "ruleCode": "Rule 6(11)",
+      "title": "Unit Sale Price (USP)",
+      "category": "Pricing Transparency",
+      "description": "For packages containing net quantity greater than 1kg/1L or containing multiple items, unit sale price (e.g., ₹/g, ₹/ml, ₹/unit) must be declared.",
+      "severity": "MINOR",
+      "penaltySection": "Section 36(1) of Legal Metrology Act, 2009",
+      "fineRange": "₹25,000",
+      "isActive": true
+    }
+  ]
+}
