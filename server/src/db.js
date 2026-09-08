@@ -1,19 +1,25 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import mongoose from 'mongoose';
 import { STATUTORY_RULES } from './rules/metrologyRules.js';
+import { UserModel } from './models/User.js';
+import { ProductModel } from './models/Product.js';
+import { ScanModel } from './models/Scan.js';
+import { ViolationModel } from './models/Violation.js';
+import { ReportModel } from './models/Report.js';
+import { RuleModel } from './models/Rule.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const DATA_DIR = path.join(__dirname, '..', 'data');
 const DB_FILE = path.join(DATA_DIR, 'db.json');
 
-// Ensure data directory exists
 if (!fs.existsSync(DATA_DIR)) {
   fs.mkdirSync(DATA_DIR, { recursive: true });
 }
 
-const DEFAULT_DB = {
+export const DEFAULT_DB = {
   users: [
     {
       id: "usr_inspector_01",
@@ -180,118 +186,211 @@ const DEFAULT_DB = {
 class Database {
   constructor() {
     this.data = null;
-    this.load();
+    this.isMongo = false;
+    this.loadLocal();
   }
 
-  load() {
+  loadLocal() {
     try {
       if (fs.existsSync(DB_FILE)) {
         const raw = fs.readFileSync(DB_FILE, 'utf-8');
         this.data = JSON.parse(raw);
       } else {
         this.data = JSON.parse(JSON.stringify(DEFAULT_DB));
-        this.save();
+        this.saveLocal();
       }
     } catch (err) {
-      console.error("Error loading database, resetting to default:", err);
       this.data = JSON.parse(JSON.stringify(DEFAULT_DB));
-      this.save();
+      this.saveLocal();
     }
   }
 
-  save() {
+  saveLocal() {
     try {
       fs.writeFileSync(DB_FILE, JSON.stringify(this.data, null, 2), 'utf-8');
     } catch (err) {
-      console.error("Error saving database:", err);
+      console.error("Error saving local database:", err);
+    }
+  }
+
+  async connect() {
+    const mongoUri = process.env.MONGODB_URI || process.env.MONGO_URI;
+    if (mongoUri) {
+      try {
+        await mongoose.connect(mongoUri);
+        this.isMongo = true;
+        console.log("🍃 Successfully connected to MongoDB Atlas!");
+        await this.seedMongoIfEmpty();
+      } catch (err) {
+        console.error("⚠️ Failed to connect to MongoDB Atlas, falling back to local file store:", err.message);
+        this.isMongo = false;
+      }
+    } else {
+      console.log("📁 MONGODB_URI not provided. Running in local file-store mode (db.json).");
+      this.isMongo = false;
+    }
+  }
+
+  async seedMongoIfEmpty() {
+    try {
+      const userCount = await UserModel.countDocuments();
+      if (userCount === 0) {
+        console.log("🌱 Seeding MongoDB Atlas with initial legal metrology records...");
+        await UserModel.insertMany(DEFAULT_DB.users);
+        await ProductModel.insertMany(DEFAULT_DB.products);
+        await ScanModel.insertMany(DEFAULT_DB.scans);
+        await ViolationModel.insertMany(DEFAULT_DB.violations);
+        await ReportModel.insertMany(DEFAULT_DB.reports);
+        await RuleModel.insertMany(DEFAULT_DB.rules);
+        console.log("✅ MongoDB Atlas seeding complete!");
+      }
+    } catch (err) {
+      console.error("MongoDB seed error:", err.message);
     }
   }
 
   // Users
-  getUserByEmail(email) {
+  async getUserByEmail(email) {
+    if (this.isMongo) {
+      return await UserModel.findOne({ email: email.toLowerCase() }).lean();
+    }
     return this.data.users.find(u => u.email.toLowerCase() === email.toLowerCase());
   }
 
-  getUserById(id) {
+  async getUserById(id) {
+    if (this.isMongo) {
+      return await UserModel.findOne({ id }).lean();
+    }
     return this.data.users.find(u => u.id === id);
   }
 
-  addUser(user) {
+  async addUser(user) {
+    if (this.isMongo) {
+      const created = await UserModel.create(user);
+      return created.toObject();
+    }
     this.data.users.push(user);
-    this.save();
+    this.saveLocal();
     return user;
   }
 
   // Products
-  getProducts() {
+  async getProducts() {
+    if (this.isMongo) {
+      return await ProductModel.find().sort({ created_at: -1 }).lean();
+    }
     return [...this.data.products].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
   }
 
-  getProductById(id) {
+  async getProductById(id) {
+    if (this.isMongo) {
+      return await ProductModel.findOne({ id }).lean();
+    }
     return this.data.products.find(p => p.id === id);
   }
 
-  addProduct(product) {
+  async addProduct(product) {
+    if (this.isMongo) {
+      const created = await ProductModel.create(product);
+      return created.toObject();
+    }
     this.data.products.unshift(product);
-    this.save();
+    this.saveLocal();
     return product;
   }
 
   // Scans
-  getScans() {
+  async getScans() {
+    if (this.isMongo) {
+      return await ScanModel.find().sort({ created_at: -1 }).lean();
+    }
     return [...this.data.scans].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
   }
 
-  getScanById(id) {
+  async getScanById(id) {
+    if (this.isMongo) {
+      return await ScanModel.findOne({ id }).lean();
+    }
     return this.data.scans.find(s => s.id === id);
   }
 
-  addScan(scan) {
+  async addScan(scan) {
+    if (this.isMongo) {
+      const created = await ScanModel.create(scan);
+      return created.toObject();
+    }
     this.data.scans.unshift(scan);
-    this.save();
+    this.saveLocal();
     return scan;
   }
 
   // Violations
-  getViolations() {
+  async getViolations() {
+    if (this.isMongo) {
+      return await ViolationModel.find().lean();
+    }
     return this.data.violations;
   }
 
-  getViolationsByScanId(scanId) {
+  async getViolationsByScanId(scanId) {
+    if (this.isMongo) {
+      return await ViolationModel.find({ scan_id: scanId }).lean();
+    }
     return this.data.violations.filter(v => v.scan_id === scanId);
   }
 
-  addViolation(violation) {
+  async addViolation(violation) {
+    if (this.isMongo) {
+      const created = await ViolationModel.create(violation);
+      return created.toObject();
+    }
     this.data.violations.push(violation);
-    this.save();
+    this.saveLocal();
     return violation;
   }
 
   // Reports
-  getReports() {
+  async getReports() {
+    if (this.isMongo) {
+      return await ReportModel.find().sort({ generated_at: -1 }).lean();
+    }
     return [...this.data.reports].sort((a, b) => new Date(b.generated_at) - new Date(a.generated_at));
   }
 
-  getReportById(id) {
+  async getReportById(id) {
+    if (this.isMongo) {
+      return await ReportModel.findOne({ $or: [{ id }, { scan_id: id }] }).lean();
+    }
     return this.data.reports.find(r => r.id === id || r.scan_id === id);
   }
 
-  addReport(report) {
+  async addReport(report) {
+    if (this.isMongo) {
+      const created = await ReportModel.create(report);
+      return created.toObject();
+    }
     this.data.reports.unshift(report);
-    this.save();
+    this.saveLocal();
     return report;
   }
 
   // Rules
-  getRules() {
+  async getRules() {
+    if (this.isMongo) {
+      const rules = await RuleModel.find().lean();
+      if (rules.length > 0) return rules;
+    }
     return this.data.rules;
   }
 
-  updateRule(id, updates) {
+  async updateRule(id, updates) {
+    if (this.isMongo) {
+      return await RuleModel.findOneAndUpdate({ id }, { $set: updates }, { new: true }).lean();
+    }
     const idx = this.data.rules.findIndex(r => r.id === id);
     if (idx !== -1) {
       this.data.rules[idx] = { ...this.data.rules[idx], ...updates };
-      this.save();
+      this.saveLocal();
       return this.data.rules[idx];
     }
     return null;

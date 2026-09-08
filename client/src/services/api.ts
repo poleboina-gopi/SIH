@@ -1,6 +1,6 @@
 import { DashboardStats, Report, Scan, StatutoryRule, User, Violation, ParsedFields } from '../types';
 
-const API_BASE_URL = 'http://localhost:5000/api';
+const API_BASE_URL = (import.meta as any).env?.VITE_API_BASE_URL || 'http://localhost:5000/api';
 
 function getAuthHeaders(): HeadersInit {
   const token = localStorage.getItem('lm_token');

@@ -31,9 +31,17 @@ An intelligent, end-to-end automated compliance verification platform for packag
 - **Frontend**: React 18, TypeScript, Vite, Vanilla CSS Design System (Government-grade dark/light mode), Lucide Icons
 - **AI / OCR**: Tesseract OCR engine, NLP & Regex Metrology Extraction heuristics
 - **Backend**: Node.js, Express.js, JWT Authentication, Multer file upload
-- **Database**: Local JSON Document Store (`server/data/db.json`)
+- **Database**: MongoDB Atlas (Cloud) with Mongoose / Local JSON Document Store (`server/data/db.json`)
+- **Cloud Deployment**: Vercel (Frontend), Render (Backend API), MongoDB Atlas (Database)
 
 ---
+
+## 🌐 Cloud Deployment (Vercel + Render + MongoDB Atlas)
+
+See the complete step-by-step instructions in [**`DEPLOYMENT.md`**](./DEPLOYMENT.md):
+- **Frontend on Vercel**: Connect repo, set root directory to `client`, configure `VITE_API_BASE_URL`.
+- **Backend on Render**: Connect repo, set root directory to `server`, configure `MONGODB_URI` and `JWT_SECRET`.
+- **Database on MongoDB Atlas**: Free M0 Cluster with IP whitelist `0.0.0.0/0`.
 
 ## 🚀 Quick Start Guide
 

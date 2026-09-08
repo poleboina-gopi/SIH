@@ -24,7 +24,7 @@ const storage = multer.diskStorage({
 
 const upload = multer({
   storage,
-  limits: { fileSize: 25 * 1024 * 1024 }, // 25MB limit
+  limits: { fileSize: 25 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
     if (file.mimetype.startsWith('image/')) {
       cb(null, true);
@@ -52,7 +52,6 @@ router.post('/upload-image', upload.single('image'), (req, res) => {
 });
 
 // POST /api/process-ocr
-// Accepts raw_text (extracted client-side or server-side) and runs field extraction
 router.post('/process-ocr', (req, res) => {
   const { raw_text, image_url, product_name, brand, category } = req.body;
 
@@ -76,34 +75,42 @@ router.post('/process-ocr', (req, res) => {
 });
 
 // GET /api/scans
-router.get('/scans', (req, res) => {
-  const scans = db.getScans();
-  const products = db.getProducts();
-  const prodMap = new Map(products.map(p => [p.id, p]));
+router.get('/scans', async (req, res) => {
+  try {
+    const scans = await db.getScans();
+    const products = await db.getProducts();
+    const prodMap = new Map(products.map(p => [p.id, p]));
 
-  const enriched = scans.map(s => ({
-    ...s,
-    product: prodMap.get(s.product_id) || null
-  }));
+    const enriched = scans.map(s => ({
+      ...s,
+      product: prodMap.get(s.product_id) || null
+    }));
 
-  res.json({ scans: enriched });
+    res.json({ scans: enriched });
+  } catch (err) {
+    res.status(500).json({ error: err.message || "Failed to load scans" });
+  }
 });
 
 // GET /api/scans/:id
-router.get('/scans/:id', (req, res) => {
-  const scan = db.getScanById(req.params.id);
-  if (!scan) return res.status(404).json({ error: "Scan not found" });
+router.get('/scans/:id', async (req, res) => {
+  try {
+    const scan = await db.getScanById(req.params.id);
+    if (!scan) return res.status(404).json({ error: "Scan not found" });
 
-  const product = db.getProductById(scan.product_id);
-  const violations = db.getViolationsByScanId(scan.id);
-  const report = db.getReportById(scan.id);
+    const product = await db.getProductById(scan.product_id);
+    const violations = await db.getViolationsByScanId(scan.id);
+    const report = await db.getReportById(scan.id);
 
-  res.json({
-    scan,
-    product,
-    violations,
-    report
-  });
+    res.json({
+      scan,
+      product,
+      violations,
+      report
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message || "Failed to load scan" });
+  }
 });
 
 export default router;
