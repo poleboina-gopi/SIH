@@ -28,6 +28,10 @@ export const ComplianceReportPage: React.FC<ComplianceReportPageProps> = ({
   } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
+  const [exportingFormat, setExportingFormat] = useState<'json' | 'csv' | null>(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     loadReport();
@@ -42,6 +46,56 @@ export const ComplianceReportPage: React.FC<ComplianceReportPageProps> = ({
       setError("Inspection report not found or failed to load.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDownloadPdf = async () => {
+    if (!reportData) return;
+    setIsDownloadingPdf(true);
+    try {
+      await api.downloadReportPdf(
+        reportData.report.id,
+        `Legal_Metrology_Report_${reportData.report.report_number || reportData.report.id}.pdf`
+      );
+    } catch (err: any) {
+      alert("Failed to download PDF: " + (err.message || 'Unknown error'));
+    } finally {
+      setIsDownloadingPdf(false);
+    }
+  };
+
+  const handleExport = async (format: 'json' | 'csv') => {
+    if (!reportData?.report?.id) return;
+    setExportingFormat(format);
+    try {
+      await api.downloadExport(
+        reportData.report.id,
+        format,
+        `Statutory_Report_${reportData.report.report_number || reportData.report.id}.${format}`
+      );
+    } catch (err: any) {
+      alert(`Failed to export ${format.toUpperCase()}: ` + (err.message || 'Unknown error'));
+    } finally {
+      setExportingFormat(null);
+    }
+  };
+
+  const handleDeleteInspection = async () => {
+    if (!reportData) return;
+    const scanId = reportData.scan?.id || reportData.report?.scan_id;
+    if (!scanId) {
+      alert("Cannot delete: scan identifier is missing.");
+      return;
+    }
+    setIsDeleting(true);
+    try {
+      await api.deleteScan(scanId);
+      alert("Inspection record and associated files successfully deleted.");
+      onBack();
+    } catch (err: any) {
+      alert("Failed to delete inspection: " + (err.message || 'Unauthorized'));
+      setIsDeleting(false);
+      setShowDeleteModal(false);
     }
   };
 
@@ -66,39 +120,6 @@ export const ComplianceReportPage: React.FC<ComplianceReportPageProps> = ({
       </div>
     );
   }
-
-  const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
-
-  const handleDownloadPdf = async () => {
-    if (!reportData) return;
-    setIsDownloadingPdf(true);
-    try {
-      await api.downloadReportPdf(
-        reportData.report.id,
-        `Legal_Metrology_Report_${reportData.report.report_number || reportData.report.id}.pdf`
-      );
-    } catch (err: any) {
-      alert("Failed to download PDF: " + (err.message || 'Unknown error'));
-    } finally {
-      setIsDownloadingPdf(false);
-    }
-  };
-
-  const handleDeleteInspection = async () => {
-    if (!reportData) return;
-    setIsDeleting(true);
-    try {
-      await api.deleteScan(reportData.scan.id);
-      alert("Inspection record and associated files successfully deleted.");
-      onBack();
-    } catch (err: any) {
-      alert("Failed to delete inspection: " + (err.message || 'Unauthorized'));
-      setIsDeleting(false);
-      setShowDeleteModal(false);
-    }
-  };
 
   const { report, scan, product, violations } = reportData;
   const isCompliant = report.status === 'COMPLIANT';
@@ -158,27 +179,27 @@ export const ComplianceReportPage: React.FC<ComplianceReportPageProps> = ({
             Print View
           </button>
 
-          <a
-            href={api.getExportUrl(report.id, 'json')}
-            target="_blank"
-            rel="noreferrer"
+          <button
+            onClick={() => handleExport('json')}
+            disabled={exportingFormat === 'json'}
             className="btn btn-secondary"
             style={{ gap: '8px' }}
+            title="Export full statutory inspection data in JSON format"
           >
-            <Download size={16} />
-            JSON
-          </a>
+            <Download size={16} className={exportingFormat === 'json' ? 'animate-spin' : ''} />
+            {exportingFormat === 'json' ? 'Exporting...' : 'JSON'}
+          </button>
 
-          <a
-            href={api.getExportUrl(report.id, 'csv')}
-            target="_blank"
-            rel="noreferrer"
+          <button
+            onClick={() => handleExport('csv')}
+            disabled={exportingFormat === 'csv'}
             className="btn btn-secondary"
             style={{ gap: '8px' }}
+            title="Export statutory violations and report summary in CSV format"
           >
-            <Download size={16} />
-            CSV
-          </a>
+            <Download size={16} className={exportingFormat === 'csv' ? 'animate-spin' : ''} />
+            {exportingFormat === 'csv' ? 'Exporting...' : 'CSV'}
+          </button>
 
           {/* Delete Inspection Button */}
           {canDelete && (

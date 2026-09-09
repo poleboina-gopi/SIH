@@ -232,7 +232,29 @@ export const api = {
   },
 
   getExportUrl(reportId: string, format: 'json' | 'csv'): string {
-    return `${API_BASE_URL}/export/${reportId}/${format}`;
+    const token = localStorage.getItem('lm_token');
+    const query = token ? `?token=${encodeURIComponent(token)}` : '';
+    return `${API_BASE_URL}/export/${reportId}/${format}${query}`;
+  },
+
+  // Authenticated Data Export (JSON/CSV)
+  async downloadExport(reportId: string, format: 'json' | 'csv', filename?: string): Promise<void> {
+    const res = await fetch(`${API_BASE_URL}/export/${reportId}/${format}`, {
+      headers: getAuthHeaders()
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ error: `Failed to export ${format.toUpperCase()}` }));
+      throw new Error(err.error || `Failed to export ${format.toUpperCase()}`);
+    }
+    const blob = await res.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename || `Statutory_Report_${reportId}.${format}`;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
   },
 
   // PDF Report Download

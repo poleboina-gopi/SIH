@@ -110,7 +110,7 @@ export function App() {
       <main className="main-content">
         {currentTab === 'inspector' && (
           user.role === 'admin' ? (
-            <AdminDashboard user={user} />
+            <AdminDashboard user={user} onViewReport={handleViewReport} />
           ) : (
             <InspectorDashboard
               user={user}
@@ -123,7 +123,7 @@ export function App() {
 
         {currentTab === 'scan' && (
           user.role === 'admin' ? (
-            <AdminDashboard user={user} />
+            <AdminDashboard user={user} onViewReport={handleViewReport} />
           ) : (
             <ScanUploadPage
               user={user}
@@ -135,7 +135,7 @@ export function App() {
 
         {currentTab === 'results' && scanData && (
           user.role === 'admin' ? (
-            <AdminDashboard user={user} />
+            <AdminDashboard user={user} onViewReport={handleViewReport} />
           ) : (
             <ScanResultsPage
               scanData={scanData}
@@ -159,7 +159,7 @@ export function App() {
         )}
 
         {currentTab === 'admin' && (
-          <AdminDashboard user={user} />
+          <AdminDashboard user={user} onViewReport={handleViewReport} />
         )}
 
         {currentTab === 'repository' && (

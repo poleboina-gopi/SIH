@@ -951,8 +951,17 @@ export const ScanResultsPage: React.FC<ScanResultsPageProps> = ({
                 className="btn btn-primary"
                 style={{ flex: 1, padding: '15px', fontSize: '1rem', fontWeight: 700, gap: '10px' }}
               >
-                <Scale size={20} />
-                <span>Confirm Declarations &amp; Issue Statutory Verdict</span>
+                {isValidating ? (
+                  <>
+                    <RefreshCw size={20} className="animate-spin" />
+                    <span>Validating Declarations &amp; Sealing Verdict...</span>
+                  </>
+                ) : (
+                  <>
+                    <Scale size={20} />
+                    <span>Confirm Declarations &amp; Issue Statutory Verdict</span>
+                  </>
+                )}
               </button>
             </div>
           </div>

@@ -6,15 +6,20 @@ const JWT_SECRET = process.env.JWT_SECRET || "legal_metrology_secret_key_2024";
  * Middleware: Verify JWT Authentication Token
  */
 export function authenticateToken(req, res, next) {
+  let token = null;
   const authHeader = req.headers['authorization'] || req.headers['Authorization'];
   
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    token = authHeader.split(' ')[1];
+  } else if (req.query && req.query.token) {
+    token = req.query.token;
+  }
+
+  if (!token) {
     return res.status(401).json({ 
       error: "Authentication required. Please sign in with your official officer account." 
     });
   }
-
-  const token = authHeader.split(' ')[1];
 
   jwt.verify(token, JWT_SECRET, (err, decodedUser) => {
     if (err) {

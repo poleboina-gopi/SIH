@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { 
   BarChart3, Settings, Shield, AlertTriangle, CheckCircle2, 
-  Layers, Users, Sliders, Save, RefreshCw, IndianRupee, Trash2 
+  Layers, Users, Sliders, Save, RefreshCw, IndianRupee, Trash2, FileText 
 } from 'lucide-react';
 import { api } from '../services/api';
 import { DashboardStats, StatutoryRule, User } from '../types';
@@ -9,9 +9,10 @@ import { DeleteConfirmModal } from '../components/DeleteConfirmModal';
 
 interface AdminDashboardProps {
   user: User;
+  onViewReport?: (scanId: string) => void;
 }
 
-export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
+export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onViewReport }) => {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [rules, setRules] = useState<StatutoryRule[]>([]);
   const [users, setUsers] = useState<User[]>([]);
@@ -334,22 +335,39 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                           )}
                         </td>
                         <td>
-                          <button
-                            onClick={() => setDeleteTarget({ id: scan.scan_id, name: `${scan.product_name} (${scan.brand})` })}
-                            className="btn btn-danger"
-                            style={{
-                              padding: '6px 12px',
-                              fontSize: '0.78rem',
-                              background: 'rgba(239, 68, 68, 0.15)',
-                              borderColor: 'rgba(239, 68, 68, 0.4)',
-                              color: '#ef4444',
-                              gap: '6px'
-                            }}
-                            title="Delete Inspection"
-                          >
-                            <Trash2 size={14} />
-                            <span>Delete</span>
-                          </button>
+                          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                            {onViewReport && (
+                              <button
+                                onClick={() => onViewReport(scan.scan_id)}
+                                className="btn btn-secondary"
+                                style={{
+                                  padding: '6px 12px',
+                                  fontSize: '0.78rem',
+                                  gap: '6px'
+                                }}
+                                title="View Statutory Compliance Report"
+                              >
+                                <FileText size={14} />
+                                <span>View Report</span>
+                              </button>
+                            )}
+                            <button
+                              onClick={() => setDeleteTarget({ id: scan.scan_id, name: `${scan.product_name} (${scan.brand})` })}
+                              className="btn btn-danger"
+                              style={{
+                                padding: '6px 12px',
+                                fontSize: '0.78rem',
+                                background: 'rgba(239, 68, 68, 0.15)',
+                                borderColor: 'rgba(239, 68, 68, 0.4)',
+                                color: '#ef4444',
+                                gap: '6px'
+                              }}
+                              title="Delete Inspection"
+                            >
+                              <Trash2 size={14} />
+                              <span>Delete</span>
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))
