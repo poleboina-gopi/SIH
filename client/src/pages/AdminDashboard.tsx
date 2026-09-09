@@ -162,37 +162,77 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onViewRepo
       {activeTab === 'analytics' && (
         <div>
           {/* Top Admin KPI Counters */}
-          <div className="grid-4" style={{ marginBottom: '28px' }}>
-            <div className="glass-panel" style={{ padding: '20px' }}>
-              <div style={{ color: 'var(--text-secondary)', fontSize: '0.8rem', fontWeight: 600 }}>TOTAL COMMODITY SCANS</div>
-              <div style={{ fontSize: '2rem', fontWeight: 800, margin: '8px 0 4px', color: '#ffffff' }}>
+          <div className="grid-4" style={{ marginBottom: '28px', gap: '16px' }}>
+            <div 
+              className="glass-panel kpi-card" 
+              style={{ 
+                padding: '22px 24px',
+                ['--kpi-accent' as any]: '#3b82f6',
+                ['--kpi-glow' as any]: 'rgba(59, 130, 246, 0.3)',
+                background: 'radial-gradient(circle at 10% 0%, rgba(59, 130, 246, 0.08) 0%, rgba(13, 20, 38, 0.75) 70%)'
+              }}
+            >
+              <div style={{ color: 'var(--text-secondary)', fontSize: '0.74rem', fontWeight: 700, letterSpacing: '0.05em' }}>
+                TOTAL COMMODITY SCANS
+              </div>
+              <div style={{ fontSize: '2.4rem', fontWeight: 800, margin: '6px 0 2px', color: '#ffffff', fontFamily: 'var(--font-heading)' }}>
                 {stats?.total_scans || 0}
               </div>
-              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Across all circles</div>
+              <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Across all enforcement circles</div>
             </div>
 
-            <div className="glass-panel" style={{ padding: '20px' }}>
-              <div style={{ color: 'var(--text-secondary)', fontSize: '0.8rem', fontWeight: 600 }}>NON-COMPLIANCE RATE</div>
-              <div style={{ fontSize: '2rem', fontWeight: 800, margin: '8px 0 4px', color: '#f43f5e' }}>
+            <div 
+              className="glass-panel kpi-card" 
+              style={{ 
+                padding: '22px 24px',
+                ['--kpi-accent' as any]: '#f43f5e',
+                ['--kpi-glow' as any]: 'rgba(244, 63, 94, 0.3)',
+                background: 'radial-gradient(circle at 10% 0%, rgba(244, 63, 94, 0.08) 0%, rgba(13, 20, 38, 0.75) 70%)'
+              }}
+            >
+              <div style={{ color: '#f87171', fontSize: '0.74rem', fontWeight: 700, letterSpacing: '0.05em' }}>
+                NON-COMPLIANCE RATE
+              </div>
+              <div style={{ fontSize: '2.4rem', fontWeight: 800, margin: '6px 0 2px', color: '#f43f5e', fontFamily: 'var(--font-heading)' }}>
                 {stats && stats.total_scans > 0 ? Math.round((stats.non_compliant_scans / stats.total_scans) * 100) : 0}%
               </div>
-              <div style={{ fontSize: '0.75rem', color: '#f87171' }}>Requires enforcement intervention</div>
+              <div style={{ fontSize: '0.72rem', color: '#f87171' }}>Requires enforcement intervention</div>
             </div>
 
-            <div className="glass-panel" style={{ padding: '20px' }}>
-              <div style={{ color: 'var(--text-secondary)', fontSize: '0.8rem', fontWeight: 600 }}>COMPOUNDING REVENUE</div>
-              <div style={{ fontSize: '2rem', fontWeight: 800, margin: '8px 0 4px', color: '#facc15' }}>
+            <div 
+              className="glass-panel kpi-card" 
+              style={{ 
+                padding: '22px 24px',
+                ['--kpi-accent' as any]: '#f59e0b',
+                ['--kpi-glow' as any]: 'rgba(245, 158, 11, 0.3)',
+                background: 'radial-gradient(circle at 10% 0%, rgba(245, 158, 11, 0.08) 0%, rgba(13, 20, 38, 0.75) 70%)'
+              }}
+            >
+              <div style={{ color: '#fbbf24', fontSize: '0.74rem', fontWeight: 700, letterSpacing: '0.05em' }}>
+                COMPOUNDING REVENUE
+              </div>
+              <div style={{ fontSize: '2.4rem', fontWeight: 800, margin: '6px 0 2px', color: '#facc15', fontFamily: 'var(--font-heading)' }}>
                 ₹{stats?.total_penalties_estimated ? stats.total_penalties_estimated.toLocaleString('en-IN') : 0}
               </div>
-              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Penalties under Section 36</div>
+              <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Penalties under Section 36</div>
             </div>
 
-            <div className="glass-panel" style={{ padding: '20px' }}>
-              <div style={{ color: 'var(--text-secondary)', fontSize: '0.8rem', fontWeight: 600 }}>ACTIVE ENFORCEMENT RULES</div>
-              <div style={{ fontSize: '2rem', fontWeight: 800, margin: '8px 0 4px', color: '#60a5fa' }}>
+            <div 
+              className="glass-panel kpi-card" 
+              style={{ 
+                padding: '22px 24px',
+                ['--kpi-accent' as any]: '#38bdf8',
+                ['--kpi-glow' as any]: 'rgba(56, 189, 248, 0.3)',
+                background: 'radial-gradient(circle at 10% 0%, rgba(56, 189, 248, 0.08) 0%, rgba(13, 20, 38, 0.75) 70%)'
+              }}
+            >
+              <div style={{ color: '#38bdf8', fontSize: '0.74rem', fontWeight: 700, letterSpacing: '0.05em' }}>
+                ACTIVE ENFORCEMENT RULES
+              </div>
+              <div style={{ fontSize: '2.4rem', fontWeight: 800, margin: '6px 0 2px', color: '#38bdf8', fontFamily: 'var(--font-heading)' }}>
                 {rules.filter(r => r.isActive).length} / {rules.length}
               </div>
-              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Rules 2011 Engine v2.4</div>
+              <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Rules 2011 Engine v2.4</div>
             </div>
           </div>
 

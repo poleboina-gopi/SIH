@@ -636,7 +636,7 @@ export const ScanUploadPage: React.FC<ScanUploadPageProps> = ({
             </div>
           </div>
 
-          {/* 3 Simultaneous Independent Upload Cards */}
+          {/* 3 Simultaneous Independent Cyber Pods */}
           <div style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
@@ -651,6 +651,7 @@ export const ScanUploadPage: React.FC<ScanUploadPageProps> = ({
                 mandatory: true,
                 requiredFields: 'Brand, Commodity Name, Net Qty',
                 color: '#3b82f6',
+                accentBg: 'rgba(59, 130, 246, 0.12)',
                 ref: frontInputRef
               },
               {
@@ -660,6 +661,7 @@ export const ScanUploadPage: React.FC<ScanUploadPageProps> = ({
                 mandatory: true,
                 requiredFields: 'MRP, Mfg Date, Expiry, Address',
                 color: '#10b981',
+                accentBg: 'rgba(16, 185, 129, 0.12)',
                 ref: backInputRef
               },
               {
@@ -669,6 +671,7 @@ export const ScanUploadPage: React.FC<ScanUploadPageProps> = ({
                 mandatory: false,
                 requiredFields: 'Consumer Helpline, Origin, Barcode',
                 color: '#8b5cf6',
+                accentBg: 'rgba(139, 92, 246, 0.12)',
                 ref: sideInputRef
               }
             ].map((slot) => {
@@ -685,36 +688,67 @@ export const ScanUploadPage: React.FC<ScanUploadPageProps> = ({
                   onDragLeave={() => setDragOverSide(null)}
                   onDrop={(e) => handleDropForSide(e, slot.side)}
                   style={{
-                    borderRadius: '12px',
-                    border: `2px solid ${isDragging ? '#3b82f6' : isSelected ? slot.color : 'var(--border-card)'}`,
-                    background: isSelected ? 'rgba(15, 23, 42, 0.9)' : 'var(--bg-glass-heavy)',
-                    padding: '12px',
+                    position: 'relative',
+                    overflow: 'hidden',
+                    borderRadius: '14px',
+                    border: `1.5px solid ${isDragging ? '#38bdf8' : isSelected ? slot.color : 'var(--border-card)'}`,
+                    background: isSelected 
+                      ? 'linear-gradient(180deg, rgba(20, 31, 56, 0.95) 0%, rgba(10, 16, 32, 0.95) 100%)' 
+                      : 'linear-gradient(180deg, rgba(13, 20, 38, 0.7) 0%, rgba(8, 12, 24, 0.8) 100%)',
+                    padding: '14px',
                     display: 'flex',
                     flexDirection: 'column',
-                    gap: '8px',
-                    boxShadow: isSelected ? `0 0 16px ${slot.color}33` : 'none',
-                    transition: 'all 0.2s ease',
+                    gap: '10px',
+                    boxShadow: isSelected 
+                      ? `0 12px 28px -6px ${slot.color}35, 0 0 0 1px ${slot.color}66, inset 0 1px 0 rgba(255,255,255,0.15)` 
+                      : '0 4px 14px rgba(0,0,0,0.35)',
+                    transition: 'all 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
                     cursor: 'pointer'
                   }}
                 >
+                  {/* Top Specular Rim-light */}
+                  <div style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    height: '2px',
+                    background: isSelected 
+                      ? `linear-gradient(90deg, transparent 0%, ${slot.color} 50%, transparent 100%)` 
+                      : 'transparent',
+                    boxShadow: isSelected ? `0 0 10px ${slot.color}` : 'none'
+                  }} />
+
                   {/* Slot Header */}
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                     <div>
-                      <div style={{ fontWeight: 800, fontSize: '0.82rem', color: isSelected ? slot.color : '#ffffff' }}>
-                        {slot.title} <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>({slot.badge})</span>
+                      <div style={{
+                        fontWeight: 800,
+                        fontSize: '0.84rem',
+                        color: isSelected ? slot.color : '#ffffff',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px'
+                      }}>
+                        <span>{slot.title}</span>
+                        <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', fontWeight: 500 }}>
+                          ({slot.badge})
+                        </span>
                       </div>
-                      <div style={{ fontSize: '0.67rem', color: 'var(--text-secondary)' }}>
+                      <div style={{ fontSize: '0.67rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
                         {slot.requiredFields}
                       </div>
                     </div>
                     <span style={{
                       fontSize: '0.66rem',
-                      padding: '2px 6px',
+                      padding: '2px 8px',
                       borderRadius: '9999px',
                       fontWeight: 700,
                       background: hasImg ? 'rgba(16, 185, 129, 0.2)' : 'rgba(255, 255, 255, 0.08)',
                       color: hasImg ? '#34d399' : 'var(--text-muted)',
-                      flexShrink: 0
+                      border: hasImg ? '1px solid rgba(16, 185, 129, 0.35)' : '1px solid rgba(255,255,255,0.06)',
+                      flexShrink: 0,
+                      letterSpacing: '0.02em'
                     }}>
                       {hasImg ? '✓ Loaded' : slot.mandatory ? 'Required' : 'Optional'}
                     </span>
@@ -722,15 +756,23 @@ export const ScanUploadPage: React.FC<ScanUploadPageProps> = ({
 
                   {/* Slot Preview or Dropzone */}
                   {hasImg ? (
-                    <div style={{ position: 'relative', borderRadius: '8px', overflow: 'hidden', background: '#090d16', border: '1px solid var(--border-subtle)' }}>
+                    <div style={{
+                      position: 'relative',
+                      borderRadius: '10px',
+                      overflow: 'hidden',
+                      background: '#060913',
+                      border: '1px solid var(--border-subtle)',
+                      boxShadow: 'inset 0 2px 6px rgba(0,0,0,0.6)'
+                    }}>
                       <img
                         src={data.previewUrl!}
                         alt={`${slot.title} preview`}
-                        style={{ width: '100%', height: '110px', objectFit: 'contain', display: 'block' }}
+                        style={{ width: '100%', height: '115px', objectFit: 'contain', display: 'block', padding: '4px' }}
                       />
                       <div style={{
-                        padding: '6px 8px',
-                        background: 'rgba(15, 23, 42, 0.92)',
+                        padding: '6px 10px',
+                        background: 'rgba(9, 14, 28, 0.95)',
+                        borderTop: '1px solid var(--border-subtle)',
                         display: 'flex',
                         justifyContent: 'space-between',
                         alignItems: 'center',
@@ -739,7 +781,7 @@ export const ScanUploadPage: React.FC<ScanUploadPageProps> = ({
                         <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '80px', color: '#94a3b8' }}>
                           {data.imageMeta?.name || 'Image'}
                         </span>
-                        <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                           <button
                             type="button"
                             onClick={(e) => { e.stopPropagation(); openFileInputForSide(slot.side); }}
@@ -747,7 +789,7 @@ export const ScanUploadPage: React.FC<ScanUploadPageProps> = ({
                           >
                             Change
                           </button>
-                          <span>•</span>
+                          <span style={{ color: 'var(--text-muted)' }}>•</span>
                           <button
                             type="button"
                             onClick={(e) => { e.stopPropagation(); openCameraForSide(slot.side); }}
@@ -755,11 +797,11 @@ export const ScanUploadPage: React.FC<ScanUploadPageProps> = ({
                           >
                             Camera
                           </button>
-                          <span>•</span>
+                          <span style={{ color: 'var(--text-muted)' }}>•</span>
                           <button
                             type="button"
                             onClick={(e) => { e.stopPropagation(); handleClearImage(slot.side); }}
-                            style={{ background: 'transparent', border: 'none', color: '#f87171', cursor: 'pointer', fontSize: '0.7rem', fontWeight: 600 }}
+                            style={{ background: 'transparent', border: 'none', color: '#f87171', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 700 }}
                           >
                             ✕
                           </button>
@@ -768,20 +810,32 @@ export const ScanUploadPage: React.FC<ScanUploadPageProps> = ({
                     </div>
                   ) : (
                     <div style={{
-                      border: '1px dashed var(--border-hover)',
-                      borderRadius: '8px',
-                      padding: '14px 6px',
+                      border: `1.5px dashed ${isDragging ? '#38bdf8' : 'rgba(255, 255, 255, 0.15)'}`,
+                      borderRadius: '10px',
+                      padding: '16px 8px',
                       textAlign: 'center',
-                      background: isDragging ? 'rgba(59, 130, 246, 0.1)' : 'rgba(15, 23, 42, 0.4)',
-                      minHeight: '110px',
+                      background: isDragging ? 'rgba(56, 189, 248, 0.1)' : 'rgba(6, 10, 22, 0.5)',
+                      minHeight: '115px',
                       display: 'flex',
                       flexDirection: 'column',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      gap: '8px'
+                      gap: '8px',
+                      transition: 'all 0.2s ease'
                     }}>
-                      <UploadCloud size={20} color="var(--text-muted)" />
-                      <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)' }}>
+                      <div style={{
+                        width: '32px',
+                        height: '32px',
+                        borderRadius: '50%',
+                        background: slot.accentBg,
+                        border: `1px solid ${slot.color}44`,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}>
+                        <UploadCloud size={16} color={slot.color} />
+                      </div>
+                      <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', fontWeight: 500 }}>
                         Upload {slot.title}
                       </div>
                       <div style={{ display: 'flex', gap: '6px' }}>
@@ -789,7 +843,7 @@ export const ScanUploadPage: React.FC<ScanUploadPageProps> = ({
                           type="button"
                           onClick={(e) => { e.stopPropagation(); openFileInputForSide(slot.side); }}
                           className="btn btn-primary"
-                          style={{ padding: '4px 8px', fontSize: '0.7rem', gap: '4px' }}
+                          style={{ padding: '4px 10px', fontSize: '0.7rem', gap: '4px', borderRadius: '6px' }}
                         >
                           <UploadCloud size={11} />
                           Browse
@@ -798,7 +852,7 @@ export const ScanUploadPage: React.FC<ScanUploadPageProps> = ({
                           type="button"
                           onClick={(e) => { e.stopPropagation(); openCameraForSide(slot.side); }}
                           className="btn btn-secondary"
-                          style={{ padding: '4px 8px', fontSize: '0.7rem', gap: '4px' }}
+                          style={{ padding: '4px 10px', fontSize: '0.7rem', gap: '4px', borderRadius: '6px' }}
                         >
                           <Camera size={11} />
                           Camera
@@ -811,16 +865,24 @@ export const ScanUploadPage: React.FC<ScanUploadPageProps> = ({
             })}
           </div>
 
-          {/* Active Panel Inspection Canvas */}
+          {/* Active Panel Optical HUD Inspection Canvas */}
           <div style={{
-            borderRadius: '12px',
+            position: 'relative',
+            borderRadius: '14px',
             border: '1px solid var(--border-card)',
-            background: 'rgba(15, 23, 42, 0.8)',
-            overflow: 'hidden'
+            background: 'linear-gradient(180deg, rgba(10, 16, 32, 0.9) 0%, rgba(6, 9, 20, 0.95) 100%)',
+            overflow: 'hidden',
+            boxShadow: '0 12px 36px -8px rgba(0, 0, 0, 0.75)'
           }}>
+            {/* HUD Corner Reticles */}
+            <div className="hud-corner hud-corner-tl" />
+            <div className="hud-corner hud-corner-tr" />
+            <div className="hud-corner hud-corner-bl" />
+            <div className="hud-corner hud-corner-br" />
+
             <div style={{
-              padding: '10px 14px',
-              background: 'rgba(15, 23, 42, 0.95)',
+              padding: '12px 16px',
+              background: 'rgba(9, 14, 28, 0.92)',
               borderBottom: '1px solid var(--border-subtle)',
               display: 'flex',
               justifyContent: 'space-between',
@@ -828,12 +890,19 @@ export const ScanUploadPage: React.FC<ScanUploadPageProps> = ({
               flexWrap: 'wrap',
               gap: '8px'
             }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ fontSize: '0.78rem', fontWeight: 800, color: '#ffffff', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                  Full Inspection Canvas: {activeSide} Panel
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div style={{
+                  width: '8px',
+                  height: '8px',
+                  borderRadius: '50%',
+                  background: sideImages[activeSide].previewUrl ? '#10b981' : '#f59e0b',
+                  boxShadow: sideImages[activeSide].previewUrl ? '0 0 8px #10b981' : '0 0 8px #f59e0b'
+                }} />
+                <span style={{ fontSize: '0.78rem', fontWeight: 800, color: '#ffffff', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  OPTICAL INSPECTOR VIEWPORT: {activeSide} PANEL
                 </span>
                 {sideImages[activeSide].previewUrl && (
-                  <span className="badge badge-compliant" style={{ fontSize: '0.68rem' }}>
+                  <span className="badge badge-compliant" style={{ fontSize: '0.66rem', padding: '2px 8px' }}>
                     ✓ Ready for OCR
                   </span>
                 )}
@@ -847,15 +916,16 @@ export const ScanUploadPage: React.FC<ScanUploadPageProps> = ({
                     type="button"
                     onClick={() => setActiveSide(s)}
                     style={{
-                      padding: '3px 8px',
+                      padding: '4px 10px',
                       fontSize: '0.72rem',
                       fontWeight: 700,
                       textTransform: 'capitalize',
                       borderRadius: '6px',
-                      border: activeSide === s ? '1px solid #3b82f6' : '1px solid transparent',
-                      background: activeSide === s ? 'var(--accent-blue)' : 'rgba(255, 255, 255, 0.05)',
-                      color: activeSide === s ? '#ffffff' : 'var(--text-secondary)',
-                      cursor: 'pointer'
+                      border: activeSide === s ? '1px solid #38bdf8' : '1px solid transparent',
+                      background: activeSide === s ? 'rgba(56, 189, 248, 0.2)' : 'rgba(255, 255, 255, 0.05)',
+                      color: activeSide === s ? '#38bdf8' : 'var(--text-secondary)',
+                      cursor: 'pointer',
+                      transition: 'all 0.15s ease'
                     }}
                   >
                     {s} {sideImages[s].previewUrl ? '✓' : ''}
@@ -865,58 +935,128 @@ export const ScanUploadPage: React.FC<ScanUploadPageProps> = ({
             </div>
 
             <div style={{
-              minHeight: '260px',
+              minHeight: '280px',
               position: 'relative',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              background: '#090d16',
-              padding: '12px'
+              background: 'radial-gradient(circle at 50% 50%, rgba(30, 58, 138, 0.1) 0%, #050811 85%)',
+              padding: '16px'
             }}>
               {sideImages[activeSide].previewUrl ? (
-                <div style={{ width: '100%', position: 'relative' }}>
+                <div style={{ width: '100%', position: 'relative', display: 'flex', justifyContent: 'center' }}>
                   <img
                     src={sideImages[activeSide].previewUrl!}
                     alt={`${activeSide} Active Inspection Preview`}
                     style={{
                       width: '100%',
-                      maxHeight: '280px',
+                      maxHeight: '300px',
                       objectFit: 'contain',
-                      borderRadius: '8px',
-                      display: 'block'
+                      borderRadius: '10px',
+                      display: 'block',
+                      border: '1px solid rgba(255, 255, 255, 0.08)',
+                      boxShadow: '0 8px 24px rgba(0, 0, 0, 0.6)'
                     }}
                   />
-                  {/* Laser Scanner Animation during OCR Processing */}
-                  {isProcessing && (
+
+                  {/* Surface Metadata HUD Overlays */}
+                  <div style={{
+                    position: 'absolute',
+                    top: '8px',
+                    left: '12px',
+                    background: 'rgba(5, 8, 17, 0.85)',
+                    border: '1px solid rgba(56, 189, 248, 0.35)',
+                    borderRadius: '6px',
+                    padding: '3px 8px',
+                    fontSize: '0.66rem',
+                    color: '#38bdf8',
+                    fontFamily: 'var(--font-mono)',
+                    letterSpacing: '0.04em',
+                    backdropFilter: 'blur(8px)'
+                  }}>
+                    TARGET: {activeSide.toUpperCase()}_SURFACE [LIVE]
+                  </div>
+
+                  {sideImages[activeSide].imageMeta && (
                     <div style={{
                       position: 'absolute',
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      height: '3px',
-                      background: 'linear-gradient(90deg, transparent, #38bdf8, #60a5fa, #38bdf8, transparent)',
-                      boxShadow: '0 0 15px 3px rgba(56, 189, 248, 0.8)',
-                      animation: 'scanLaser 2s infinite ease-in-out',
-                      zIndex: 10
-                    }} />
+                      bottom: '8px',
+                      right: '12px',
+                      background: 'rgba(5, 8, 17, 0.85)',
+                      border: '1px solid rgba(255, 255, 255, 0.1)',
+                      borderRadius: '6px',
+                      padding: '3px 8px',
+                      fontSize: '0.66rem',
+                      color: 'var(--text-secondary)',
+                      fontFamily: 'var(--font-mono)',
+                      backdropFilter: 'blur(8px)'
+                    }}>
+                      {sideImages[activeSide].imageMeta?.width}x{sideImages[activeSide].imageMeta?.height} • {sideImages[activeSide].imageMeta?.size}
+                    </div>
+                  )}
+
+                  {/* Laser Scanner Animation during OCR Processing */}
+                  {isProcessing && (
+                    <>
+                      <div style={{
+                        position: 'absolute',
+                        left: 0,
+                        right: 0,
+                        height: '3px',
+                        background: 'linear-gradient(90deg, transparent, #38bdf8, #60a5fa, #38bdf8, transparent)',
+                        boxShadow: '0 0 20px 4px rgba(56, 189, 248, 0.9)',
+                        animation: 'scanLaser 2.2s infinite ease-in-out',
+                        zIndex: 10
+                      }} />
+                      <div style={{
+                        position: 'absolute',
+                        top: '50%',
+                        left: '50%',
+                        transform: 'translate(-50%, -50%)',
+                        background: 'rgba(10, 16, 32, 0.92)',
+                        border: '1px solid #38bdf8',
+                        padding: '6px 16px',
+                        borderRadius: '9999px',
+                        color: '#ffffff',
+                        fontSize: '0.75rem',
+                        fontWeight: 700,
+                        letterSpacing: '0.05em',
+                        boxShadow: '0 0 25px rgba(56, 189, 248, 0.6)',
+                        zIndex: 11
+                      }}>
+                        NEURAL OCR SCANNING...
+                      </div>
+                    </>
                   )}
                 </div>
               ) : (
-                <div style={{ textAlign: 'center', padding: '30px 20px', color: 'var(--text-muted)' }}>
-                  <UploadCloud size={32} style={{ margin: '0 auto 10px', opacity: 0.5 }} />
-                  <div style={{ fontWeight: 700, fontSize: '0.88rem', color: 'var(--text-secondary)', marginBottom: '4px' }}>
-                    No Image Uploaded for {activeSide.toUpperCase()} Panel
+                <div style={{ textAlign: 'center', padding: '36px 20px', color: 'var(--text-muted)' }}>
+                  <div style={{
+                    width: '60px',
+                    height: '60px',
+                    borderRadius: '50%',
+                    background: 'rgba(56, 189, 248, 0.08)',
+                    border: '1px dashed rgba(56, 189, 248, 0.35)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    margin: '0 auto 14px'
+                  }}>
+                    <UploadCloud size={28} color="#38bdf8" />
                   </div>
-                  <div style={{ fontSize: '0.78rem', marginBottom: '14px', maxWidth: '340px', margin: '0 auto 14px' }}>
-                    Click "Browse" or "Camera" on the <strong>{activeSide.toUpperCase()}</strong> card above to add this panel's image.
+                  <div style={{ fontWeight: 700, fontSize: '0.92rem', color: '#ffffff', marginBottom: '4px' }}>
+                    Optical Reticle: No Image for {activeSide.toUpperCase()} Panel
+                  </div>
+                  <div style={{ fontSize: '0.78rem', marginBottom: '16px', maxWidth: '360px', margin: '0 auto 16px', color: 'var(--text-secondary)' }}>
+                    Capture packaging surface via device camera or browse high-resolution label photo to engage automated compliance audit.
                   </div>
                   <button
                     type="button"
                     onClick={() => openFileInputForSide(activeSide)}
                     className="btn btn-primary"
-                    style={{ padding: '6px 14px', fontSize: '0.78rem', gap: '6px' }}
+                    style={{ padding: '8px 18px', fontSize: '0.8rem', gap: '8px', borderRadius: '8px' }}
                   >
-                    <UploadCloud size={14} />
+                    <UploadCloud size={15} />
                     Browse {activeSide.toUpperCase()} Photo
                   </button>
                 </div>
@@ -1235,12 +1375,21 @@ export const ScanUploadPage: React.FC<ScanUploadPageProps> = ({
               className="btn btn-primary"
               style={{
                 width: '100%',
-                padding: '16px',
+                padding: '16px 24px',
                 fontSize: '1rem',
-                fontWeight: 700,
-                gap: '10px',
-                marginTop: '6px',
-                boxShadow: (hasAnyImage || manualText) && !isProcessing ? '0 4px 20px rgba(37, 99, 235, 0.35)' : 'none'
+                fontWeight: 800,
+                letterSpacing: '0.02em',
+                gap: '12px',
+                marginTop: '10px',
+                borderRadius: '12px',
+                background: (!hasAnyImage && !manualText) || isProcessing
+                  ? 'rgba(255, 255, 255, 0.06)'
+                  : 'linear-gradient(135deg, #1e40af 0%, #2563eb 50%, #0284c7 100%)',
+                boxShadow: (hasAnyImage || manualText) && !isProcessing
+                  ? '0 8px 30px rgba(37, 99, 235, 0.55), 0 0 20px rgba(56, 189, 248, 0.35), inset 0 1px 1px rgba(255, 255, 255, 0.4)'
+                  : 'none',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+                transition: 'all 0.25s cubic-bezier(0.16, 1, 0.3, 1)'
               }}
             >
               {isProcessing ? (
@@ -1252,13 +1401,13 @@ export const ScanUploadPage: React.FC<ScanUploadPageProps> = ({
                 </>
               ) : (
                 <>
-                  <Sparkles size={20} />
+                  <Sparkles size={20} color="#38bdf8" style={{ filter: 'drop-shadow(0 0 6px rgba(56, 189, 248, 0.8))' }} />
                   <span>
                     {uploadedSides.length > 1
-                      ? `Extract Declarations from ${uploadedSides.length} Panels & Run OCR`
+                      ? `Extract Declarations from ${uploadedSides.length} Panels & Run Statutory Audit`
                       : uploadedSides.length === 1
-                      ? `Extract Declarations (${uploadedSides[0].toUpperCase()} Panel) & Run OCR`
-                      : 'Extract Declarations & Run OCR'}
+                      ? `Extract Declarations (${uploadedSides[0].toUpperCase()} Panel) & Run Statutory Audit`
+                      : 'Extract Declarations & Run Statutory Audit'}
                   </span>
                   <ArrowRight size={20} />
                 </>

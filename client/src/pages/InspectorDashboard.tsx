@@ -111,12 +111,33 @@ export const InspectorDashboard: React.FC<InspectorDashboardProps> = ({
       {/* KPI Counters Grid */}
       <div className="grid-4" style={{ marginBottom: '32px', gap: '16px' }}>
         {/* Total Scans */}
-        <div className="glass-panel" style={{ padding: '20px 22px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: 'var(--text-secondary)', fontSize: '0.74rem', fontWeight: 700, letterSpacing: '0.04em' }}>
-            <span>TOTAL INSPECTIONS</span>
-            <Layers size={18} color="#60a5fa" />
+        <div 
+          className="glass-panel kpi-card" 
+          style={{ 
+            padding: '22px 24px',
+            ['--kpi-accent' as any]: '#3b82f6',
+            ['--kpi-glow' as any]: 'rgba(59, 130, 246, 0.3)',
+            background: 'radial-gradient(circle at 10% 0%, rgba(59, 130, 246, 0.08) 0%, rgba(13, 20, 38, 0.75) 70%)'
+          }}
+        >
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+            <span style={{ color: 'var(--text-secondary)', fontSize: '0.74rem', fontWeight: 700, letterSpacing: '0.05em' }}>
+              TOTAL INSPECTIONS
+            </span>
+            <div style={{
+              width: '36px',
+              height: '36px',
+              borderRadius: '8px',
+              background: 'rgba(59, 130, 246, 0.12)',
+              border: '1px solid rgba(59, 130, 246, 0.3)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}>
+              <Layers size={18} color="#60a5fa" />
+            </div>
           </div>
-          <div style={{ fontSize: '2.2rem', fontWeight: 800, margin: '8px 0 2px', color: '#ffffff', lineHeight: 1.1 }}>
+          <div style={{ fontSize: '2.4rem', fontWeight: 800, margin: '4px 0 2px', color: '#ffffff', lineHeight: 1.1, fontFamily: 'var(--font-heading)' }}>
             {stats ? stats.total_scans : 2}
           </div>
           <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
@@ -125,46 +146,109 @@ export const InspectorDashboard: React.FC<InspectorDashboardProps> = ({
         </div>
 
         {/* Compliant Scans */}
-        <div className="glass-panel" style={{ padding: '20px 22px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: '#34d399', fontSize: '0.74rem', fontWeight: 700, letterSpacing: '0.04em' }}>
-            <span>COMPLIANT LABELS</span>
-            <CheckCircle2 size={18} color="#10b981" />
+        <div 
+          className="glass-panel kpi-card" 
+          style={{ 
+            padding: '22px 24px',
+            ['--kpi-accent' as any]: '#10b981',
+            ['--kpi-glow' as any]: 'rgba(16, 185, 129, 0.3)',
+            background: 'radial-gradient(circle at 10% 0%, rgba(16, 185, 129, 0.08) 0%, rgba(13, 20, 38, 0.75) 70%)'
+          }}
+        >
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+            <span style={{ color: '#34d399', fontSize: '0.74rem', fontWeight: 700, letterSpacing: '0.05em' }}>
+              COMPLIANT LABELS
+            </span>
+            <div style={{
+              width: '36px',
+              height: '36px',
+              borderRadius: '8px',
+              background: 'rgba(16, 185, 129, 0.12)',
+              border: '1px solid rgba(16, 185, 129, 0.3)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}>
+              <CheckCircle2 size={18} color="#10b981" />
+            </div>
           </div>
-          <div style={{ fontSize: '2.2rem', fontWeight: 800, margin: '8px 0 2px', color: '#10b981', lineHeight: 1.1 }}>
+          <div style={{ fontSize: '2.4rem', fontWeight: 800, margin: '4px 0 2px', color: '#10b981', lineHeight: 1.1, fontFamily: 'var(--font-heading)' }}>
             {stats ? stats.compliant_scans : 1}
           </div>
-          <div style={{ fontSize: '0.72rem', color: '#34d399', display: 'flex', alignItems: 'center', gap: '4px' }}>
-            <span>✅</span>
-            <span>{stats ? `${stats.compliance_rate}% pass rate` : '50% pass rate'}</span>
+          <div style={{ fontSize: '0.72rem', color: '#34d399', display: 'flex', alignItems: 'center', gap: '5px' }}>
+            <span style={{ fontSize: '0.8rem' }}>●</span>
+            <span style={{ fontWeight: 600 }}>{stats ? `${stats.compliance_rate}% statutory pass rate` : '50% pass rate'}</span>
           </div>
         </div>
 
         {/* Non-Compliant Scans */}
-        <div className="glass-panel" style={{ padding: '20px 22px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: '#f87171', fontSize: '0.74rem', fontWeight: 700, letterSpacing: '0.04em' }}>
-            <span>VIOLATIONS DETECTED</span>
-            <AlertOctagon size={18} color="#f43f5e" />
+        <div 
+          className="glass-panel kpi-card" 
+          style={{ 
+            padding: '22px 24px',
+            ['--kpi-accent' as any]: '#f43f5e',
+            ['--kpi-glow' as any]: 'rgba(244, 63, 94, 0.3)',
+            background: 'radial-gradient(circle at 10% 0%, rgba(244, 63, 94, 0.08) 0%, rgba(13, 20, 38, 0.75) 70%)'
+          }}
+        >
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+            <span style={{ color: '#f87171', fontSize: '0.74rem', fontWeight: 700, letterSpacing: '0.05em' }}>
+              VIOLATIONS DETECTED
+            </span>
+            <div style={{
+              width: '36px',
+              height: '36px',
+              borderRadius: '8px',
+              background: 'rgba(244, 63, 94, 0.12)',
+              border: '1px solid rgba(244, 63, 94, 0.3)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}>
+              <AlertOctagon size={18} color="#f43f5e" />
+            </div>
           </div>
-          <div style={{ fontSize: '2.2rem', fontWeight: 800, margin: '8px 0 2px', color: '#f43f5e', lineHeight: 1.1 }}>
+          <div style={{ fontSize: '2.4rem', fontWeight: 800, margin: '4px 0 2px', color: '#f43f5e', lineHeight: 1.1, fontFamily: 'var(--font-heading)' }}>
             {stats ? stats.total_violations : 3}
           </div>
-          <div style={{ fontSize: '0.72rem', color: '#f87171', display: 'flex', alignItems: 'center', gap: '4px' }}>
-            <span>❌</span>
+          <div style={{ fontSize: '0.72rem', color: '#f87171', display: 'flex', alignItems: 'center', gap: '5px' }}>
+            <span style={{ fontSize: '0.8rem' }}>●</span>
             <span>Across {stats ? stats.non_compliant_scans : 1} non-compliant packages</span>
           </div>
         </div>
 
         {/* Penalties Estimated */}
-        <div className="glass-panel" style={{ padding: '20px 22px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: '#fbbf24', fontSize: '0.74rem', fontWeight: 700, letterSpacing: '0.04em' }}>
-            <span>COMPOUNDING FINES</span>
-            <IndianRupee size={18} color="#facc15" />
+        <div 
+          className="glass-panel kpi-card" 
+          style={{ 
+            padding: '22px 24px',
+            ['--kpi-accent' as any]: '#f59e0b',
+            ['--kpi-glow' as any]: 'rgba(245, 158, 11, 0.3)',
+            background: 'radial-gradient(circle at 10% 0%, rgba(245, 158, 11, 0.08) 0%, rgba(13, 20, 38, 0.75) 70%)'
+          }}
+        >
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+            <span style={{ color: '#fbbf24', fontSize: '0.74rem', fontWeight: 700, letterSpacing: '0.05em' }}>
+              COMPOUNDING FINES
+            </span>
+            <div style={{
+              width: '36px',
+              height: '36px',
+              borderRadius: '8px',
+              background: 'rgba(245, 158, 11, 0.12)',
+              border: '1px solid rgba(245, 158, 11, 0.3)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}>
+              <IndianRupee size={18} color="#facc15" />
+            </div>
           </div>
-          <div style={{ fontSize: '2.2rem', fontWeight: 800, margin: '8px 0 2px', color: '#facc15', lineHeight: 1.1 }}>
+          <div style={{ fontSize: '2.4rem', fontWeight: 800, margin: '4px 0 2px', color: '#facc15', lineHeight: 1.1, fontFamily: 'var(--font-heading)' }}>
             ₹{stats ? stats.total_penalties_estimated.toLocaleString('en-IN') : '75,000'}
           </div>
           <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-            Statutory fines under Sec. 36
+            Statutory compounding under Sec. 36
           </div>
         </div>
       </div>
