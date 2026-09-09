@@ -84,20 +84,48 @@ async function preprocessImageForOcr(dataUrl: string): Promise<string> {
   });
 }
 
+type PackageSide = 'front' | 'back' | 'side';
+
+interface SideData {
+  previewUrl: string | null;
+  imageMeta: ImageMetadata | null;
+}
+
 export const ScanUploadPage: React.FC<ScanUploadPageProps> = ({
   user,
   initialSample,
   onOcrComplete
 }) => {
   const [selectedSample, setSelectedSample] = useState<SampleLabel | null>(initialSample || null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(initialSample?.svgDataUrl || null);
-  const [imageMeta, setImageMeta] = useState<ImageMetadata | null>(null);
+  const [activeSide, setActiveSide] = useState<PackageSide>('front');
+  const [sideImages, setSideImages] = useState<Record<PackageSide, SideData>>({
+    front: {
+      previewUrl: initialSample?.svgDataUrl || null,
+      imageMeta: initialSample ? {
+        name: `${initialSample.name.replace(/\s+/g, '_')}_front.svg`,
+        size: 'Benchmark Vector',
+        width: 600,
+        height: 420
+      } : null
+    },
+    back: { previewUrl: null, imageMeta: null },
+    side: { previewUrl: null, imageMeta: null }
+  });
   
   const [productName, setProductName] = useState(initialSample?.name || '');
   const [brand, setBrand] = useState(initialSample?.brand || '');
   const [category, setCategory] = useState(initialSample?.category || 'General Packaged Commodity');
-  const [activeSide, setActiveSide] = useState<'front' | 'back' | 'side'>('front');
   const [isDragOver, setIsDragOver] = useState(false);
+
+  // Active side derived variables
+  const previewUrl = sideImages[activeSide].previewUrl;
+  const imageMeta = sideImages[activeSide].imageMeta;
+
+  const uploadedSides = (['front', 'back', 'side'] as const).filter(
+    (s) => !!sideImages[s].previewUrl
+  );
+  const totalUploadedCount = uploadedSides.length;
+  const hasAnyImage = totalUploadedCount > 0;
 
   // Processing & Loading State
   const [isProcessing, setIsProcessing] = useState(false);
@@ -112,11 +140,17 @@ export const ScanUploadPage: React.FC<ScanUploadPageProps> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
 
+  const updateSideImage = (side: PackageSide, url: string | null, meta: ImageMetadata | null) => {
+    setSideImages(prev => ({
+      ...prev,
+      [side]: { previewUrl: url, imageMeta: meta }
+    }));
+  };
+
   const handleCameraCapture = (captured: CapturedImageData) => {
     setSelectedSample(null);
-    setPreviewUrl(captured.dataUrl);
-    setImageMeta({
-      name: captured.name,
+    updateSideImage(activeSide, captured.dataUrl, {
+      name: `${captured.name.replace('.jpg', '')}_${activeSide}.jpg`,
       size: captured.size,
       width: captured.width,
       height: captured.height
@@ -125,39 +159,28 @@ export const ScanUploadPage: React.FC<ScanUploadPageProps> = ({
     setManualTextFallback(false);
   };
 
-  // Inspect image dimensions whenever previewUrl changes
-  useEffect(() => {
-    if (!previewUrl) {
-      setImageMeta(null);
-      return;
-    }
-    const img = new Image();
-    img.onload = () => {
-      setImageMeta(prev => ({
-        name: prev?.name || 'Packaged Commodity Image',
-        size: prev?.size || 'Standard Image',
-        width: img.naturalWidth || img.width,
-        height: img.naturalHeight || img.height
-      }));
-    };
-    img.src = previewUrl;
-  }, [previewUrl]);
-
   // When a preset benchmark is chosen
   const handleSelectBenchmark = (sample: SampleLabel) => {
     setSelectedSample(sample);
-    setPreviewUrl(sample.svgDataUrl);
+    setSideImages({
+      front: {
+        previewUrl: sample.svgDataUrl,
+        imageMeta: {
+          name: `${sample.name.replace(/\s+/g, '_')}_front.svg`,
+          size: 'Benchmark Vector',
+          width: 600,
+          height: 420
+        }
+      },
+      back: { previewUrl: null, imageMeta: null },
+      side: { previewUrl: null, imageMeta: null }
+    });
+    setActiveSide('front');
     setProductName(sample.name);
     setBrand(sample.brand);
     setCategory(sample.category);
     setOcrError(null);
     setManualTextFallback(false);
-    setImageMeta({
-      name: `${sample.name.replace(/\s+/g, '_')}.svg`,
-      size: 'Benchmark Vector',
-      width: 600,
-      height: 420
-    });
   };
 
   // Custom File upload handler
@@ -178,27 +201,40 @@ export const ScanUploadPage: React.FC<ScanUploadPageProps> = ({
     const reader = new FileReader();
     reader.onload = () => {
       const dataUrl = reader.result as string;
-      setPreviewUrl(dataUrl);
+      const meta: ImageMetadata = {
+        name: `${file.name} (${activeSide.toUpperCase()})`,
+        size: sizeFormatted,
+        width: 0,
+        height: 0
+      };
+
+      const img = new Image();
+      img.onload = () => {
+        meta.width = img.naturalWidth || img.width;
+        meta.height = img.naturalHeight || img.height;
+        updateSideImage(activeSide, dataUrl, meta);
+      };
+      img.onerror = () => {
+        updateSideImage(activeSide, dataUrl, meta);
+      };
+      img.src = dataUrl;
 
       // Auto-populate product name from filename if empty
       const baseName = file.name.replace(/\.[^/.]+$/, "").replace(/[-_]/g, " ");
       if (!productName || productName === 'Table Butter 100g') {
         setProductName(baseName.charAt(0).toUpperCase() + baseName.slice(1));
       }
-
-      setImageMeta({
-        name: file.name,
-        size: sizeFormatted,
-        width: 0,
-        height: 0
-      });
     };
     reader.readAsDataURL(file);
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) processUploadedFile(file);
+    if (file) {
+      processUploadedFile(file);
+      // Reset input value so same file can be chosen again if needed
+      e.target.value = '';
+    }
   };
 
   const handleDrop = (e: React.DragEvent) => {
@@ -208,17 +244,16 @@ export const ScanUploadPage: React.FC<ScanUploadPageProps> = ({
     if (file) processUploadedFile(file);
   };
 
-  const handleClearImage = () => {
-    setPreviewUrl(null);
+  const handleClearImage = (sideToClear: PackageSide = activeSide) => {
+    updateSideImage(sideToClear, null, null);
     setSelectedSample(null);
-    setImageMeta(null);
     setOcrError(null);
     setManualTextFallback(false);
   };
 
   // Run OCR & Analysis
   const handleStartAnalysis = async () => {
-    if (!previewUrl && !manualText) return;
+    if (!hasAnyImage && !manualText) return;
 
     setIsProcessing(true);
     setOcrError(null);
@@ -263,15 +298,12 @@ export const ScanUploadPage: React.FC<ScanUploadPageProps> = ({
           boundingBoxes: selectedSample.boundingBoxes
         });
       } else {
-        // Real user uploaded file: Canvas Preprocessing + Tesseract Worker
-        setActiveStage(1);
-        setOcrProgress(15);
-        setStatusMessage("Pre-processing label: Enhancing contrast & high-DPI scaling...");
-        const processedUrl = await preprocessImageForOcr(previewUrl!);
-
+        // Real user uploaded files: Process all uploaded panels (front, back, side)
+        const targetSides = uploadedSides.length > 0 ? uploadedSides : [activeSide];
+        
         setActiveStage(2);
-        setOcrProgress(30);
-        setStatusMessage("Loading Tesseract OCR WASM engine & linguistic neural network...");
+        setOcrProgress(20);
+        setStatusMessage(`Loading Tesseract OCR WASM engine & linguistic neural network...`);
 
         const { createWorker } = await import('tesseract.js');
         const worker = await createWorker('eng', 1, {
@@ -279,9 +311,7 @@ export const ScanUploadPage: React.FC<ScanUploadPageProps> = ({
             if (m.status === 'recognizing text') {
               setActiveStage(3);
               const progressPct = Math.round((m.progress || 0) * 100);
-              const overallPct = Math.min(88, Math.round(35 + (m.progress || 0) * 50));
-              setOcrProgress(overallPct);
-              setStatusMessage(`Scanning label typography & extracting characters (${progressPct}%)...`);
+              setStatusMessage(`Scanning packaging typography (${progressPct}%)...`);
             } else if (m.status === 'loading language traineddata') {
               setOcrProgress(25);
               setStatusMessage("Downloading & caching English trained language models...");
@@ -289,70 +319,91 @@ export const ScanUploadPage: React.FC<ScanUploadPageProps> = ({
           }
         });
 
-        const ret = await worker.recognize(processedUrl);
-        await worker.terminate();
-
-        const extractedText = (ret.data.text || '').trim();
-
-        // Generate bounding box candidates from real recognized lines/words
+        const extractedPanelTexts: string[] = [];
         const dynamicBoxes: any[] = [];
-        if (ret.data && (ret.data as any).lines) {
-          const lines = (ret.data as any).lines;
-          lines.slice(0, 15).forEach((line: any, idx: number) => {
-            const bbox = line.bbox;
-            if (bbox && line.text && line.text.trim().length > 3) {
-              const textLower = line.text.toLowerCase();
-              let field = `line_${idx}`;
-              let label = 'Declaration';
-              let status: 'valid' | 'invalid' | 'warning' = 'valid';
 
-              if (/mrp|price|₹|rs/i.test(textLower)) {
-                field = 'mrp';
-                label = 'MRP Declaration';
-                status = /taxes/i.test(textLower) ? 'valid' : 'invalid';
-              } else if (/net|qty|g|kg|ml/i.test(textLower)) {
-                field = 'net_quantity';
-                label = 'Net Quantity';
-                status = /gms|gm\b/i.test(textLower) ? 'invalid' : 'valid';
-              } else if (/mfd|pkd|date|\d{2}[\/-]\d{4}/i.test(textLower)) {
-                field = 'mfg_date';
-                label = 'Mfg Date';
-              } else if (/mfd\s*by|packed\s*by|ltd|cooperative/i.test(textLower)) {
-                field = 'manufacturer';
-                label = 'Manufacturer';
-              } else if (/care|call|email|helpline/i.test(textLower)) {
-                field = 'consumer_care';
-                label = 'Consumer Care';
+        for (let i = 0; i < targetSides.length; i++) {
+          const side = targetSides[i];
+          const sideData = sideImages[side];
+          if (!sideData.previewUrl) continue;
+
+          const panelStepProgress = Math.min(88, Math.round(30 + ((i + 0.5) / targetSides.length) * 55));
+          setOcrProgress(panelStepProgress);
+          setStatusMessage(`Scanning ${side.toUpperCase()} panel (${i + 1}/${targetSides.length})...`);
+
+          const processedUrl = await preprocessImageForOcr(sideData.previewUrl);
+          const ret = await worker.recognize(processedUrl);
+          const sideText = (ret.data.text || '').trim();
+
+          if (sideText) {
+            extractedPanelTexts.push(`--- ${side.toUpperCase()} PANEL DECLARATIONS ---\n${sideText}`);
+          }
+
+          // Generate bounding box candidates from real recognized lines/words
+          if (ret.data && (ret.data as any).lines) {
+            const lines = (ret.data as any).lines;
+            lines.slice(0, 10).forEach((line: any, idx: number) => {
+              const bbox = line.bbox;
+              if (bbox && line.text && line.text.trim().length > 3) {
+                const textLower = line.text.toLowerCase();
+                let field = `${side}_line_${idx}`;
+                let label = `${side.toUpperCase()} Declaration`;
+                let status: 'valid' | 'invalid' | 'warning' = 'valid';
+
+                if (/mrp|price|₹|rs/i.test(textLower)) {
+                  field = 'mrp';
+                  label = 'MRP Declaration';
+                  status = /taxes/i.test(textLower) ? 'valid' : 'invalid';
+                } else if (/net|qty|g|kg|ml/i.test(textLower)) {
+                  field = 'net_quantity';
+                  label = 'Net Quantity';
+                  status = /gms|gm\b/i.test(textLower) ? 'invalid' : 'valid';
+                } else if (/mfd|pkd|date|\d{2}[\/-]\d{4}/i.test(textLower)) {
+                  field = 'mfg_date';
+                  label = 'Mfg Date';
+                } else if (/mfd\s*by|packed\s*by|ltd|cooperative/i.test(textLower)) {
+                  field = 'manufacturer';
+                  label = 'Manufacturer';
+                } else if (/care|call|email|helpline/i.test(textLower)) {
+                  field = 'consumer_care';
+                  label = 'Consumer Care';
+                }
+
+                // Normalize coordinates to 600x420 coordinate space for overlay
+                const imgW = sideData.imageMeta?.width || 600;
+                const imgH = sideData.imageMeta?.height || 420;
+                dynamicBoxes.push({
+                  field,
+                  label,
+                  x: Math.round((bbox.x0 / imgW) * 600),
+                  y: Math.round((bbox.y0 / imgH) * 420),
+                  width: Math.max(40, Math.round(((bbox.x1 - bbox.x0) / imgW) * 600)),
+                  height: Math.max(16, Math.round(((bbox.y1 - bbox.y0) / imgH) * 420)),
+                  status
+                });
               }
-
-              // Normalize coordinates to 600x420 coordinate space for overlay
-              const imgW = imageMeta?.width || 600;
-              const imgH = imageMeta?.height || 420;
-              dynamicBoxes.push({
-                field,
-                label,
-                x: Math.round((bbox.x0 / imgW) * 600),
-                y: Math.round((bbox.y0 / imgH) * 420),
-                width: Math.max(40, Math.round(((bbox.x1 - bbox.x0) / imgW) * 600)),
-                height: Math.max(16, Math.round(((bbox.y1 - bbox.y0) / imgH) * 420)),
-                status
-              });
-            }
-          });
+            });
+          }
         }
 
-        if (!extractedText || extractedText.length < 5) {
+        await worker.terminate();
+
+        const combinedExtractedText = extractedPanelTexts.join('\n\n').trim();
+
+        if (!combinedExtractedText || combinedExtractedText.length < 5) {
           setManualTextFallback(true);
-          throw new Error("OCR detected very little text. The image may be blurry, low-contrast, or photographed at an angle.");
+          throw new Error("OCR detected very little text across the uploaded panels. The images may be blurry, low-contrast, or photographed at an angle.");
         }
 
         setActiveStage(4);
         setOcrProgress(92);
-        setStatusMessage("Parsing statutory declarations through Legal Metrology NLP...");
+        setStatusMessage(`Parsing statutory declarations from ${targetSides.length} panel(s) through Legal Metrology NLP...`);
+
+        const primaryImageUrl = sideImages.front.previewUrl || sideImages.back.previewUrl || sideImages.side.previewUrl || previewUrl || '';
 
         const parsedRes = await api.processOcr({
-          raw_text: extractedText,
-          image_url: previewUrl || undefined,
+          raw_text: combinedExtractedText,
+          image_url: primaryImageUrl || undefined,
           product_name: productName,
           brand: brand,
           category: category
@@ -361,11 +412,11 @@ export const ScanUploadPage: React.FC<ScanUploadPageProps> = ({
         setOcrProgress(100);
 
         onOcrComplete({
-          imageUrl: previewUrl!,
+          imageUrl: primaryImageUrl,
           productName: productName || parsedRes.parsed_fields.commodity_name || "Packaged Commodity",
           brand: brand || parsedRes.parsed_fields.manufacturer?.name || "Packer / Manufacturer",
           category,
-          rawText: extractedText,
+          rawText: combinedExtractedText,
           parsedFields: parsedRes.parsed_fields,
           boundingBoxes: dynamicBoxes.length > 0 ? dynamicBoxes : undefined
         });
@@ -522,37 +573,65 @@ export const ScanUploadPage: React.FC<ScanUploadPageProps> = ({
         
         {/* Left Column: Image Upload & Live Preview Card */}
         <div className="glass-panel" style={{ padding: '24px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
-            <span style={{ fontSize: '0.82rem', fontWeight: 800, letterSpacing: '0.05em', color: 'var(--text-secondary)' }}>
-              1. COMMODITY LABEL IMAGE
-            </span>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', flexWrap: 'wrap', gap: '8px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ fontSize: '0.82rem', fontWeight: 800, letterSpacing: '0.05em', color: 'var(--text-secondary)' }}>
+                1. COMMODITY LABEL PANELS
+              </span>
+              <span style={{
+                fontSize: '0.7rem',
+                background: totalUploadedCount > 0 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(255, 255, 255, 0.08)',
+                color: totalUploadedCount > 0 ? '#34d399' : 'var(--text-muted)',
+                padding: '2px 8px',
+                borderRadius: '9999px',
+                fontWeight: 600
+              }}>
+                {totalUploadedCount}/3 Uploaded
+              </span>
+            </div>
             
-            {/* Multi-side tabs */}
-            <div style={{ display: 'flex', gap: '4px', background: 'rgba(15, 23, 42, 0.6)', padding: '2px', borderRadius: '8px' }}>
-              {(['front', 'back', 'side'] as const).map((side) => (
-                <button
-                  key={side}
-                  onClick={() => setActiveSide(side)}
-                  style={{
-                    padding: '3px 10px',
-                    fontSize: '0.72rem',
-                    fontWeight: 600,
-                    textTransform: 'capitalize',
-                    borderRadius: '6px',
-                    border: 'none',
-                    background: activeSide === side ? 'var(--accent-blue)' : 'transparent',
-                    color: activeSide === side ? '#ffffff' : 'var(--text-secondary)',
-                    cursor: 'pointer',
-                    transition: 'all 0.15s ease'
-                  }}
-                >
-                  {side}
-                </button>
-              ))}
+            {/* Multi-side tabs with independent status */}
+            <div style={{ display: 'flex', gap: '4px', background: 'rgba(15, 23, 42, 0.7)', padding: '3px', borderRadius: '8px', border: '1px solid var(--border-subtle)' }}>
+              {(['front', 'back', 'side'] as const).map((side) => {
+                const hasImg = !!sideImages[side].previewUrl;
+                return (
+                  <button
+                    key={side}
+                    type="button"
+                    onClick={() => setActiveSide(side)}
+                    style={{
+                      padding: '4px 10px',
+                      fontSize: '0.74rem',
+                      fontWeight: 700,
+                      textTransform: 'capitalize',
+                      borderRadius: '6px',
+                      border: activeSide === side ? '1px solid rgba(59, 130, 246, 0.6)' : '1px solid transparent',
+                      background: activeSide === side ? 'var(--accent-blue)' : 'transparent',
+                      color: activeSide === side ? '#ffffff' : hasImg ? '#93c5fd' : 'var(--text-secondary)',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      transition: 'all 0.15s ease'
+                    }}
+                  >
+                    <span style={{
+                      display: 'inline-block',
+                      width: '7px',
+                      height: '7px',
+                      borderRadius: '50%',
+                      background: hasImg ? '#34d399' : 'rgba(255,255,255,0.25)',
+                      boxShadow: hasImg ? '0 0 6px #34d399' : 'none'
+                    }} />
+                    <span>{side}</span>
+                    {hasImg && <span style={{ fontSize: '0.65rem', opacity: 0.85 }}>✓</span>}
+                  </button>
+                );
+              })}
             </div>
           </div>
 
-          {/* Upload Drop Zone / Image Preview */}
+          {/* Upload Drop Zone / Image Preview for Active Side */}
           <div
             onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
             onDragLeave={() => setIsDragOver(false)}
@@ -591,11 +670,30 @@ export const ScanUploadPage: React.FC<ScanUploadPageProps> = ({
 
             {previewUrl ? (
               <div style={{ width: '100%', position: 'relative' }}>
+                {/* Active Panel Badge */}
+                <div style={{
+                  position: 'absolute',
+                  top: '10px',
+                  left: '10px',
+                  zIndex: 15,
+                  background: 'rgba(15, 23, 42, 0.85)',
+                  border: '1px solid rgba(59, 130, 246, 0.5)',
+                  padding: '3px 10px',
+                  borderRadius: '6px',
+                  fontSize: '0.72rem',
+                  fontWeight: 700,
+                  color: '#93c5fd',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.04em'
+                }}>
+                  {activeSide} Panel Active
+                </div>
+
                 {/* Image Container with Scanning Animation when processing */}
                 <div style={{ position: 'relative', overflow: 'hidden', borderRadius: '8px' }}>
                   <img
                     src={previewUrl}
-                    alt="Packaging Label Preview"
+                    alt={`${activeSide} Label Preview`}
                     style={{
                       width: '100%',
                       maxHeight: '320px',
@@ -682,7 +780,7 @@ export const ScanUploadPage: React.FC<ScanUploadPageProps> = ({
                       <span>•</span>
                       <button
                         type="button"
-                        onClick={handleClearImage}
+                        onClick={() => handleClearImage(activeSide)}
                         style={{
                           background: 'transparent',
                           border: 'none',
@@ -713,11 +811,15 @@ export const ScanUploadPage: React.FC<ScanUploadPageProps> = ({
                 }}>
                   <UploadCloud size={30} />
                 </div>
-                <div style={{ fontWeight: 700, fontSize: '1rem', marginBottom: '6px' }}>
-                  Upload Genuine Product Packaging
+                <div style={{ fontWeight: 700, fontSize: '1rem', marginBottom: '6px', textTransform: 'capitalize' }}>
+                  Upload {activeSide} Packaging Panel
                 </div>
-                <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '16px', maxWidth: '340px', lineHeight: 1.4 }}>
-                  Drag &amp; drop any real packaging photo, product box, or pouch label to extract actual statutory declarations.
+                <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '16px', maxWidth: '360px', lineHeight: 1.4 }}>
+                  {activeSide === 'front'
+                    ? 'Upload front view (Brand, Commodity Name, and Net Quantity declarations).'
+                    : activeSide === 'back'
+                    ? 'Upload back view (Manufacturer Name & Address, Date of Mfg, and MRP with Taxes).'
+                    : 'Upload side view (Consumer Care helpline, Country of Origin, or Unit Sale Price).'}
                 </div>
 
                 <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
@@ -743,6 +845,79 @@ export const ScanUploadPage: React.FC<ScanUploadPageProps> = ({
                 </div>
               </div>
             )}
+          </div>
+
+          {/* Multi-Side 3-Panel Thumbnail Strip */}
+          <div style={{
+            marginTop: '14px',
+            display: 'grid',
+            gridTemplateColumns: 'repeat(3, 1fr)',
+            gap: '8px'
+          }}>
+            {(['front', 'back', 'side'] as const).map((side) => {
+              const data = sideImages[side];
+              const isActive = activeSide === side;
+              const hasImg = !!data.previewUrl;
+              return (
+                <div
+                  key={side}
+                  onClick={() => setActiveSide(side)}
+                  style={{
+                    padding: '8px 10px',
+                    borderRadius: '8px',
+                    border: `1px solid ${isActive ? 'var(--accent-blue)' : 'var(--border-subtle)'}`,
+                    background: isActive ? 'rgba(37, 99, 235, 0.15)' : 'var(--bg-glass)',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    transition: 'all 0.15s ease'
+                  }}
+                >
+                  <div style={{
+                    width: '36px',
+                    height: '36px',
+                    borderRadius: '6px',
+                    background: '#090d16',
+                    overflow: 'hidden',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexShrink: 0,
+                    border: '1px solid var(--border-card)'
+                  }}>
+                    {hasImg ? (
+                      <img
+                        src={data.previewUrl!}
+                        alt={`${side} thumbnail`}
+                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                      />
+                    ) : (
+                      <ImageIcon size={16} color="var(--text-muted)" />
+                    )}
+                  </div>
+                  <div style={{ minWidth: 0, flex: 1 }}>
+                    <div style={{
+                      fontSize: '0.74rem',
+                      fontWeight: 700,
+                      textTransform: 'capitalize',
+                      color: isActive ? '#60a5fa' : '#ffffff'
+                    }}>
+                      {side} View
+                    </div>
+                    <div style={{
+                      fontSize: '0.68rem',
+                      color: hasImg ? '#34d399' : 'var(--text-muted)',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap'
+                    }}>
+                      {hasImg ? 'Uploaded ✓' : '+ Upload'}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
 
           {/* Quick Benchmark Comparison Presets */}
@@ -956,7 +1131,7 @@ export const ScanUploadPage: React.FC<ScanUploadPageProps> = ({
             {/* Execute Compliance Scan Button */}
             <button
               onClick={handleStartAnalysis}
-              disabled={!previewUrl || isProcessing}
+              disabled={(!hasAnyImage && !manualText) || isProcessing}
               className="btn btn-primary"
               style={{
                 width: '100%',
@@ -965,18 +1140,26 @@ export const ScanUploadPage: React.FC<ScanUploadPageProps> = ({
                 fontWeight: 700,
                 gap: '10px',
                 marginTop: '6px',
-                boxShadow: previewUrl && !isProcessing ? '0 4px 20px rgba(37, 99, 235, 0.35)' : 'none'
+                boxShadow: (hasAnyImage || manualText) && !isProcessing ? '0 4px 20px rgba(37, 99, 235, 0.35)' : 'none'
               }}
             >
               {isProcessing ? (
                 <>
                   <RefreshCw size={20} className="animate-spin" />
-                  <span>Executing OCR &amp; Statutory Validation...</span>
+                  <span>
+                    Executing OCR &amp; Statutory Validation ({uploadedSides.length} panel{uploadedSides.length > 1 ? 's' : ''})...
+                  </span>
                 </>
               ) : (
                 <>
                   <Sparkles size={20} />
-                  <span>Extract Declarations &amp; Run OCR</span>
+                  <span>
+                    {uploadedSides.length > 1
+                      ? `Extract Declarations from ${uploadedSides.length} Panels & Run OCR`
+                      : uploadedSides.length === 1
+                      ? `Extract Declarations (${uploadedSides[0].toUpperCase()} Panel) & Run OCR`
+                      : 'Extract Declarations & Run OCR'}
+                  </span>
                   <ArrowRight size={20} />
                 </>
               )}
