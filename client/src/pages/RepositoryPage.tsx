@@ -4,14 +4,16 @@ import {
   Calendar, ShieldCheck, AlertOctagon, AlertTriangle, Layers 
 } from 'lucide-react';
 import { api } from '../services/api';
-import { Report } from '../types';
+import { Report, User } from '../types';
 
 interface RepositoryPageProps {
+  user?: User | null;
   onViewReport: (scanId: string) => void;
   onNewScan: () => void;
 }
 
 export const RepositoryPage: React.FC<RepositoryPageProps> = ({
+  user,
   onViewReport,
   onNewScan
 }) => {
@@ -65,14 +67,17 @@ export const RepositoryPage: React.FC<RepositoryPageProps> = ({
           </p>
         </div>
 
-        <button
-          onClick={onNewScan}
-          className="btn btn-primary"
-          style={{ gap: '8px' }}
-        >
-          <Layers size={16} />
-          New Inspection
-        </button>
+        {/* Hide New Inspection button strictly for ADMIN users */}
+        {user?.role === 'inspector' && (
+          <button
+            onClick={onNewScan}
+            className="btn btn-primary"
+            style={{ gap: '8px' }}
+          >
+            <Layers size={16} />
+            New Inspection
+          </button>
+        )}
       </div>
 
       {/* Search & Filter Toolbar */}

@@ -4,15 +4,17 @@ import {
   AlertTriangle, Scale, CheckCircle2, FileText, Send, Share2, CornerDownRight 
 } from 'lucide-react';
 import { api } from '../services/api';
-import { Report, Scan, Violation } from '../types';
+import { Report, Scan, Violation, User } from '../types';
 
 interface ComplianceReportPageProps {
+  user?: User | null;
   reportId: string;
   onBack: () => void;
   onNewScan: () => void;
 }
 
 export const ComplianceReportPage: React.FC<ComplianceReportPageProps> = ({
+  user,
   reportId,
   onBack,
   onNewScan
@@ -79,7 +81,7 @@ export const ComplianceReportPage: React.FC<ComplianceReportPageProps> = ({
       }}>
         <button onClick={onBack} className="btn btn-secondary">
           <ArrowLeft size={16} />
-          Back to Inspections
+          {user?.role === 'admin' ? 'Back to Central Dashboard' : 'Back to Inspections'}
         </button>
 
         <div style={{ display: 'flex', gap: '10px' }}>
@@ -114,14 +116,17 @@ export const ComplianceReportPage: React.FC<ComplianceReportPageProps> = ({
             Export CSV
           </a>
 
-          <button
-            onClick={onNewScan}
-            className="btn btn-success"
-            style={{ gap: '8px' }}
-          >
-            <Scale size={16} />
-            Inspect Another Product
-          </button>
+          {/* Hide Inspect Another Product strictly for ADMIN users */}
+          {user?.role === 'inspector' && (
+            <button
+              onClick={onNewScan}
+              className="btn btn-success"
+              style={{ gap: '8px' }}
+            >
+              <Scale size={16} />
+              Inspect Another Product
+            </button>
+          )}
         </div>
       </div>
 

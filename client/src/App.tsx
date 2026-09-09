@@ -56,6 +56,7 @@ export function App() {
 
   // When a benchmark sample is selected from dashboard
   const handleSelectSample = (sample: SampleLabel) => {
+    if (user?.role === 'admin') return; // strictly block admin
     setActiveSample(sample);
     setCurrentTab('scan');
   };
@@ -96,42 +97,64 @@ export function App() {
       <Navbar
         user={user}
         currentTab={currentTab}
-        onSelectTab={(tab) => setCurrentTab(tab)}
+        onSelectTab={(tab) => {
+          if (user.role === 'admin' && (tab === 'scan' || tab === 'inspector')) {
+            return;
+          }
+          setCurrentTab(tab);
+        }}
         onLogout={handleLogout}
       />
 
       {/* Main Content Area */}
       <main className="main-content">
         {currentTab === 'inspector' && (
-          <InspectorDashboard
-            user={user}
-            onNavigateScan={() => { setActiveSample(null); setCurrentTab('scan'); }}
-            onSelectSample={handleSelectSample}
-            onViewReport={handleViewReport}
-          />
+          user.role === 'admin' ? (
+            <AdminDashboard user={user} />
+          ) : (
+            <InspectorDashboard
+              user={user}
+              onNavigateScan={() => { setActiveSample(null); setCurrentTab('scan'); }}
+              onSelectSample={handleSelectSample}
+              onViewReport={handleViewReport}
+            />
+          )
         )}
 
         {currentTab === 'scan' && (
-          <ScanUploadPage
-            user={user}
-            initialSample={activeSample}
-            onOcrComplete={handleOcrComplete}
-          />
+          user.role === 'admin' ? (
+            <AdminDashboard user={user} />
+          ) : (
+            <ScanUploadPage
+              user={user}
+              initialSample={activeSample}
+              onOcrComplete={handleOcrComplete}
+            />
+          )
         )}
 
         {currentTab === 'results' && scanData && (
-          <ScanResultsPage
-            scanData={scanData}
-            onBack={() => setCurrentTab('scan')}
-            onValidationComplete={handleValidationComplete}
-          />
+          user.role === 'admin' ? (
+            <AdminDashboard user={user} />
+          ) : (
+            <ScanResultsPage
+              scanData={scanData}
+              onBack={() => setCurrentTab('scan')}
+              onValidationComplete={handleValidationComplete}
+            />
+          )
         )}
 
         {currentTab === 'report' && activeReportId && (
           <ComplianceReportPage
+            user={user}
             reportId={activeReportId}
-            onBack={() => setCurrentTab('inspector')}
-            onNewScan={() => { setActiveSample(null); setCurrentTab('scan'); }}
+            onBack={() => setCurrentTab(user.role === 'admin' ? 'admin' : 'inspector')}
+            onNewScan={() => {
+              if (user.role === 'admin') return;
+              setActiveSample(null);
+              setCurrentTab('scan');
+            }}
           />
         )}
 
@@ -141,8 +164,13 @@ export function App() {
 
         {currentTab === 'repository' && (
           <RepositoryPage
+            user={user}
             onViewReport={handleViewReport}
-            onNewScan={() => { setActiveSample(null); setCurrentTab('scan'); }}
+            onNewScan={() => {
+              if (user.role === 'admin') return;
+              setActiveSample(null);
+              setCurrentTab('scan');
+            }}
           />
         )}
       </main>

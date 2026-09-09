@@ -73,14 +73,17 @@ export const InspectorDashboard: React.FC<InspectorDashboardProps> = ({
           </p>
         </div>
 
-        <button
-          onClick={onNavigateScan}
-          className="btn btn-primary"
-          style={{ padding: '12px 24px', fontSize: '0.95rem', gap: '10px' }}
-        >
-          <ScanLine size={18} />
-          Start New Inspection
-        </button>
+        {/* Hide Start New Inspection button strictly for ADMIN users */}
+        {user.role === 'inspector' && (
+          <button
+            onClick={onNavigateScan}
+            className="btn btn-primary"
+            style={{ padding: '12px 24px', fontSize: '0.95rem', gap: '10px' }}
+          >
+            <ScanLine size={18} />
+            Start New Inspection
+          </button>
+        )}
       </div>
 
       {/* KPI Counters Grid */}
@@ -317,7 +320,7 @@ export const InspectorDashboard: React.FC<InspectorDashboardProps> = ({
               ) : (
                 <tr>
                   <td colSpan={6} style={{ textAlign: 'center', padding: '24px', color: 'var(--text-muted)' }}>
-                    No recent inspections recorded. Click "Start New Inspection" above.
+                    No recent inspections recorded.{user.role === 'inspector' ? ' Click "Start New Inspection" above.' : ''}
                   </td>
                 </tr>
               )}
