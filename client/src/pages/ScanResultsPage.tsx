@@ -73,19 +73,43 @@ export const ScanResultsPage: React.FC<ScanResultsPageProps> = ({
   // Field change helpers
   const updateField = (section: keyof ParsedFields, key: string, value: any) => {
     setFields(prev => {
-      const currentSection = prev[section] as any;
-      if (typeof currentSection === 'object' && currentSection !== null) {
-        return {
-          ...prev,
-          [section]: {
-            ...currentSection,
-            [key]: value
-          }
-        };
+      const current = prev[section];
+      const baseObj = (typeof current === 'object' && current !== null) ? { ...current } : {};
+      const updated: any = {
+        ...baseObj,
+        [key]: value
+      };
+
+      if (section === 'manufacturer') {
+        const addr = updated.address || updated.raw || (typeof value === 'string' ? value : '');
+        if (!updated.name && addr) {
+          updated.name = addr.split(',')[0].trim();
+        }
+        updated.has_pincode = /\b\d{6}\b/.test(addr);
+        if (!updated.raw) updated.raw = addr;
+      } else if (section === 'net_quantity') {
+        const raw = (updated.raw || (typeof value === 'string' ? value : '')).trim();
+        const match = raw.match(/(\d+(?:\.\d+)?)\s*([a-zA-Z.]+)/);
+        if (match) {
+          updated.value = parseFloat(match[1]);
+          const rawUnit = match[2].toLowerCase().replace(/\.$/, '');
+          updated.unit = rawUnit;
+          const illegal = ['gm', 'gms', 'g.', 'kg.', 'kgs', 'kilos', 'mls', 'ml.', 'ltr', 'ltrs'];
+          updated.is_standard = !illegal.includes(rawUnit);
+        }
+      } else if (section === 'mfg_date') {
+        const dateStr = (updated.date || (typeof value === 'string' ? value : '')).trim();
+        const dateRegex = /^(?:0[1-9]|1[0-2])\/(?:20\d{2}|\d{2})$|^(?:0[1-9]|[12]\d|3[01])\/(?:0[1-9]|1[0-2])\/(?:20\d{2}|\d{2})$|^(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\s*(?:20\d{2}|\d{2})$/i;
+        updated.is_compliant = dateRegex.test(dateStr);
+      } else if (section === 'mrp') {
+        const raw = (updated.raw || (typeof value === 'string' ? value : '')).trim();
+        updated.includes_taxes = /incl\w*\s*(?:of)?\s*all\s*taxes/i.test(raw);
+        updated.has_currency_symbol = /(?:₹|rs\.?|inr)/i.test(raw);
       }
+
       return {
         ...prev,
-        [section]: value
+        [section]: updated
       };
     });
   };
@@ -121,46 +145,63 @@ export const ScanResultsPage: React.FC<ScanResultsPageProps> = ({
     const list: { type: 'missing' | 'defect'; field: string; message: string; rule: string }[] = [];
 
     // 1. Manufacturer
-    if (!fields.manufacturer || !fields.manufacturer.name) {
+    const mfg = fields.manufacturer as any;
+    const mfgName = typeof mfg === 'object' && mfg !== null ? mfg.name : (typeof mfg === 'string' ? (mfg as string).trim() : '');
+    const mfgAddr = typeof mfg === 'object' && mfg !== null ? (mfg.address || mfg.raw || '') : (typeof mfg === 'string' ? mfg : '');
+    const hasPin = typeof mfg === 'object' && mfg !== null ? Boolean(mfg.has_pincode || /\b\d{6}\b/.test(mfgAddr)) : /\b\d{6}\b/.test(mfgAddr);
+
+    if (!mfg || !mfgName) {
       list.push({ type: 'missing', field: 'manufacturer', message: 'Manufacturer name & address omitted', rule: 'Rule 6(1)(a)' });
+    } else if (!hasPin && mfgAddr.length < 20) {
+      list.push({ type: 'defect', field: 'manufacturer', message: 'Manufacturer address lacks pin code or district', rule: 'Rule 6(1)(a)' });
     }
 
     // 2. Generic Name
-    if (!fields.commodity_name || fields.commodity_name.trim() === 'Packaged Commodity') {
+    const cName = typeof fields.commodity_name === 'string' ? fields.commodity_name.trim() : (fields.commodity_name as any)?.name || '';
+    if (!cName || cName.toLowerCase() === 'packaged commodity') {
       list.push({ type: 'missing', field: 'commodity_name', message: 'Generic commodity name missing', rule: 'Rule 6(1)(b)' });
     }
 
     // 3. Net Quantity
-    if (!fields.net_quantity || !fields.net_quantity.raw) {
+    const nq = fields.net_quantity as any;
+    const nqRaw = typeof nq === 'object' && nq !== null ? (nq.raw || (nq.value ? `${nq.value} ${nq.unit || ''}` : '')) : (typeof nq === 'string' ? nq : '');
+    if (!nq || !nqRaw.trim()) {
       list.push({ type: 'missing', field: 'net_quantity', message: 'Net quantity declaration missing', rule: 'Rule 6(1)(c)' });
-    } else if (!fields.net_quantity.is_standard) {
-      list.push({ type: 'defect', field: 'net_quantity', message: `Illegal non-standard unit '${fields.net_quantity.unit}' (Must use g, kg, ml, l)`, rule: 'Rule 12 & 13' });
+    } else if (typeof nq === 'object' && nq !== null && nq.is_standard === false) {
+      list.push({ type: 'defect', field: 'net_quantity', message: `Illegal non-standard unit '${nq.unit || nqRaw}' (Must use g, kg, ml, l)`, rule: 'Rule 12 & 13' });
     }
 
     // 4. Date of Mfg / Pkg
-    if (!fields.mfg_date || !fields.mfg_date.date) {
+    const md = fields.mfg_date as any;
+    const mdDate = typeof md === 'object' && md !== null ? (md.date || md.raw || '') : (typeof md === 'string' ? md : '');
+    if (!md || !mdDate.trim()) {
       list.push({ type: 'missing', field: 'mfg_date', message: 'Month & year of packing missing', rule: 'Rule 6(1)(d)' });
-    } else if (!fields.mfg_date.is_compliant) {
-      list.push({ type: 'defect', field: 'mfg_date', message: `Invalid date format '${fields.mfg_date.date}' (Prescribed: MM/YYYY or Month YYYY)`, rule: 'Rule 6(1)(d)' });
+    } else if (typeof md === 'object' && md !== null && md.is_compliant === false) {
+      list.push({ type: 'defect', field: 'mfg_date', message: `Invalid date format '${mdDate}' (Prescribed: MM/YYYY or Month YYYY)`, rule: 'Rule 6(1)(d)' });
     }
 
     // 5. MRP
-    if (!fields.mrp || !fields.mrp.raw) {
+    const mrp = fields.mrp as any;
+    const mrpRaw = typeof mrp === 'object' && mrp !== null ? (mrp.raw || (mrp.value ? `Rs. ${mrp.value}` : '')) : (typeof mrp === 'string' ? mrp : '');
+    if (!mrp || !mrpRaw.trim()) {
       list.push({ type: 'missing', field: 'mrp', message: 'Maximum Retail Price (MRP) missing', rule: 'Rule 6(1)(e)' });
-    } else if (!fields.mrp.includes_taxes) {
+    } else if (typeof mrp === 'object' && mrp !== null && mrp.includes_taxes === false) {
       list.push({ type: 'defect', field: 'mrp', message: "MRP lacks mandatory '(inclusive of all taxes)' clause", rule: 'Rule 6(1)(e)' });
-    } else if (fields.mrp.has_currency_symbol === false) {
+    } else if (typeof mrp === 'object' && mrp !== null && mrp.has_currency_symbol === false) {
       list.push({ type: 'defect', field: 'mrp', message: "MRP lacks official '₹' or 'Rs.' currency symbol", rule: 'Rule 6(1)(e)' });
     }
 
     // 6. Consumer Care
-    if (!fields.consumer_care) {
+    const cc = fields.consumer_care as any;
+    const ccPhone = typeof cc === 'object' && cc !== null ? (cc.phone || '') : '';
+    const ccEmail = typeof cc === 'object' && cc !== null ? (cc.email || '') : '';
+    if (!cc || (!ccPhone && !ccEmail && typeof cc === 'object')) {
       list.push({ type: 'missing', field: 'consumer_care', message: 'Consumer redressal contact details missing', rule: 'Rule 6(1)(n)' });
     } else {
-      if (!fields.consumer_care.email) {
+      if (!ccEmail) {
         list.push({ type: 'defect', field: 'consumer_care', message: 'Consumer care email address missing (Mandatory)', rule: 'Rule 6(1)(n)' });
       }
-      if (!fields.consumer_care.phone) {
+      if (!ccPhone) {
         list.push({ type: 'defect', field: 'consumer_care', message: 'Consumer care phone number missing (Mandatory)', rule: 'Rule 6(1)(n)' });
       }
     }
@@ -174,19 +215,35 @@ export const ScanResultsPage: React.FC<ScanResultsPageProps> = ({
   const handleValidate = async () => {
     setIsValidating(true);
     try {
-      const result = await api.validateCompliance({
-        product_name: scanData.productName || fields.commodity_name,
-        brand: scanData.brand || fields.manufacturer?.name || 'Local / Generic',
-        category: scanData.category,
+      const mfg = fields.manufacturer as any;
+      const mfgName = typeof mfg === 'object' && mfg !== null
+        ? (mfg.name || (mfg.address ? (mfg.address as string).split(',')[0].trim() : ''))
+        : (typeof mfg === 'string' ? (mfg as string).split(',')[0].trim() : '');
+
+      const cName = typeof fields.commodity_name === 'string'
+        ? fields.commodity_name
+        : (fields.commodity_name as any)?.name;
+
+      const payload = {
+        product_name: scanData.productName || cName || 'Packaged Commodity',
+        brand: scanData.brand || mfgName || 'Local / Generic',
+        category: scanData.category || 'General Packaged Commodity',
         image_url: scanData.imageUrl,
         raw_text: rawText,
         parsed_fields: fields
-      });
+      };
+
+      const result = await api.validateCompliance(payload);
+
+      if (!result || !result.report_id) {
+        throw new Error("Validation succeeded on backend, but no report ID was returned.");
+      }
 
       onValidationComplete(result.report_id);
-    } catch (err) {
+    } catch (err: any) {
       console.error("Validation error:", err);
-      alert("Failed to validate declarations. Please try again.");
+      const errMsg = err?.message || "Failed to validate declarations. Please try again.";
+      alert(`Validation Alert: ${errMsg}`);
     } finally {
       setIsValidating(false);
     }
@@ -519,7 +576,9 @@ export const ScanResultsPage: React.FC<ScanResultsPageProps> = ({
             
             {/* 1. Manufacturer Details */}
             {(() => {
-              const isMissing = !fields.manufacturer || !fields.manufacturer.name;
+              const mfg = fields.manufacturer as any;
+              const mfgName = typeof mfg === 'object' && mfg !== null ? mfg.name : (typeof mfg === 'string' ? (mfg as string).trim() : '');
+              const isMissing = !mfg || !mfgName;
               return (
                 <div style={{
                   border: isMissing ? '2px solid #ef4444' : selectedField === 'manufacturer' ? '1px solid var(--accent-blue)' : '1px solid var(--border-subtle)',
@@ -544,7 +603,7 @@ export const ScanResultsPage: React.FC<ScanResultsPageProps> = ({
                   </div>
                   <textarea
                     rows={2}
-                    value={fields.manufacturer?.address || fields.manufacturer?.raw || ''}
+                    value={typeof mfg === 'object' && mfg !== null ? (mfg.address || mfg.raw || '') : (typeof mfg === 'string' ? mfg : '')}
                     onChange={(e) => updateField('manufacturer', 'address', e.target.value)}
                     placeholder="Full manufacturer name, physical factory address, city and pin code"
                     style={{

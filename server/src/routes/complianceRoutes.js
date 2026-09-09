@@ -103,6 +103,7 @@ router.post('/validate', authenticateToken, requireInspector, async (req, res) =
       evaluation
     });
   } catch (err) {
+    console.error("Compliance validation error:", err);
     res.status(500).json({ error: err.message || "Validation failed" });
   }
 });

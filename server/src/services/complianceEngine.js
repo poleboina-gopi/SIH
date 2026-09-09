@@ -13,7 +13,19 @@ export function evaluateCompliance(parsedFields = {}, activeRules = STATUTORY_RU
   // 1. Check Rule 6(1)(a) - Manufacturer / Packer / Importer
   const rule61a = rulesMap.get("RULE_6_1_A");
   if (rule61a?.isActive) {
-    if (!parsedFields.manufacturer || !parsedFields.manufacturer.name) {
+    const mfg = parsedFields?.manufacturer;
+    const mfgRaw = typeof mfg === 'string' ? mfg : (mfg?.raw || mfg?.address || '');
+    const mfgName = typeof mfg === 'object' && mfg !== null 
+      ? (mfg.name || (mfgRaw ? mfgRaw.split(',')[0].trim() : '')) 
+      : (typeof mfg === 'string' ? mfg.split(',')[0].trim() : '');
+    const mfgAddress = typeof mfg === 'object' && mfg !== null 
+      ? (mfg.address || mfgRaw || '') 
+      : (typeof mfg === 'string' ? mfg : '');
+    const hasPincode = typeof mfg === 'object' && mfg !== null
+      ? Boolean(mfg.has_pincode || /\b\d{6}\b/.test(mfgAddress))
+      : /\b\d{6}\b/.test(mfgAddress);
+
+    if (!mfg || !mfgName) {
       violations.push({
         rule_code: "Rule 6(1)(a)",
         rule_id: "RULE_6_1_A",
@@ -24,13 +36,13 @@ export function evaluateCompliance(parsedFields = {}, activeRules = STATUTORY_RU
         penalty_fine: "₹25,000",
         field: "manufacturer"
       });
-    } else if (!parsedFields.manufacturer.has_pincode && parsedFields.manufacturer.address.length < 20) {
+    } else if (!hasPincode && mfgAddress.length < 20) {
       violations.push({
         rule_code: "Rule 6(1)(a)",
         rule_id: "RULE_6_1_A",
         violation_type: "INCOMPLETE_MANUFACTURER_ADDRESS",
         severity: "MAJOR",
-        description: `Incomplete manufacturer address detected ('${parsedFields.manufacturer.raw}'). Pin code or district name omitted.`,
+        description: `Incomplete manufacturer address detected ('${mfgRaw || mfgAddress || mfgName}'). Pin code or district name omitted.`,
         statutory_provision: "Rule 6(1)(a) of Legal Metrology (PC) Rules, 2011",
         penalty_fine: "₹25,000",
         field: "manufacturer"
@@ -41,7 +53,10 @@ export function evaluateCompliance(parsedFields = {}, activeRules = STATUTORY_RU
   // 2. Check Rule 6(1)(b) - Generic or Common Commodity Name
   const rule61b = rulesMap.get("RULE_6_1_B");
   if (rule61b?.isActive) {
-    if (!parsedFields.commodity_name || parsedFields.commodity_name === "Packaged Commodity") {
+    const cName = typeof parsedFields?.commodity_name === 'string'
+      ? parsedFields.commodity_name.trim()
+      : (parsedFields?.commodity_name?.name || '');
+    if (!cName || cName.toLowerCase() === "packaged commodity") {
       violations.push({
         rule_code: "Rule 6(1)(b)",
         rule_id: "RULE_6_1_B",
@@ -58,7 +73,13 @@ export function evaluateCompliance(parsedFields = {}, activeRules = STATUTORY_RU
   // 3. Check Rule 6(1)(c) - Net Quantity & Standard Metric Units
   const rule61c = rulesMap.get("RULE_6_1_C");
   if (rule61c?.isActive) {
-    if (!parsedFields.net_quantity) {
+    const nq = parsedFields?.net_quantity;
+    const nqRaw = typeof nq === 'string' ? nq : (nq?.raw || (nq?.value ? `${nq.value} ${nq.unit || ''}` : ''));
+    let isStandard = typeof nq === 'object' && nq !== null && typeof nq.is_standard === 'boolean' ? nq.is_standard : null;
+    let nqUnit = typeof nq === 'object' && nq !== null && nq.unit ? nq.unit : '';
+    let nqError = typeof nq === 'object' && nq !== null ? nq.error : null;
+
+    if (!nq || (!nqRaw && (typeof nq === 'object' && !nq.value))) {
       violations.push({
         rule_code: "Rule 6(1)(c)",
         rule_id: "RULE_6_1_C",
@@ -69,24 +90,48 @@ export function evaluateCompliance(parsedFields = {}, activeRules = STATUTORY_RU
         penalty_fine: "₹25,000",
         field: "net_quantity"
       });
-    } else if (!parsedFields.net_quantity.is_standard) {
-      violations.push({
-        rule_code: "Rule 6(1)(c)",
-        rule_id: "RULE_6_1_C",
-        violation_type: "NON_STANDARD_UNIT_SYMBOL",
-        severity: "CRITICAL",
-        description: `Net quantity uses illegal symbol '${parsedFields.net_quantity.unit}'. ${parsedFields.net_quantity.error || 'Only standard symbols (g, kg, ml, l, etc.) are permissible.'}`,
-        statutory_provision: "Rule 12 & 13 of Legal Metrology (PC) Rules, 2011 read with Sec 36(1) LM Act",
-        penalty_fine: "₹25,000 to ₹50,000",
-        field: "net_quantity"
-      });
+    } else {
+      if (isStandard === null && nqRaw) {
+        const match = nqRaw.match(/(\d+(?:\.\d+)?)\s*([a-zA-Z.]+)/);
+        if (match) {
+          nqUnit = match[2].toLowerCase().replace(/\.$/, '');
+          const illegalUnits = ['gm', 'gms', 'g.', 'kg.', 'kgs', 'kilos', 'mls', 'ml.', 'ltr', 'ltrs'];
+          if (illegalUnits.includes(nqUnit)) {
+            isStandard = false;
+            nqError = `Illegal symbol '${match[2]}'. Standard unit is '${nqUnit.startsWith('k') ? 'kg' : nqUnit.startsWith('l') ? 'l' : nqUnit.startsWith('m') ? 'ml' : 'g'}'.`;
+          } else {
+            isStandard = true;
+          }
+        } else {
+          isStandard = true;
+        }
+      }
+
+      if (isStandard === false) {
+        violations.push({
+          rule_code: "Rule 6(1)(c)",
+          rule_id: "RULE_6_1_C",
+          violation_type: "NON_STANDARD_UNIT_SYMBOL",
+          severity: "CRITICAL",
+          description: `Net quantity uses illegal symbol '${nqUnit || nqRaw}'. ${nqError || 'Only standard symbols (g, kg, ml, l, etc.) are permissible.'}`,
+          statutory_provision: "Rule 12 & 13 of Legal Metrology (PC) Rules, 2011 read with Sec 36(1) LM Act",
+          penalty_fine: "₹25,000 to ₹50,000",
+          field: "net_quantity"
+        });
+      }
     }
   }
 
   // 4. Check Rule 6(1)(d) - Month & Year of Mfg/Packing/Import
   const rule61d = rulesMap.get("RULE_6_1_D");
   if (rule61d?.isActive) {
-    if (!parsedFields.mfg_date) {
+    const mfgDate = parsedFields?.mfg_date;
+    const dateStr = typeof mfgDate === 'string' ? mfgDate : (mfgDate?.date || mfgDate?.raw || '');
+    let isCompliantDate = typeof mfgDate === 'object' && mfgDate !== null && typeof mfgDate.is_compliant === 'boolean'
+      ? mfgDate.is_compliant
+      : null;
+
+    if (!mfgDate || (!dateStr && (typeof mfgDate === 'object' && !mfgDate.date))) {
       violations.push({
         rule_code: "Rule 6(1)(d)",
         rule_id: "RULE_6_1_D",
@@ -97,24 +142,40 @@ export function evaluateCompliance(parsedFields = {}, activeRules = STATUTORY_RU
         penalty_fine: "₹25,000",
         field: "mfg_date"
       });
-    } else if (!parsedFields.mfg_date.is_compliant) {
-      violations.push({
-        rule_code: "Rule 6(1)(d)",
-        rule_id: "RULE_6_1_D",
-        violation_type: "INVALID_DATE_FORMAT",
-        severity: "MAJOR",
-        description: `Date '${parsedFields.mfg_date.date}' violates prescribed format (must be MM/YYYY or Month YYYY).`,
-        statutory_provision: "Rule 6(1)(d) of Legal Metrology (PC) Rules, 2011",
-        penalty_fine: "₹20,000",
-        field: "mfg_date"
-      });
+    } else {
+      if (isCompliantDate === null && dateStr) {
+        const dateRegex = /^(?:0[1-9]|1[0-2])\/(?:20\d{2}|\d{2})$|^(?:0[1-9]|[12]\d|3[01])\/(?:0[1-9]|1[0-2])\/(?:20\d{2}|\d{2})$|^(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\s*(?:20\d{2}|\d{2})$/i;
+        isCompliantDate = dateRegex.test(dateStr.trim());
+      }
+
+      if (isCompliantDate === false) {
+        violations.push({
+          rule_code: "Rule 6(1)(d)",
+          rule_id: "RULE_6_1_D",
+          violation_type: "INVALID_DATE_FORMAT",
+          severity: "MAJOR",
+          description: `Date '${dateStr || 'Unspecified'}' violates prescribed format (must be MM/YYYY or Month YYYY).`,
+          statutory_provision: "Rule 6(1)(d) of Legal Metrology (PC) Rules, 2011",
+          penalty_fine: "₹20,000",
+          field: "mfg_date"
+        });
+      }
     }
   }
 
   // 5. Check Rule 6(1)(e) - MRP & Tax Clause
   const rule61e = rulesMap.get("RULE_6_1_E");
   if (rule61e?.isActive) {
-    if (!parsedFields.mrp) {
+    const mrp = parsedFields?.mrp;
+    const mrpRaw = typeof mrp === 'string' ? mrp : (mrp?.raw || (mrp?.value ? `Rs. ${mrp.value}` : ''));
+    let includesTaxes = typeof mrp === 'object' && mrp !== null && typeof mrp.includes_taxes === 'boolean'
+      ? mrp.includes_taxes
+      : null;
+    let hasCurrencySymbol = typeof mrp === 'object' && mrp !== null && typeof mrp.has_currency_symbol === 'boolean'
+      ? mrp.has_currency_symbol
+      : null;
+
+    if (!mrp || (!mrpRaw && (typeof mrp === 'object' && !mrp.value))) {
       violations.push({
         rule_code: "Rule 6(1)(e)",
         rule_id: "RULE_6_1_E",
@@ -125,35 +186,54 @@ export function evaluateCompliance(parsedFields = {}, activeRules = STATUTORY_RU
         penalty_fine: "₹25,000 to ₹1,00,000",
         field: "mrp"
       });
-    } else if (!parsedFields.mrp.includes_taxes) {
-      violations.push({
-        rule_code: "Rule 6(1)(e)",
-        rule_id: "RULE_6_1_E",
-        violation_type: "MISSING_TAX_CLAUSE",
-        severity: "CRITICAL",
-        description: "Maximum Retail Price declaration fails to mention mandatory statutory clause '(inclusive of all taxes)' or '(incl. of all taxes)'.",
-        statutory_provision: "Rule 6(1)(e) of Legal Metrology (PC) Rules, 2011",
-        penalty_fine: "₹25,000",
-        field: "mrp"
-      });
-    } else if (parsedFields.mrp.has_currency_symbol === false) {
-      violations.push({
-        rule_code: "Rule 6(1)(e)",
-        rule_id: "RULE_6_1_E",
-        violation_type: "MISSING_CURRENCY_SYMBOL",
-        severity: "MAJOR",
-        description: "Maximum Retail Price declaration fails to display official currency symbol ('₹' or 'Rs.').",
-        statutory_provision: "Rule 6(1)(e) of Legal Metrology (PC) Rules, 2011",
-        penalty_fine: "₹25,000",
-        field: "mrp"
-      });
+    } else {
+      if (includesTaxes === null && mrpRaw) {
+        includesTaxes = /incl\w*\s*(?:of)?\s*all\s*taxes/i.test(mrpRaw);
+      }
+      if (hasCurrencySymbol === null && mrpRaw) {
+        hasCurrencySymbol = /(?:₹|rs\.?|inr)/i.test(mrpRaw);
+      }
+
+      if (includesTaxes === false) {
+        violations.push({
+          rule_code: "Rule 6(1)(e)",
+          rule_id: "RULE_6_1_E",
+          violation_type: "MISSING_TAX_CLAUSE",
+          severity: "CRITICAL",
+          description: "Maximum Retail Price declaration fails to mention mandatory statutory clause '(inclusive of all taxes)' or '(incl. of all taxes)'.",
+          statutory_provision: "Rule 6(1)(e) of Legal Metrology (PC) Rules, 2011",
+          penalty_fine: "₹25,000",
+          field: "mrp"
+        });
+      } else if (hasCurrencySymbol === false) {
+        violations.push({
+          rule_code: "Rule 6(1)(e)",
+          rule_id: "RULE_6_1_E",
+          violation_type: "MISSING_CURRENCY_SYMBOL",
+          severity: "MAJOR",
+          description: "Maximum Retail Price declaration fails to display official currency symbol ('₹' or 'Rs.').",
+          statutory_provision: "Rule 6(1)(e) of Legal Metrology (PC) Rules, 2011",
+          penalty_fine: "₹25,000",
+          field: "mrp"
+        });
+      }
     }
   }
 
   // 6. Check Rule 6(1)(n) - Consumer Care Details
   const rule61n = rulesMap.get("RULE_6_1_N");
   if (rule61n?.isActive) {
-    if (!parsedFields.consumer_care) {
+    const cc = parsedFields?.consumer_care;
+    let ccPhone = typeof cc === 'object' && cc !== null ? (cc.phone || '') : '';
+    let ccEmail = typeof cc === 'object' && cc !== null ? (cc.email || '') : '';
+    if (typeof cc === 'string') {
+      const phoneMatch = cc.match(/(?:\+91|0)?\d{3,5}[-\s]?\d{6,8}|\b1800[-\s]?\d{3}[-\s]?\d{3,4}\b/);
+      if (phoneMatch) ccPhone = phoneMatch[0];
+      const emailMatch = cc.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/);
+      if (emailMatch) ccEmail = emailMatch[0];
+    }
+
+    if (!cc || (!ccPhone && !ccEmail && typeof cc === 'object')) {
       violations.push({
         rule_code: "Rule 6(1)(n)",
         rule_id: "RULE_6_1_N",
@@ -165,7 +245,7 @@ export function evaluateCompliance(parsedFields = {}, activeRules = STATUTORY_RU
         field: "consumer_care"
       });
     } else {
-      if (!parsedFields.consumer_care.email) {
+      if (!ccEmail) {
         violations.push({
           rule_code: "Rule 6(1)(n)",
           rule_id: "RULE_6_1_N",
@@ -177,7 +257,7 @@ export function evaluateCompliance(parsedFields = {}, activeRules = STATUTORY_RU
           field: "consumer_care"
         });
       }
-      if (!parsedFields.consumer_care.phone) {
+      if (!ccPhone) {
         violations.push({
           rule_code: "Rule 6(1)(n)",
           rule_id: "RULE_6_1_N",
@@ -196,7 +276,7 @@ export function evaluateCompliance(parsedFields = {}, activeRules = STATUTORY_RU
   const rule61m = rulesMap.get("RULE_6_1_M");
   if (rule61m?.isActive) {
     const isImported = /import|switzerland|germany|usa|china|foreign/i.test(JSON.stringify(parsedFields));
-    if (isImported && !parsedFields.country_of_origin) {
+    if (isImported && !parsedFields?.country_of_origin) {
       violations.push({
         rule_code: "Rule 6(1)(m)",
         rule_id: "RULE_6_1_M",
@@ -213,7 +293,7 @@ export function evaluateCompliance(parsedFields = {}, activeRules = STATUTORY_RU
   // 8. Readability & Font Size Check (Rule 7)
   const rule7 = rulesMap.get("RULE_7");
   if (rule7?.isActive) {
-    if (parsedFields.readability?.clarity === "LOW") {
+    if (parsedFields?.readability?.clarity === "LOW") {
       violations.push({
         rule_code: "Rule 7",
         rule_id: "RULE_7",
@@ -247,8 +327,13 @@ export function evaluateCompliance(parsedFields = {}, activeRules = STATUTORY_RU
   let statutoryNotice = null;
   if (complianceStatus === "NON_COMPLIANT") {
     const totalPenalties = violations.length * 25000;
-    const recipient = parsedFields.manufacturer?.name || "The Manufacturer / Packer / Importer";
-    const address = parsedFields.manufacturer?.address || "Address as declared on package";
+    const mfg = parsedFields?.manufacturer;
+    const recipient = typeof mfg === 'object' && mfg !== null
+      ? (mfg.name || (mfg.address ? mfg.address.split(',')[0].trim() : "The Manufacturer / Packer / Importer"))
+      : (typeof mfg === 'string' && mfg.trim() ? mfg.split(',')[0].trim() : "The Manufacturer / Packer / Importer");
+    const address = typeof mfg === 'object' && mfg !== null
+      ? (mfg.address || mfg.raw || "Address as declared on package")
+      : (typeof mfg === 'string' && mfg.trim() ? mfg : "Address as declared on package");
 
     statutoryNotice = {
       noticeNumber: `SCN/LM/${new Date().getFullYear()}/${Math.floor(1000 + Math.random() * 9000)}`,
@@ -256,7 +341,7 @@ export function evaluateCompliance(parsedFields = {}, activeRules = STATUTORY_RU
       recipient,
       address,
       subject: `Show Cause Notice for Violations under Legal Metrology (Packaged Commodities) Rules, 2011`,
-      commodityName: parsedFields.commodity_name || "Packaged Commodity",
+      commodityName: (typeof parsedFields?.commodity_name === 'string' ? parsedFields.commodity_name : '') || "Packaged Commodity",
       violationsCount: violations.length,
       statutoryProvisionsViolated: violations.map(v => v.rule_code).join(", "),
       penalSectionApplicable: "Section 36(1) and Section 36(2) of Legal Metrology Act, 2009",
