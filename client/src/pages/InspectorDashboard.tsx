@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { 
   ShieldCheck, AlertOctagon, AlertTriangle, ScanLine, 
-  ArrowUpRight, Clock, FileCheck, IndianRupee, Layers, CheckCircle2 
+  ArrowUpRight, Clock, FileCheck, IndianRupee, Layers, CheckCircle2, Trash2 
 } from 'lucide-react';
 import { api } from '../services/api';
 import { DashboardStats, User } from '../types';
 import { SAMPLE_LABELS, SampleLabel } from '../data/sampleLabels';
+import { DeleteConfirmModal } from '../components/DeleteConfirmModal';
 
 interface InspectorDashboardProps {
   user: User;
@@ -22,6 +23,9 @@ export const InspectorDashboard: React.FC<InspectorDashboardProps> = ({
 }) => {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
 
   useEffect(() => {
     loadDashboardData();
@@ -35,6 +39,22 @@ export const InspectorDashboard: React.FC<InspectorDashboardProps> = ({
       console.error("Failed to load dashboard statistics:", err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
+    setIsDeleting(true);
+    try {
+      const res = await api.deleteScan(deleteTarget.id);
+      setDeleteTarget(null);
+      setFeedbackMessage(res.message || 'Inspection deleted successfully.');
+      setTimeout(() => setFeedbackMessage(null), 4000);
+      await loadDashboardData();
+    } catch (err: any) {
+      alert("Failed to delete inspection: " + (err.message || 'Unauthorized'));
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -306,14 +326,31 @@ export const InspectorDashboard: React.FC<InspectorDashboardProps> = ({
                       )}
                     </td>
                     <td>
-                      <button
-                        onClick={() => onViewReport(scan.scan_id)}
-                        className="btn btn-secondary"
-                        style={{ padding: '6px 12px', fontSize: '0.78rem' }}
-                      >
-                        <FileCheck size={14} />
-                        View Legal Report
-                      </button>
+                      <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                        <button
+                          onClick={() => onViewReport(scan.scan_id)}
+                          className="btn btn-secondary"
+                          style={{ padding: '6px 12px', fontSize: '0.78rem', gap: '6px' }}
+                        >
+                          <FileCheck size={14} />
+                          <span>View Legal Report</span>
+                        </button>
+
+                        <button
+                          onClick={() => setDeleteTarget({ id: scan.scan_id, name: `${scan.product_name} (${scan.brand})` })}
+                          className="btn btn-danger"
+                          style={{
+                            padding: '6px 10px',
+                            fontSize: '0.78rem',
+                            background: 'rgba(239, 68, 68, 0.15)',
+                            border: '1px solid rgba(239, 68, 68, 0.4)',
+                            color: '#ef4444'
+                          }}
+                          title="Delete Inspection"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -328,6 +365,41 @@ export const InspectorDashboard: React.FC<InspectorDashboardProps> = ({
           </table>
         </div>
       </div>
+
+      {/* Success Feedback Notification */}
+      {feedbackMessage && (
+        <div style={{
+          position: 'fixed',
+          bottom: '24px',
+          right: '24px',
+          background: '#064e3b',
+          border: '1px solid #10b981',
+          borderRadius: '10px',
+          padding: '14px 20px',
+          color: '#ecfdf5',
+          fontSize: '0.9rem',
+          fontWeight: 600,
+          boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
+          zIndex: 9999,
+          display: 'flex',
+          alignItems: 'center',
+          gap: '10px'
+        }}>
+          <CheckCircle2 size={18} color="#10b981" />
+          <span>{feedbackMessage}</span>
+        </div>
+      )}
+
+      {/* Confirmation Modal */}
+      <DeleteConfirmModal
+        isOpen={!!deleteTarget}
+        title="Delete Inspection"
+        message="Are you sure you want to delete this inspection?"
+        itemName={deleteTarget?.name}
+        isDeleting={isDeleting}
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </div>
   );
 };

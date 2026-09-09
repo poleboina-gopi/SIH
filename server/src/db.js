@@ -456,6 +456,45 @@ class Database {
     }
     return null;
   }
+
+  async deleteScan(scanId) {
+    const scan = await this.getScanById(scanId);
+    if (!scan) return null;
+
+    let product = null;
+    if (scan.product_id) {
+      product = await this.getProductById(scan.product_id);
+    }
+
+    if (this.isMongo) {
+      // 1. Delete scan document
+      await ScanModel.deleteOne({ id: scanId });
+      // 2. Delete all violations logged for this scan
+      await ViolationModel.deleteMany({ scan_id: scanId });
+      // 3. Delete report for this scan
+      await ReportModel.deleteMany({ $or: [{ scan_id: scanId }, { id: scanId }] });
+      // 4. Delete product if no other scan references it
+      if (scan.product_id) {
+        const remainingScansForProd = await ScanModel.countDocuments({ product_id: scan.product_id });
+        if (remainingScansForProd === 0) {
+          await ProductModel.deleteOne({ id: scan.product_id });
+        }
+      }
+    } else {
+      this.data.scans = this.data.scans.filter(s => s.id !== scanId);
+      this.data.violations = this.data.violations.filter(v => v.scan_id !== scanId);
+      this.data.reports = this.data.reports.filter(r => r.scan_id !== scanId && r.id !== scanId);
+      if (scan.product_id) {
+        const hasOtherScans = this.data.scans.some(s => s.product_id === scan.product_id);
+        if (!hasOtherScans) {
+          this.data.products = this.data.products.filter(p => p.id !== scan.product_id);
+        }
+      }
+      this.saveLocal();
+    }
+
+    return { scan, product };
+  }
 }
 
 export const db = new Database();

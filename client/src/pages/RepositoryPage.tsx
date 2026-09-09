@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { 
   Database, Search, Filter, FileText, ArrowRight, 
-  Calendar, ShieldCheck, AlertOctagon, AlertTriangle, Layers 
+  Calendar, ShieldCheck, AlertOctagon, AlertTriangle, Layers, Trash2 
 } from 'lucide-react';
 import { api } from '../services/api';
 import { Report, User } from '../types';
+import { DeleteConfirmModal } from '../components/DeleteConfirmModal';
 
 interface RepositoryPageProps {
   user?: User | null;
@@ -21,6 +22,8 @@ export const RepositoryPage: React.FC<RepositoryPageProps> = ({
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'COMPLIANT' | 'NON_COMPLIANT' | 'BORDERLINE'>('ALL');
   const [loading, setLoading] = useState(true);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     loadReports();
@@ -34,6 +37,20 @@ export const RepositoryPage: React.FC<RepositoryPageProps> = ({
       console.error("Failed to load audit repository:", err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
+    setIsDeleting(true);
+    try {
+      await api.deleteScan(deleteTarget.id);
+      setDeleteTarget(null);
+      await loadReports();
+    } catch (err: any) {
+      alert("Failed to delete inspection: " + (err.message || 'Error deleting inspection'));
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -221,20 +238,49 @@ export const RepositoryPage: React.FC<RepositoryPageProps> = ({
                     {new Date(report.generated_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
                   </div>
 
-                  <button
-                    onClick={() => onViewReport(report.scan_id || report.id)}
-                    className="btn btn-secondary"
-                    style={{ padding: '6px 12px', fontSize: '0.78rem', gap: '6px' }}
-                  >
-                    <span>View Certificate</span>
-                    <ArrowRight size={14} />
-                  </button>
+                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                    {(user?.role === 'admin' || user?.role === 'inspector') && (
+                      <button
+                        onClick={() => setDeleteTarget({ id: report.scan_id || report.id, name: `${report.product_name} (${report.report_number})` })}
+                        className="btn btn-danger"
+                        style={{
+                          padding: '6px 10px',
+                          fontSize: '0.78rem',
+                          background: 'rgba(239, 68, 68, 0.15)',
+                          borderColor: 'rgba(239, 68, 68, 0.4)',
+                          color: '#ef4444'
+                        }}
+                        title="Delete Inspection"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    )}
+                    <button
+                      onClick={() => onViewReport(report.scan_id || report.id)}
+                      className="btn btn-secondary"
+                      style={{ padding: '6px 12px', fontSize: '0.78rem', gap: '6px' }}
+                    >
+                      <span>View Certificate</span>
+                      <ArrowRight size={14} />
+                    </button>
+                  </div>
                 </div>
               </div>
             );
           })}
         </div>
       )}
+
+      {/* Confirmation Modal */}
+      <DeleteConfirmModal
+        isOpen={!!deleteTarget}
+        title="Delete Inspection Record"
+        message="Are you sure you want to delete this inspection?"
+        itemName={deleteTarget?.name}
+        isDeleting={isDeleting}
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </div>
   );
 };

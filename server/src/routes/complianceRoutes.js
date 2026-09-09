@@ -3,6 +3,7 @@ import { db } from '../db.js';
 import { evaluateCompliance } from '../services/complianceEngine.js';
 import { parsePackagingText } from '../services/parserService.js';
 import { authenticateToken, requireInspector } from '../middleware/auth.js';
+import { generateCompliancePdf } from '../services/pdfService.js';
 
 const router = express.Router();
 
@@ -126,6 +127,29 @@ router.get('/report/:id', authenticateToken, async (req, res) => {
     });
   } catch (err) {
     res.status(500).json({ error: err.message || "Failed to load report" });
+  }
+});
+
+// GET /api/report/:id/pdf (Downloadable Official Legal Metrology Certificate PDF)
+router.get('/report/:id/pdf', authenticateToken, async (req, res) => {
+  try {
+    const report = await db.getReportById(req.params.id);
+    if (!report) {
+      return res.status(404).json({ error: "Report not found" });
+    }
+
+    const scan = await db.getScanById(report.scan_id);
+    const product = scan ? await db.getProductById(scan.product_id) : null;
+    const violations = scan ? await db.getViolationsByScanId(scan.id) : [];
+
+    const safeNumber = (report.report_number || report.id).replace(/[^a-zA-Z0-9_-]/g, '_');
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="Legal_Metrology_Report_${safeNumber}.pdf"`);
+
+    generateCompliancePdf({ report, scan, product, violations }, res);
+  } catch (err) {
+    console.error("PDF generation error:", err);
+    res.status(500).json({ error: err.message || "Failed to generate PDF report" });
   }
 });
 

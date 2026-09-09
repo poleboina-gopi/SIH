@@ -233,5 +233,38 @@ export const api = {
 
   getExportUrl(reportId: string, format: 'json' | 'csv'): string {
     return `${API_BASE_URL}/export/${reportId}/${format}`;
+  },
+
+  // PDF Report Download
+  async downloadReportPdf(reportId: string, filename?: string): Promise<void> {
+    const res = await fetch(`${API_BASE_URL}/report/${reportId}/pdf`, {
+      headers: getAuthHeaders()
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ error: 'Failed to generate PDF' }));
+      throw new Error(err.error || 'Failed to generate PDF');
+    }
+    const blob = await res.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename || `Legal_Metrology_Report_${reportId}.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+  },
+
+  // Delete Inspection
+  async deleteScan(scanId: string): Promise<{ success: boolean; message: string }> {
+    const res = await fetch(`${API_BASE_URL}/scan/${scanId}`, {
+      method: 'DELETE',
+      headers: getAuthHeaders()
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ error: 'Failed to delete inspection' }));
+      throw new Error(err.error || 'Failed to delete inspection');
+    }
+    return res.json();
   }
 };

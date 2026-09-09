@@ -114,4 +114,55 @@ router.get('/scans/:id', authenticateToken, async (req, res) => {
   }
 });
 
+// DELETE /api/scan/:id (Secured: ADMIN or Creator INSPECTOR only)
+router.delete('/scan/:id', authenticateToken, async (req, res) => {
+  try {
+    const scanId = req.params.id;
+    const scan = await db.getScanById(scanId);
+
+    if (!scan) {
+      return res.status(404).json({ error: "Inspection scan record not found" });
+    }
+
+    // Security Check:
+    // Only ADMIN or the specific INSPECTOR who performed the inspection can delete it
+    const isOwnerInspector = req.user.role === 'inspector' && (scan.inspector_id === req.user.id);
+    const isAdmin = req.user.role === 'admin';
+
+    if (!isAdmin && !isOwnerInspector) {
+      return res.status(403).json({ 
+        error: "Access Denied: Only the creator Inspector or a Joint Controller (Admin) can delete this inspection record." 
+      });
+    }
+
+    // Delete DB records
+    const deleted = await db.deleteScan(scanId);
+
+    // Delete physical uploaded image file if local and not a seed sample asset
+    if (deleted?.product?.image_url) {
+      const imgUrl = deleted.product.image_url;
+      const isDefaultSample = imgUrl.includes('sample') || imgUrl.includes('butter') || imgUrl.includes('detergent') || imgUrl.includes('imported');
+      if (imgUrl.startsWith('/uploads/') && !isDefaultSample) {
+        const filePath = path.join(UPLOADS_DIR, path.basename(imgUrl));
+        if (fs.existsSync(filePath)) {
+          try {
+            fs.unlinkSync(filePath);
+          } catch (e) {
+            console.warn("Could not remove file on disk:", e.message);
+          }
+        }
+      }
+    }
+
+    res.json({
+      success: true,
+      message: "Inspection record, statutory report, and associated declarations deleted successfully",
+      deleted_scan_id: scanId
+    });
+  } catch (err) {
+    console.error("Delete scan error:", err);
+    res.status(500).json({ error: err.message || "Failed to delete inspection scan" });
+  }
+});
+
 export default router;

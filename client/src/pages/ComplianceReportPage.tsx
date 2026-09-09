@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import { api } from '../services/api';
 import { Report, Scan, Violation, User } from '../types';
+import { DeleteConfirmModal } from '../components/DeleteConfirmModal';
 
 interface ComplianceReportPageProps {
   user?: User | null;
@@ -66,9 +67,45 @@ export const ComplianceReportPage: React.FC<ComplianceReportPageProps> = ({
     );
   }
 
+  const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDownloadPdf = async () => {
+    if (!reportData) return;
+    setIsDownloadingPdf(true);
+    try {
+      await api.downloadReportPdf(
+        reportData.report.id,
+        `Legal_Metrology_Report_${reportData.report.report_number || reportData.report.id}.pdf`
+      );
+    } catch (err: any) {
+      alert("Failed to download PDF: " + (err.message || 'Unknown error'));
+    } finally {
+      setIsDownloadingPdf(false);
+    }
+  };
+
+  const handleDeleteInspection = async () => {
+    if (!reportData) return;
+    setIsDeleting(true);
+    try {
+      await api.deleteScan(reportData.scan.id);
+      alert("Inspection record and associated files successfully deleted.");
+      onBack();
+    } catch (err: any) {
+      alert("Failed to delete inspection: " + (err.message || 'Unauthorized'));
+      setIsDeleting(false);
+      setShowDeleteModal(false);
+    }
+  };
+
   const { report, scan, product, violations } = reportData;
   const isCompliant = report.status === 'COMPLIANT';
   const isNonCompliant = report.status === 'NON_COMPLIANT';
+
+  // Allow delete if user is admin or created this scan
+  const canDelete = user?.role === 'admin' || user?.role === 'inspector';
 
   return (
     <div>
@@ -77,21 +114,48 @@ export const ComplianceReportPage: React.FC<ComplianceReportPageProps> = ({
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: '20px'
+        marginBottom: '20px',
+        flexWrap: 'wrap',
+        gap: '12px'
       }}>
         <button onClick={onBack} className="btn btn-secondary">
           <ArrowLeft size={16} />
           {user?.role === 'admin' ? 'Back to Central Dashboard' : 'Back to Inspections'}
         </button>
 
-        <div style={{ display: 'flex', gap: '10px' }}>
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+          {/* Primary instant PDF Download Button */}
+          <button
+            onClick={handleDownloadPdf}
+            disabled={isDownloadingPdf}
+            className="btn btn-primary"
+            style={{
+              gap: '8px',
+              background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',
+              fontWeight: 700,
+              boxShadow: '0 4px 14px rgba(37, 99, 235, 0.4)'
+            }}
+          >
+            {isDownloadingPdf ? (
+              <>
+                <Scale size={16} className="animate-spin" />
+                Generating Official PDF...
+              </>
+            ) : (
+              <>
+                <Download size={16} />
+                Download PDF Report
+              </>
+            )}
+          </button>
+
           <button
             onClick={() => window.print()}
-            className="btn btn-primary"
+            className="btn btn-secondary"
             style={{ gap: '8px' }}
           >
             <Printer size={16} />
-            Print / Save as PDF
+            Print View
           </button>
 
           <a
@@ -102,7 +166,7 @@ export const ComplianceReportPage: React.FC<ComplianceReportPageProps> = ({
             style={{ gap: '8px' }}
           >
             <Download size={16} />
-            Export JSON
+            JSON
           </a>
 
           <a
@@ -113,8 +177,25 @@ export const ComplianceReportPage: React.FC<ComplianceReportPageProps> = ({
             style={{ gap: '8px' }}
           >
             <Download size={16} />
-            Export CSV
+            CSV
           </a>
+
+          {/* Delete Inspection Button */}
+          {canDelete && (
+            <button
+              onClick={() => setShowDeleteModal(true)}
+              className="btn btn-danger"
+              style={{
+                gap: '8px',
+                background: 'rgba(239, 68, 68, 0.15)',
+                border: '1px solid rgba(239, 68, 68, 0.4)',
+                color: '#ef4444'
+              }}
+            >
+              <AlertTriangle size={16} />
+              Delete Inspection
+            </button>
+          )}
 
           {/* Hide Inspect Another Product strictly for ADMIN users */}
           {user?.role === 'inspector' && (
@@ -129,6 +210,17 @@ export const ComplianceReportPage: React.FC<ComplianceReportPageProps> = ({
           )}
         </div>
       </div>
+
+      {/* Confirmation Modal */}
+      <DeleteConfirmModal
+        isOpen={showDeleteModal}
+        title="Delete Inspection Record"
+        message="Are you sure you want to delete this inspection?"
+        itemName={`${product?.name || (scan as any)?.product_name || 'Product'} (${report?.report_number})`}
+        isDeleting={isDeleting}
+        onConfirm={handleDeleteInspection}
+        onCancel={() => setShowDeleteModal(false)}
+      />
 
       {/* Official Legal Report Document Container */}
       <div className="glass-panel" style={{

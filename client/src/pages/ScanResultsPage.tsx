@@ -2,9 +2,10 @@ import React, { useState, useMemo } from 'react';
 import { 
   CheckCircle2, AlertTriangle, XCircle, ArrowLeft, ArrowRight, 
   Eye, Edit3, ShieldAlert, Sparkles, Scale, FileText, Copy, Check, 
-  AlertOctagon, RefreshCw, Layers
+  AlertOctagon, RefreshCw, Layers, Trash2
 } from 'lucide-react';
 import { BoundingBoxOverlay } from '../components/BoundingBoxOverlay';
+import { DeleteConfirmModal } from '../components/DeleteConfirmModal';
 import { ParsedFields } from '../types';
 import { api } from '../services/api';
 
@@ -51,6 +52,23 @@ export const ScanResultsPage: React.FC<ScanResultsPageProps> = ({
   const [leftTab, setLeftTab] = useState<'visual' | 'raw'>('visual');
   const [copied, setCopied] = useState(false);
   const [isValidating, setIsValidating] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDeleteInspection = async () => {
+    setIsDeleting(true);
+    try {
+      if ((scanData as any)?.scanId) {
+        await api.deleteScan((scanData as any).scanId);
+      }
+      onBack();
+    } catch (e: any) {
+      alert("Failed to delete inspection: " + (e.message || "Unknown error"));
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteModal(false);
+    }
+  };
 
   // Field change helpers
   const updateField = (section: keyof ParsedFields, key: string, value: any) => {
@@ -202,25 +220,43 @@ export const ScanResultsPage: React.FC<ScanResultsPageProps> = ({
           </div>
         </div>
 
-        <button
-          onClick={handleValidate}
-          disabled={isValidating}
-          className="btn btn-primary"
-          style={{ padding: '12px 24px', fontSize: '0.95rem', gap: '10px' }}
-        >
-          {isValidating ? (
-            <>
-              <RefreshCw size={18} className="animate-spin" />
-              <span>Validating Rules &amp; Sealing Report...</span>
-            </>
-          ) : (
-            <>
-              <Scale size={18} />
-              <span>Validate Statutory Compliance</span>
-              <ArrowRight size={18} />
-            </>
-          )}
-        </button>
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+          <button
+            onClick={() => setShowDeleteModal(true)}
+            className="btn btn-danger"
+            style={{
+              padding: '12px 18px',
+              fontSize: '0.9rem',
+              gap: '8px',
+              background: 'rgba(239, 68, 68, 0.15)',
+              border: '1px solid rgba(239, 68, 68, 0.4)',
+              color: '#ef4444'
+            }}
+          >
+            <Trash2 size={16} />
+            <span>Delete Inspection</span>
+          </button>
+
+          <button
+            onClick={handleValidate}
+            disabled={isValidating}
+            className="btn btn-primary"
+            style={{ padding: '12px 24px', fontSize: '0.95rem', gap: '10px' }}
+          >
+            {isValidating ? (
+              <>
+                <RefreshCw size={18} className="animate-spin" />
+                <span>Validating Rules &amp; Sealing Report...</span>
+              </>
+            ) : (
+              <>
+                <Scale size={18} />
+                <span>Validate Statutory Compliance</span>
+                <ArrowRight size={18} />
+              </>
+            )}
+          </button>
+        </div>
       </div>
 
       {/* Prominent Missing Fields & Statutory Defects Banner */}
@@ -831,13 +867,30 @@ export const ScanResultsPage: React.FC<ScanResultsPageProps> = ({
               </div>
             </div>
 
-            {/* Validate Button */}
-            <div style={{ marginTop: '10px' }}>
+            {/* Action Buttons */}
+            <div style={{ marginTop: '14px', display: 'flex', gap: '12px' }}>
+              <button
+                type="button"
+                onClick={() => setShowDeleteModal(true)}
+                className="btn btn-secondary"
+                style={{
+                  padding: '14px 20px',
+                  fontSize: '0.95rem',
+                  fontWeight: 600,
+                  color: '#ef4444',
+                  borderColor: 'rgba(239, 68, 68, 0.4)',
+                  gap: '8px'
+                }}
+              >
+                <Trash2 size={18} />
+                <span>Delete Inspection</span>
+              </button>
+
               <button
                 onClick={handleValidate}
                 disabled={isValidating}
                 className="btn btn-primary"
-                style={{ width: '100%', padding: '15px', fontSize: '1rem', fontWeight: 700, gap: '10px' }}
+                style={{ flex: 1, padding: '15px', fontSize: '1rem', fontWeight: 700, gap: '10px' }}
               >
                 <Scale size={20} />
                 <span>Confirm Declarations &amp; Issue Statutory Verdict</span>
@@ -846,6 +899,17 @@ export const ScanResultsPage: React.FC<ScanResultsPageProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Confirmation Modal */}
+      <DeleteConfirmModal
+        isOpen={showDeleteModal}
+        title="Delete Inspection"
+        message="Are you sure you want to delete this inspection?"
+        itemName={scanData.productName || 'Current Scan'}
+        isDeleting={isDeleting}
+        onConfirm={handleDeleteInspection}
+        onCancel={() => setShowDeleteModal(false)}
+      />
     </div>
   );
 };

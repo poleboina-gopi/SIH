@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { 
   BarChart3, Settings, Shield, AlertTriangle, CheckCircle2, 
-  Layers, Users, Sliders, Save, RefreshCw, IndianRupee 
+  Layers, Users, Sliders, Save, RefreshCw, IndianRupee, Trash2 
 } from 'lucide-react';
 import { api } from '../services/api';
 import { DashboardStats, StatutoryRule, User } from '../types';
+import { DeleteConfirmModal } from '../components/DeleteConfirmModal';
 
 interface AdminDashboardProps {
   user: User;
@@ -18,6 +19,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
   const [updatingRuleId, setUpdatingRuleId] = useState<string | null>(null);
   const [updatingUserId, setUpdatingUserId] = useState<string | null>(null);
   const [userSuccessMessage, setUserSuccessMessage] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [actionSuccessMessage, setActionSuccessMessage] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'analytics' | 'users' | 'rules'>('analytics');
 
   useEffect(() => {
@@ -38,6 +42,22 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
       console.error("Failed to load admin data:", err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
+    setIsDeleting(true);
+    try {
+      const res = await api.deleteScan(deleteTarget.id);
+      setDeleteTarget(null);
+      setActionSuccessMessage(res.message || 'Inspection deleted successfully.');
+      setTimeout(() => setActionSuccessMessage(null), 4000);
+      await loadAdminData();
+    } catch (err: any) {
+      alert("Failed to delete inspection: " + (err.message || 'Error deleting inspection'));
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -273,6 +293,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                     <th>STATUTORY STATUS</th>
                     <th>COMPLIANCE SCORE</th>
                     <th>VIOLATIONS</th>
+                    <th>ACTION</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -312,11 +333,29 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
                             <span style={{ color: '#34d399' }}>None (Compliant)</span>
                           )}
                         </td>
+                        <td>
+                          <button
+                            onClick={() => setDeleteTarget({ id: scan.scan_id, name: `${scan.product_name} (${scan.brand})` })}
+                            className="btn btn-danger"
+                            style={{
+                              padding: '6px 12px',
+                              fontSize: '0.78rem',
+                              background: 'rgba(239, 68, 68, 0.15)',
+                              borderColor: 'rgba(239, 68, 68, 0.4)',
+                              color: '#ef4444',
+                              gap: '6px'
+                            }}
+                            title="Delete Inspection"
+                          >
+                            <Trash2 size={14} />
+                            <span>Delete</span>
+                          </button>
+                        </td>
                       </tr>
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={5} style={{ textAlign: 'center', padding: '24px', color: 'var(--text-muted)' }}>
+                      <td colSpan={6} style={{ textAlign: 'center', padding: '24px', color: 'var(--text-muted)' }}>
                         No commodity inspection logs registered yet.
                       </td>
                     </tr>
@@ -524,6 +563,41 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
           </div>
         </div>
       )}
+
+      {/* Action Success Feedback Notification */}
+      {actionSuccessMessage && (
+        <div style={{
+          position: 'fixed',
+          bottom: '24px',
+          right: '24px',
+          background: '#064e3b',
+          border: '1px solid #10b981',
+          borderRadius: '10px',
+          padding: '14px 20px',
+          color: '#ecfdf5',
+          fontSize: '0.9rem',
+          fontWeight: 600,
+          boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
+          zIndex: 9999,
+          display: 'flex',
+          alignItems: 'center',
+          gap: '10px'
+        }}>
+          <CheckCircle2 size={18} color="#10b981" />
+          <span>{actionSuccessMessage}</span>
+        </div>
+      )}
+
+      {/* Confirmation Modal */}
+      <DeleteConfirmModal
+        isOpen={!!deleteTarget}
+        title="Delete Inspection Record"
+        message="Are you sure you want to delete this inspection?"
+        itemName={deleteTarget?.name}
+        isDeleting={isDeleting}
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </div>
   );
 };
