@@ -612,268 +612,23 @@ export const ScanUploadPage: React.FC<ScanUploadPageProps> = ({
             style={{ display: 'none' }}
           />
 
-          {/* Section Header */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', flexWrap: 'wrap', gap: '8px' }}>
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ fontSize: '0.84rem', fontWeight: 800, letterSpacing: '0.04em', color: 'var(--text-secondary)' }}>
-                  1. COMMODITY LABEL PANELS (MULTI-SURFACE AUDIT)
-                </span>
-                <span style={{
-                  fontSize: '0.7rem',
-                  background: totalUploadedCount > 0 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(255, 255, 255, 0.08)',
-                  color: totalUploadedCount > 0 ? '#34d399' : 'var(--text-muted)',
-                  padding: '2px 8px',
-                  borderRadius: '9999px',
-                  fontWeight: 600
-                }}>
-                  {totalUploadedCount}/3 Uploaded
-                </span>
-              </div>
-              <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)', marginTop: '2px' }}>
-                Upload distinct packaging panels for Front, Back, and Side. Declarations from all panels are aggregated for statutory audit.
-              </div>
-            </div>
-          </div>
-
-          {/* 3 Simultaneous Independent Cyber Pods */}
-          <div className="upload-pods-grid" style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-            gap: '12px',
-            marginBottom: '16px'
-          }}>
-            {[
-              {
-                side: 'front' as PackageSide,
-                title: 'Front View',
-                badge: 'Principal Display',
-                mandatory: true,
-                requiredFields: 'Brand, Commodity Name, Net Qty',
-                color: '#3b82f6',
-                accentBg: 'rgba(59, 130, 246, 0.12)',
-                ref: frontInputRef
-              },
-              {
-                side: 'back' as PackageSide,
-                title: 'Back View',
-                badge: 'Information Panel',
-                mandatory: true,
-                requiredFields: 'MRP, Mfg Date, Expiry, Address',
-                color: '#10b981',
-                accentBg: 'rgba(16, 185, 129, 0.12)',
-                ref: backInputRef
-              },
-              {
-                side: 'side' as PackageSide,
-                title: 'Side Panel',
-                badge: 'Support & Origin',
-                mandatory: false,
-                requiredFields: 'Consumer Helpline, Origin, Barcode',
-                color: '#8b5cf6',
-                accentBg: 'rgba(139, 92, 246, 0.12)',
-                ref: sideInputRef
-              }
-            ].map((slot) => {
-              const data = sideImages[slot.side];
-              const hasImg = !!data.previewUrl;
-              const isSelected = activeSide === slot.side;
-              const isDragging = dragOverSide === slot.side;
-
-              return (
-                <div
-                  key={slot.side}
-                  onClick={() => setActiveSide(slot.side)}
-                  onDragOver={(e) => { e.preventDefault(); setDragOverSide(slot.side); }}
-                  onDragLeave={() => setDragOverSide(null)}
-                  onDrop={(e) => handleDropForSide(e, slot.side)}
-                  style={{
-                    position: 'relative',
-                    overflow: 'hidden',
-                    borderRadius: '14px',
-                    border: `1.5px solid ${isDragging ? '#38bdf8' : isSelected ? slot.color : 'var(--border-card)'}`,
-                    background: isSelected 
-                      ? 'linear-gradient(180deg, rgba(20, 31, 56, 0.95) 0%, rgba(10, 16, 32, 0.95) 100%)' 
-                      : 'linear-gradient(180deg, rgba(13, 20, 38, 0.7) 0%, rgba(8, 12, 24, 0.8) 100%)',
-                    padding: '14px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '10px',
-                    boxShadow: isSelected 
-                      ? `0 12px 28px -6px ${slot.color}35, 0 0 0 1px ${slot.color}66, inset 0 1px 0 rgba(255,255,255,0.15)` 
-                      : '0 4px 14px rgba(0,0,0,0.35)',
-                    transition: 'all 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
-                    cursor: 'pointer'
-                  }}
-                >
-                  {/* Top Specular Rim-light */}
-                  <div style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    height: '2px',
-                    background: isSelected 
-                      ? `linear-gradient(90deg, transparent 0%, ${slot.color} 50%, transparent 100%)` 
-                      : 'transparent',
-                    boxShadow: isSelected ? `0 0 10px ${slot.color}` : 'none'
-                  }} />
-
-                  {/* Slot Header */}
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                    <div>
-                      <div style={{
-                        fontWeight: 800,
-                        fontSize: '0.84rem',
-                        color: isSelected ? slot.color : '#ffffff',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '6px'
-                      }}>
-                        <span>{slot.title}</span>
-                        <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', fontWeight: 500 }}>
-                          ({slot.badge})
-                        </span>
-                      </div>
-                      <div style={{ fontSize: '0.67rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
-                        {slot.requiredFields}
-                      </div>
-                    </div>
-                    <span style={{
-                      fontSize: '0.66rem',
-                      padding: '2px 8px',
-                      borderRadius: '9999px',
-                      fontWeight: 700,
-                      background: hasImg ? 'rgba(16, 185, 129, 0.2)' : 'rgba(255, 255, 255, 0.08)',
-                      color: hasImg ? '#34d399' : 'var(--text-muted)',
-                      border: hasImg ? '1px solid rgba(16, 185, 129, 0.35)' : '1px solid rgba(255,255,255,0.06)',
-                      flexShrink: 0,
-                      letterSpacing: '0.02em'
-                    }}>
-                      {hasImg ? '✓ Loaded' : slot.mandatory ? 'Required' : 'Optional'}
-                    </span>
-                  </div>
-
-                  {/* Slot Preview or Dropzone */}
-                  {hasImg ? (
-                    <div style={{
-                      position: 'relative',
-                      borderRadius: '10px',
-                      overflow: 'hidden',
-                      background: '#060913',
-                      border: '1px solid var(--border-subtle)',
-                      boxShadow: 'inset 0 2px 6px rgba(0,0,0,0.6)'
-                    }}>
-                      <img
-                        src={data.previewUrl!}
-                        alt={`${slot.title} preview`}
-                        style={{ width: '100%', height: '115px', objectFit: 'contain', display: 'block', padding: '4px' }}
-                      />
-                      <div style={{
-                        padding: '6px 10px',
-                        background: 'rgba(9, 14, 28, 0.95)',
-                        borderTop: '1px solid var(--border-subtle)',
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        fontSize: '0.7rem'
-                      }}>
-                        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '80px', color: '#94a3b8' }}>
-                          {data.imageMeta?.name || 'Image'}
-                        </span>
-                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                          <button
-                            type="button"
-                            onClick={(e) => { e.stopPropagation(); openFileInputForSide(slot.side); }}
-                            style={{ background: 'transparent', border: 'none', color: '#60a5fa', cursor: 'pointer', fontSize: '0.7rem', fontWeight: 600 }}
-                          >
-                            Change
-                          </button>
-                          <span style={{ color: 'var(--text-muted)' }}>•</span>
-                          <button
-                            type="button"
-                            onClick={(e) => { e.stopPropagation(); openCameraForSide(slot.side); }}
-                            style={{ background: 'transparent', border: 'none', color: '#38bdf8', cursor: 'pointer', fontSize: '0.7rem', fontWeight: 600 }}
-                          >
-                            Camera
-                          </button>
-                          <span style={{ color: 'var(--text-muted)' }}>•</span>
-                          <button
-                            type="button"
-                            onClick={(e) => { e.stopPropagation(); handleClearImage(slot.side); }}
-                            style={{ background: 'transparent', border: 'none', color: '#f87171', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 700 }}
-                          >
-                            ✕
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    <div style={{
-                      border: `1.5px dashed ${isDragging ? '#38bdf8' : 'rgba(255, 255, 255, 0.15)'}`,
-                      borderRadius: '10px',
-                      padding: '16px 8px',
-                      textAlign: 'center',
-                      background: isDragging ? 'rgba(56, 189, 248, 0.1)' : 'rgba(6, 10, 22, 0.5)',
-                      minHeight: '115px',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: '8px',
-                      transition: 'all 0.2s ease'
-                    }}>
-                      <div style={{
-                        width: '32px',
-                        height: '32px',
-                        borderRadius: '50%',
-                        background: slot.accentBg,
-                        border: `1px solid ${slot.color}44`,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center'
-                      }}>
-                        <UploadCloud size={16} color={slot.color} />
-                      </div>
-                      <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', fontWeight: 500 }}>
-                        Upload {slot.title}
-                      </div>
-                      <div style={{ display: 'flex', gap: '6px' }}>
-                        <button
-                          type="button"
-                          onClick={(e) => { e.stopPropagation(); openFileInputForSide(slot.side); }}
-                          className="btn btn-primary"
-                          style={{ padding: '4px 10px', fontSize: '0.7rem', gap: '4px', borderRadius: '6px' }}
-                        >
-                          <UploadCloud size={11} />
-                          Browse
-                        </button>
-                        <button
-                          type="button"
-                          onClick={(e) => { e.stopPropagation(); openCameraForSide(slot.side); }}
-                          className="btn btn-secondary"
-                          style={{ padding: '4px 10px', fontSize: '0.7rem', gap: '4px', borderRadius: '6px' }}
-                        >
-                          <Camera size={11} />
-                          Camera
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-
-          {/* Active Panel Optical HUD Inspection Canvas */}
-          <div style={{
-            position: 'relative',
-            borderRadius: '14px',
-            border: '1px solid var(--border-card)',
-            background: 'linear-gradient(180deg, rgba(10, 16, 32, 0.9) 0%, rgba(6, 9, 20, 0.95) 100%)',
-            overflow: 'hidden',
-            boxShadow: '0 12px 36px -8px rgba(0, 0, 0, 0.75)'
-          }}>
+          {/* Active Panel Optical HUD Inspection Viewport */}
+          <div 
+            onDragOver={(e) => { e.preventDefault(); setDragOverSide(activeSide); }}
+            onDragLeave={() => setDragOverSide(null)}
+            onDrop={(e) => handleDropForSide(e, activeSide)}
+            style={{
+              position: 'relative',
+              borderRadius: '14px',
+              border: `1.5px solid ${dragOverSide === activeSide ? '#38bdf8' : 'var(--border-card)'}`,
+              background: dragOverSide === activeSide 
+                ? 'linear-gradient(180deg, rgba(14, 28, 54, 0.95) 0%, rgba(8, 14, 28, 0.98) 100%)' 
+                : 'linear-gradient(180deg, rgba(10, 16, 32, 0.9) 0%, rgba(6, 9, 20, 0.95) 100%)',
+              overflow: 'hidden',
+              boxShadow: '0 12px 36px -8px rgba(0, 0, 0, 0.75)',
+              transition: 'all 0.2s ease'
+            }}
+          >
             {/* HUD Corner Reticles */}
             <div className="hud-corner hud-corner-tl" />
             <div className="hud-corner hud-corner-tr" />
@@ -888,7 +643,7 @@ export const ScanUploadPage: React.FC<ScanUploadPageProps> = ({
               justifyContent: 'space-between',
               alignItems: 'center',
               flexWrap: 'wrap',
-              gap: '8px'
+              gap: '10px'
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <div style={{
@@ -909,15 +664,15 @@ export const ScanUploadPage: React.FC<ScanUploadPageProps> = ({
               </div>
 
               {/* Quick Tab Switcher for Inspector Canvas */}
-              <div style={{ display: 'flex', gap: '4px' }}>
+              <div style={{ display: 'flex', gap: '6px' }}>
                 {(['front', 'back', 'side'] as const).map((s) => (
                   <button
                     key={s}
                     type="button"
                     onClick={() => setActiveSide(s)}
                     style={{
-                      padding: '4px 10px',
-                      fontSize: '0.72rem',
+                      padding: '5px 12px',
+                      fontSize: '0.75rem',
                       fontWeight: 700,
                       textTransform: 'capitalize',
                       borderRadius: '6px',
@@ -925,17 +680,23 @@ export const ScanUploadPage: React.FC<ScanUploadPageProps> = ({
                       background: activeSide === s ? 'rgba(56, 189, 248, 0.2)' : 'rgba(255, 255, 255, 0.05)',
                       color: activeSide === s ? '#38bdf8' : 'var(--text-secondary)',
                       cursor: 'pointer',
-                      transition: 'all 0.15s ease'
+                      transition: 'all 0.15s ease',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px'
                     }}
                   >
-                    {s} {sideImages[s].previewUrl ? '✓' : ''}
+                    <span>{s}</span>
+                    {sideImages[s].previewUrl ? (
+                      <span style={{ color: '#34d399', fontWeight: 800 }}>✓</span>
+                    ) : null}
                   </button>
                 ))}
               </div>
             </div>
 
             <div style={{
-              minHeight: '280px',
+              minHeight: '290px',
               position: 'relative',
               display: 'flex',
               alignItems: 'center',
@@ -944,13 +705,13 @@ export const ScanUploadPage: React.FC<ScanUploadPageProps> = ({
               padding: '16px'
             }}>
               {sideImages[activeSide].previewUrl ? (
-                <div style={{ width: '100%', position: 'relative', display: 'flex', justifyContent: 'center' }}>
+                <div style={{ width: '100%', position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                   <img
                     src={sideImages[activeSide].previewUrl!}
                     alt={`${activeSide} Active Inspection Preview`}
                     style={{
                       width: '100%',
-                      maxHeight: '300px',
+                      maxHeight: '340px',
                       objectFit: 'contain',
                       borderRadius: '10px',
                       display: 'block',
@@ -980,7 +741,7 @@ export const ScanUploadPage: React.FC<ScanUploadPageProps> = ({
                   {sideImages[activeSide].imageMeta && (
                     <div style={{
                       position: 'absolute',
-                      bottom: '8px',
+                      top: '8px',
                       right: '12px',
                       background: 'rgba(5, 8, 17, 0.85)',
                       border: '1px solid rgba(255, 255, 255, 0.1)',
@@ -1028,37 +789,87 @@ export const ScanUploadPage: React.FC<ScanUploadPageProps> = ({
                       </div>
                     </>
                   )}
+
+                  {/* Panel Action Toolbar when image is loaded */}
+                  <div style={{
+                    marginTop: '12px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                    background: 'rgba(10, 16, 32, 0.9)',
+                    border: '1px solid rgba(255, 255, 255, 0.12)',
+                    borderRadius: '8px',
+                    padding: '6px 14px',
+                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.4)'
+                  }}>
+                    <button
+                      type="button"
+                      onClick={() => openFileInputForSide(activeSide)}
+                      style={{ background: 'transparent', border: 'none', color: '#60a5fa', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '5px' }}
+                    >
+                      <UploadCloud size={13} />
+                      Browse / Change
+                    </button>
+                    <span style={{ color: 'var(--text-muted)' }}>•</span>
+                    <button
+                      type="button"
+                      onClick={() => openCameraForSide(activeSide)}
+                      style={{ background: 'transparent', border: 'none', color: '#38bdf8', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '5px' }}
+                    >
+                      <Camera size={13} />
+                      Camera
+                    </button>
+                    <span style={{ color: 'var(--text-muted)' }}>•</span>
+                    <button
+                      type="button"
+                      onClick={() => handleClearImage(activeSide)}
+                      style={{ background: 'transparent', border: 'none', color: '#f87171', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 600 }}
+                    >
+                      ✕ Remove
+                    </button>
+                  </div>
                 </div>
               ) : (
-                <div style={{ textAlign: 'center', padding: '36px 20px', color: 'var(--text-muted)' }}>
+                <div style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--text-muted)' }}>
                   <div style={{
-                    width: '60px',
-                    height: '60px',
+                    width: '64px',
+                    height: '64px',
                     borderRadius: '50%',
                     background: 'rgba(56, 189, 248, 0.08)',
                     border: '1px dashed rgba(56, 189, 248, 0.35)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    margin: '0 auto 14px'
+                    margin: '0 auto 16px'
                   }}>
-                    <UploadCloud size={28} color="#38bdf8" />
+                    <UploadCloud size={30} color="#38bdf8" />
                   </div>
-                  <div style={{ fontWeight: 700, fontSize: '0.92rem', color: '#ffffff', marginBottom: '4px' }}>
+                  <div style={{ fontWeight: 700, fontSize: '0.94rem', color: '#ffffff', marginBottom: '6px' }}>
                     Optical Reticle: No Image for {activeSide.toUpperCase()} Panel
                   </div>
-                  <div style={{ fontSize: '0.78rem', marginBottom: '16px', maxWidth: '360px', margin: '0 auto 16px', color: 'var(--text-secondary)' }}>
+                  <div style={{ fontSize: '0.78rem', marginBottom: '20px', maxWidth: '380px', margin: '0 auto 20px', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
                     Capture packaging surface via device camera or browse high-resolution label photo to engage automated compliance audit.
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => openFileInputForSide(activeSide)}
-                    className="btn btn-primary"
-                    style={{ padding: '8px 18px', fontSize: '0.8rem', gap: '8px', borderRadius: '8px' }}
-                  >
-                    <UploadCloud size={15} />
-                    Browse {activeSide.toUpperCase()} Photo
-                  </button>
+                  <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', flexWrap: 'wrap' }}>
+                    <button
+                      type="button"
+                      onClick={() => openFileInputForSide(activeSide)}
+                      className="btn btn-primary"
+                      style={{ padding: '8px 20px', fontSize: '0.82rem', gap: '8px', borderRadius: '8px' }}
+                    >
+                      <UploadCloud size={15} />
+                      Browse {activeSide.toUpperCase()} Photo
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => openCameraForSide(activeSide)}
+                      className="btn btn-secondary"
+                      style={{ padding: '8px 18px', fontSize: '0.82rem', gap: '8px', borderRadius: '8px' }}
+                    >
+                      <Camera size={15} />
+                      Camera
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
