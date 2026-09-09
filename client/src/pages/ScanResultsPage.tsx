@@ -256,9 +256,11 @@ export const ScanResultsPage: React.FC<ScanResultsPageProps> = ({
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: '20px'
+        marginBottom: '20px',
+        flexWrap: 'wrap',
+        gap: '12px'
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
           <button
             onClick={onBack}
             className="btn btn-secondary"
@@ -268,16 +270,16 @@ export const ScanResultsPage: React.FC<ScanResultsPageProps> = ({
             Back to Upload
           </button>
           <div>
-            <h1 style={{ fontSize: '1.45rem', fontWeight: 800 }}>
+            <h1 style={{ fontSize: '1.35rem', fontWeight: 800, margin: 0 }}>
               OCR Field Extraction &amp; Dynamic Verification
             </h1>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.8rem' }}>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.78rem', margin: '2px 0 0' }}>
               Extracted via real-time Tesseract OCR. Confirm detected declarations before generating the official compliance certificate.
             </p>
           </div>
         </div>
 
-        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
           <button
             onClick={() => setShowDeleteModal(true)}
             className="btn btn-danger"

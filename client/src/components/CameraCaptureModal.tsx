@@ -176,17 +176,18 @@ export const CameraCaptureModal: React.FC<CameraCaptureModalProps> = ({
     <div style={{
       position: 'fixed',
       inset: 0,
-      background: 'rgba(0, 0, 0, 0.85)',
-      backdropFilter: 'blur(8px)',
+      background: 'rgba(0, 0, 0, 0.88)',
+      backdropFilter: 'blur(10px)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
       zIndex: 9999,
-      padding: '20px'
+      padding: 'min(16px, 2vw)'
     }}>
       <div className="glass-panel" style={{
         maxWidth: '720px',
         width: '100%',
+        maxHeight: '96vh',
         background: '#090d16',
         border: '1px solid rgba(59, 130, 246, 0.4)',
         borderRadius: '16px',
@@ -197,7 +198,7 @@ export const CameraCaptureModal: React.FC<CameraCaptureModalProps> = ({
       }}>
         {/* Header */}
         <div style={{
-          padding: '16px 20px',
+          padding: '12px 16px',
           borderBottom: '1px solid var(--border-subtle)',
           display: 'flex',
           justifyContent: 'space-between',
@@ -206,24 +207,25 @@ export const CameraCaptureModal: React.FC<CameraCaptureModalProps> = ({
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <div style={{
-              width: '36px',
-              height: '36px',
-              borderRadius: '10px',
+              width: '34px',
+              height: '34px',
+              borderRadius: '8px',
               background: 'rgba(37, 99, 235, 0.2)',
               border: '1px solid rgba(37, 99, 235, 0.4)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              color: '#60a5fa'
+              color: '#60a5fa',
+              flexShrink: 0
             }}>
               <Camera size={18} />
             </div>
             <div>
-              <div style={{ fontWeight: 800, fontSize: '1rem', color: '#ffffff' }}>
+              <div style={{ fontWeight: 800, fontSize: '0.92rem', color: '#ffffff' }}>
                 {panelTitle ? `Camera Capture: ${panelTitle}` : 'System Camera Viewfinder'}
               </div>
-              <div style={{ fontSize: '0.74rem', color: 'var(--text-secondary)' }}>
-                Position commodity packaging inside the alignment frame for high-accuracy OCR
+              <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>
+                Position packaging surface inside frame for statutory OCR audit
               </div>
             </div>
           </div>
@@ -254,7 +256,8 @@ export const CameraCaptureModal: React.FC<CameraCaptureModalProps> = ({
         <div style={{
           position: 'relative',
           width: '100%',
-          height: '420px',
+          height: 'min(420px, 48vh)',
+          minHeight: '260px',
           background: '#000000',
           overflow: 'hidden',
           display: 'flex',
@@ -405,25 +408,26 @@ export const CameraCaptureModal: React.FC<CameraCaptureModalProps> = ({
 
         {/* Footer Controls */}
         <div style={{
-          padding: '18px 24px',
+          padding: '12px 16px',
           background: 'rgba(15, 23, 42, 0.95)',
           borderTop: '1px solid var(--border-subtle)',
           display: 'flex',
           justifyContent: 'space-between',
-          alignItems: 'center'
+          alignItems: 'center',
+          gap: '10px'
         }}>
           {/* Switch Camera Button if multiple video devices exist */}
-          <div>
+          <div style={{ minWidth: '40px' }}>
             {devices.length > 1 && !errorMessage && (
               <button
                 type="button"
                 onClick={handleSwitchCamera}
                 className="btn btn-secondary"
-                style={{ gap: '8px', padding: '8px 14px', fontSize: '0.8rem' }}
+                style={{ gap: '6px', padding: '8px 12px', fontSize: '0.78rem' }}
                 title="Switch between available cameras"
               >
                 <SwitchCamera size={16} />
-                <span>Switch Camera</span>
+                <span className="desktop-only">Switch Camera</span>
               </button>
             )}
           </div>
@@ -435,17 +439,18 @@ export const CameraCaptureModal: React.FC<CameraCaptureModalProps> = ({
             disabled={isLoading || !!errorMessage}
             className="btn btn-primary"
             style={{
-              padding: '12px 28px',
-              fontSize: '0.95rem',
+              padding: '10px 24px',
+              fontSize: '0.9rem',
               fontWeight: 800,
-              gap: '10px',
+              gap: '8px',
               background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',
               boxShadow: '0 4px 18px rgba(37, 99, 235, 0.45)',
-              borderRadius: '9999px'
+              borderRadius: '9999px',
+              minHeight: '44px'
             }}
           >
-            <Camera size={20} />
-            <span>Capture Label Photo</span>
+            <Camera size={18} />
+            <span>Snap Photo</span>
           </button>
 
           {/* Cancel button */}
@@ -456,9 +461,10 @@ export const CameraCaptureModal: React.FC<CameraCaptureModalProps> = ({
               onClose();
             }}
             className="btn btn-secondary"
-            style={{ padding: '8px 16px', fontSize: '0.8rem' }}
+            style={{ padding: '8px 14px', fontSize: '0.78rem', minHeight: '40px' }}
           >
-            Cancel
+            <span className="desktop-only">Cancel</span>
+            <span className="mobile-only">✕</span>
           </button>
         </div>
       </div>
