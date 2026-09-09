@@ -618,7 +618,7 @@ export const ScanUploadPage: React.FC<ScanUploadPageProps> = ({
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <span style={{ fontSize: '0.84rem', fontWeight: 800, letterSpacing: '0.04em', color: 'var(--text-secondary)' }}>
-                  1. COMMODITY LABEL PANELS (3 SIDES / 3 భుజాలు)
+                  1. COMMODITY LABEL PANELS (MULTI-SURFACE AUDIT)
                 </span>
                 <span style={{
                   fontSize: '0.7rem',
@@ -632,7 +632,7 @@ export const ScanUploadPage: React.FC<ScanUploadPageProps> = ({
                 </span>
               </div>
               <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)', marginTop: '2px' }}>
-                Upload 3 distinct photos for Front (ముందు), Back (వెనుక), and Side (ప్రక్క). All 3 panels are scanned together.
+                Upload distinct packaging panels for Front, Back, and Side. Declarations from all panels are aggregated for statutory audit.
               </div>
             </div>
           </div>
@@ -648,30 +648,27 @@ export const ScanUploadPage: React.FC<ScanUploadPageProps> = ({
               {
                 side: 'front' as PackageSide,
                 title: 'Front View',
-                telugu: 'ముందు వైపు',
-                badge: 'Primary Surface',
+                badge: 'Principal Display',
                 mandatory: true,
-                requiredFields: 'Brand, Name, Net Qty',
+                requiredFields: 'Brand, Commodity Name, Net Qty',
                 color: '#3b82f6',
                 ref: frontInputRef
               },
               {
                 side: 'back' as PackageSide,
                 title: 'Back View',
-                telugu: 'వెనుక వైపు',
-                badge: 'Info Panel',
+                badge: 'Information Panel',
                 mandatory: true,
-                requiredFields: 'MRP, Mfg Date, Address',
+                requiredFields: 'MRP, Mfg Date, Expiry, Address',
                 color: '#10b981',
                 ref: backInputRef
               },
               {
                 side: 'side' as PackageSide,
-                title: 'Side View',
-                telugu: 'ప్రక్క వైపు',
+                title: 'Side Panel',
                 badge: 'Support & Origin',
                 mandatory: false,
-                requiredFields: 'Helpline, Origin, Care',
+                requiredFields: 'Consumer Helpline, Origin, Barcode',
                 color: '#8b5cf6',
                 ref: sideInputRef
               }
@@ -705,7 +702,7 @@ export const ScanUploadPage: React.FC<ScanUploadPageProps> = ({
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                     <div>
                       <div style={{ fontWeight: 800, fontSize: '0.82rem', color: isSelected ? slot.color : '#ffffff' }}>
-                        {slot.title} <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>({slot.telugu})</span>
+                        {slot.title} <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>({slot.badge})</span>
                       </div>
                       <div style={{ fontSize: '0.67rem', color: 'var(--text-secondary)' }}>
                         {slot.requiredFields}
@@ -1081,15 +1078,15 @@ export const ScanUploadPage: React.FC<ScanUploadPageProps> = ({
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', color: sideImages.front.previewUrl ? '#93c5fd' : 'var(--text-muted)' }}>
-                  <span>Front (ముందు వైపు):</span>
+                  <span>Front Panel (Principal Display):</span>
                   <span style={{ fontWeight: 600 }}>{sideImages.front.previewUrl ? '✓ Ready (Net Qty, Brand)' : '— Not uploaded'}</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', color: sideImages.back.previewUrl ? '#86efac' : 'var(--text-muted)' }}>
-                  <span>Back (వెనుక వైపు):</span>
+                  <span>Back Panel (Statutory Info):</span>
                   <span style={{ fontWeight: 600 }}>{sideImages.back.previewUrl ? '✓ Ready (MRP, Mfg Date)' : '— Not uploaded'}</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', color: sideImages.side.previewUrl ? '#c4b5fd' : 'var(--text-muted)' }}>
-                  <span>Side (ప్రక్క వైపు):</span>
+                  <span>Side Panel (Helpline & Origin):</span>
                   <span style={{ fontWeight: 600 }}>{sideImages.side.previewUrl ? '✓ Ready (Helpline, Origin)' : '— Not uploaded'}</span>
                 </div>
               </div>
@@ -1217,7 +1214,7 @@ export const ScanUploadPage: React.FC<ScanUploadPageProps> = ({
         isOpen={isCameraOpen}
         onClose={() => setIsCameraOpen(false)}
         onCapture={handleCameraCapture}
-        panelTitle={`${cameraTargetSide.toUpperCase()} PANEL (${cameraTargetSide === 'front' ? 'ముందు వైపు' : cameraTargetSide === 'back' ? 'వెనుక వైపు' : 'ప్రక్క వైపు'})`}
+        panelTitle={`${cameraTargetSide.toUpperCase()} PANEL (${cameraTargetSide === 'front' ? 'Principal Display Surface' : cameraTargetSide === 'back' ? 'Statutory Information Panel' : 'Consumer Helpline & Origin'})`}
       />
 
       <style>{`
