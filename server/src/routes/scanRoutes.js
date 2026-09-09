@@ -5,6 +5,7 @@ import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { db } from '../db.js';
 import { parsePackagingText } from '../services/parserService.js';
+import { authenticateToken, requireInspector } from '../middleware/auth.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -36,8 +37,8 @@ const upload = multer({
 
 const router = express.Router();
 
-// POST /api/upload-image
-router.post('/upload-image', upload.single('image'), (req, res) => {
+// POST /api/upload-image (Secured: Sworn Inspectors Only)
+router.post('/upload-image', authenticateToken, requireInspector, upload.single('image'), (req, res) => {
   if (!req.file) {
     return res.status(400).json({ error: "No image file provided" });
   }
@@ -51,8 +52,8 @@ router.post('/upload-image', upload.single('image'), (req, res) => {
   });
 });
 
-// POST /api/process-ocr
-router.post('/process-ocr', (req, res) => {
+// POST /api/process-ocr (Secured: Sworn Inspectors Only)
+router.post('/process-ocr', authenticateToken, requireInspector, (req, res) => {
   const { raw_text, image_url, product_name, brand, category } = req.body;
 
   if (!raw_text || typeof raw_text !== 'string') {
@@ -74,8 +75,8 @@ router.post('/process-ocr', (req, res) => {
   });
 });
 
-// GET /api/scans
-router.get('/scans', async (req, res) => {
+// GET /api/scans (Secured: Authenticated Officers)
+router.get('/scans', authenticateToken, async (req, res) => {
   try {
     const scans = await db.getScans();
     const products = await db.getProducts();
@@ -92,8 +93,8 @@ router.get('/scans', async (req, res) => {
   }
 });
 
-// GET /api/scans/:id
-router.get('/scans/:id', async (req, res) => {
+// GET /api/scans/:id (Secured: Authenticated Officers)
+router.get('/scans/:id', authenticateToken, async (req, res) => {
   try {
     const scan = await db.getScanById(req.params.id);
     if (!scan) return res.status(404).json({ error: "Scan not found" });

@@ -206,6 +206,31 @@ export const api = {
     return res.json();
   },
 
+  // Admin User Management
+  async getAdminUsers(): Promise<{ users: User[] }> {
+    const res = await fetch(`${API_BASE_URL}/admin/users`, {
+      headers: getAuthHeaders()
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ error: 'Failed to load user directory' }));
+      throw new Error(err.error || 'Failed to load user directory');
+    }
+    return res.json();
+  },
+
+  async updateUserRole(id: string, role: string): Promise<{ user: User; message: string }> {
+    const res = await fetch(`${API_BASE_URL}/admin/users/${id}/role`, {
+      method: 'PATCH',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ role })
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ error: 'Failed to update user role' }));
+      throw new Error(err.error || 'Failed to update user role');
+    }
+    return res.json();
+  },
+
   getExportUrl(reportId: string, format: 'json' | 'csv'): string {
     return `${API_BASE_URL}/export/${reportId}/${format}`;
   }

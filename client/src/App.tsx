@@ -38,6 +38,16 @@ export function App() {
 
   const [activeReportId, setActiveReportId] = useState<string | null>(null);
 
+  // RBAC route guard: strictly isolates Inspector vs Admin interfaces
+  React.useEffect(() => {
+    if (user?.role === 'admin' && (currentTab === 'inspector' || currentTab === 'scan' || currentTab === 'results')) {
+      setCurrentTab('admin');
+    }
+    if (user?.role === 'inspector' && currentTab === 'admin') {
+      setCurrentTab('inspector');
+    }
+  }, [user, currentTab]);
+
   const handleLogout = () => {
     api.logout();
     setUser(null);
@@ -103,6 +113,7 @@ export function App() {
 
         {currentTab === 'scan' && (
           <ScanUploadPage
+            user={user}
             initialSample={activeSample}
             onOcrComplete={handleOcrComplete}
           />

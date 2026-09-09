@@ -1,10 +1,11 @@
 import express from 'express';
 import { db } from '../db.js';
+import { authenticateToken, requireAdmin } from '../middleware/auth.js';
 
 const router = express.Router();
 
-// GET /api/stats
-router.get('/stats', async (req, res) => {
+// GET /api/stats (Secured: Authenticated Officers)
+router.get('/stats', authenticateToken, async (req, res) => {
   try {
     const scans = await db.getScans();
     const violations = await db.getViolations();
@@ -69,8 +70,8 @@ router.get('/stats', async (req, res) => {
   }
 });
 
-// GET /api/violations
-router.get('/violations', async (req, res) => {
+// GET /api/violations (Secured: Authenticated Officers)
+router.get('/violations', authenticateToken, async (req, res) => {
   try {
     const violations = await db.getViolations();
     const scans = await db.getScans();
@@ -94,6 +95,38 @@ router.get('/violations', async (req, res) => {
     res.json({ violations: enriched });
   } catch (err) {
     res.status(500).json({ error: err.message || "Failed to load violations" });
+  }
+});
+
+// GET /api/admin/users (Secured: Sworn Administrators Only)
+router.get('/admin/users', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const users = await db.getUsers();
+    res.json({ users });
+  } catch (err) {
+    res.status(500).json({ error: err.message || "Failed to retrieve user directory" });
+  }
+});
+
+// PATCH /api/admin/users/:id/role (Secured: Sworn Administrators Only)
+router.patch('/admin/users/:id/role', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const { role } = req.body;
+    if (!['inspector', 'admin'].includes(role)) {
+      return res.status(400).json({ error: "Invalid role. Role must be either 'inspector' or 'admin'." });
+    }
+
+    const updated = await db.updateUserRole(req.params.id, role);
+    if (!updated) {
+      return res.status(404).json({ error: "Officer record not found." });
+    }
+
+    res.json({ 
+      message: `Officer role successfully updated to ${role}`,
+      user: updated 
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message || "Failed to update user role" });
   }
 });
 

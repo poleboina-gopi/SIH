@@ -136,6 +136,17 @@ export function evaluateCompliance(parsedFields = {}, activeRules = STATUTORY_RU
         penalty_fine: "₹25,000",
         field: "mrp"
       });
+    } else if (parsedFields.mrp.has_currency_symbol === false) {
+      violations.push({
+        rule_code: "Rule 6(1)(e)",
+        rule_id: "RULE_6_1_E",
+        violation_type: "MISSING_CURRENCY_SYMBOL",
+        severity: "MAJOR",
+        description: "Maximum Retail Price declaration fails to display official currency symbol ('₹' or 'Rs.').",
+        statutory_provision: "Rule 6(1)(e) of Legal Metrology (PC) Rules, 2011",
+        penalty_fine: "₹25,000",
+        field: "mrp"
+      });
     }
   }
 

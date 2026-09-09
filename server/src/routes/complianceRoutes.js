@@ -2,11 +2,12 @@ import express from 'express';
 import { db } from '../db.js';
 import { evaluateCompliance } from '../services/complianceEngine.js';
 import { parsePackagingText } from '../services/parserService.js';
+import { authenticateToken, requireInspector } from '../middleware/auth.js';
 
 const router = express.Router();
 
-// POST /api/validate
-router.post('/validate', async (req, res) => {
+// POST /api/validate (Secured: Sworn Inspectors Only)
+router.post('/validate', authenticateToken, requireInspector, async (req, res) => {
   try {
     const {
       product_name,
@@ -15,9 +16,12 @@ router.post('/validate', async (req, res) => {
       image_url,
       raw_text,
       parsed_fields: clientParsedFields,
-      inspector_id = "usr_inspector_01",
-      inspector_name = "R. K. Sharma"
+      inspector_id,
+      inspector_name
     } = req.body;
+
+    const assignedInspectorId = req.user?.id || inspector_id || "usr_inspector_01";
+    const assignedInspectorName = req.user?.name || inspector_name || "Legal Metrology Officer";
 
     if (!raw_text && !clientParsedFields) {
       return res.status(400).json({ error: "raw_text or parsed_fields is required" });
@@ -36,7 +40,7 @@ router.post('/validate', async (req, res) => {
       brand: brand || parsed.manufacturer?.name || "Unbranded / Local",
       category: category || "Packaged Commodity",
       image_url: image_url || "/uploads/sample_placeholder.png",
-      uploaded_by: inspector_id,
+      uploaded_by: assignedInspectorId,
       created_at: new Date().toISOString()
     };
     const savedProduct = await db.addProduct(product);
@@ -49,7 +53,7 @@ router.post('/validate', async (req, res) => {
       parsed_fields: parsed,
       compliance_status: evaluation.compliance_status,
       compliance_score: evaluation.compliance_score,
-      inspector_id,
+      inspector_id: assignedInspectorId,
       created_at: new Date().toISOString()
     };
     const savedScan = await db.addScan(scan);
@@ -59,29 +63,36 @@ router.post('/validate', async (req, res) => {
       const violationRecord = {
         id: `viol_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
         scan_id: scanId,
-        ...v
+        rule_code: v.rule_code,
+        violation_type: v.violation_type,
+        severity: v.severity,
+        description: v.description,
+        statutory_provision: v.statutory_provision || "Rule 6 of Legal Metrology (PC) Rules, 2011",
+        suggested_action: v.suggested_action || v.statutory_remedy || "Rectify declaration",
+        penalty_fine: v.penalty_fine || "₹25,000",
+        field: v.field,
+        created_at: new Date().toISOString()
       };
       const sv = await db.addViolation(violationRecord);
       savedViolations.push(sv);
     }
 
     const reportId = `rep_${Date.now()}`;
-    const reportNumber = `LMCR-${new Date().getFullYear()}-${Math.floor(10000 + Math.random() * 90000)}`;
+    const reportNumber = `CLM/DEL/${new Date().getFullYear()}/${Math.floor(1000 + Math.random() * 9000)}`;
     const report = {
       id: reportId,
       scan_id: scanId,
       report_number: reportNumber,
-      product_id: productId,
       status: evaluation.compliance_status,
       score: evaluation.compliance_score,
-      inspector_name,
-      generated_at: new Date().toISOString(),
-      rule_checks_summary: evaluation.rule_checks_summary,
-      statutory_notice: evaluation.statutory_notice
+      inspector_id: assignedInspectorId,
+      inspector_name: assignedInspectorName,
+      statutory_notice: evaluation.compliance_status === "NON_COMPLIANT" ? evaluation.show_cause_notice : null,
+      generated_at: new Date().toISOString()
     };
     const savedReport = await db.addReport(report);
 
-    res.status(201).json({
+    res.json({
       success: true,
       report_id: reportId,
       report: savedReport,
@@ -95,8 +106,8 @@ router.post('/validate', async (req, res) => {
   }
 });
 
-// GET /api/report/:id
-router.get('/report/:id', async (req, res) => {
+// GET /api/report/:id (Secured: Authenticated Officers)
+router.get('/report/:id', authenticateToken, async (req, res) => {
   try {
     const report = await db.getReportById(req.params.id);
     if (!report) {
@@ -118,8 +129,8 @@ router.get('/report/:id', async (req, res) => {
   }
 });
 
-// GET /api/reports
-router.get('/reports', async (req, res) => {
+// GET /api/reports (Secured: Authenticated Officers)
+router.get('/reports', authenticateToken, async (req, res) => {
   try {
     const reports = await db.getReports();
     const scans = await db.getScans();
@@ -147,8 +158,8 @@ router.get('/reports', async (req, res) => {
   }
 });
 
-// GET /api/export/:id/:format
-router.get('/export/:id/:format', async (req, res) => {
+// GET /api/export/:id/:format (Secured: Authenticated Officers)
+router.get('/export/:id/:format', authenticateToken, async (req, res) => {
   try {
     const { id, format } = req.params;
     const report = await db.getReportById(id);

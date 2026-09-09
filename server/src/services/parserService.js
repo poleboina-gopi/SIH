@@ -130,22 +130,34 @@ function extractNetQuantity(text) {
 }
 
 function extractDates(text) {
-  // Checks MM/YYYY, MM/YY, Month YYYY, "Pkd Date", "Mfg Date", "Best Before"
+  // Checks DD/MM/YYYY, MM/YYYY, DD-MM-YYYY, MM-YYYY, Month YYYY
   const datePatterns = [
-    /(?:mfg|mfd|packed|pkd|date\s*of\s*pkd|date\s*of\s*mfg|dom|dop)[:\s.-]*([0-1]?\d\/(?:20)?\d{2})/i,
-    /(?:mfg|mfd|packed|pkd)[:\s.-]*([a-z]{3,9}\s+(?:20)?\d{2,4})/i,
-    /\b([0-1]\d\/(?:20\d{2}|\d{2}))\b/
+    // 1. Prefixed DD/MM/YYYY or DD-MM-YYYY or DD.MM.YYYY
+    /(?:mfg|mfd|packed|pkd|date\s*of\s*pkd|date\s*of\s*mfg|dom|dop)[:\s.-]*\b([0-3]?\d[\/\-\.][0-1]?\d[\/\-\.](?:20\d{2}|\d{2}))\b/i,
+    // 2. Prefixed MM/YYYY or MM-YYYY
+    /(?:mfg|mfd|packed|pkd|date\s*of\s*pkd|date\s*of\s*mfg|dom|dop)[:\s.-]*\b([0-1]?\d[\/\-](?:20\d{2}|\d{2}))\b/i,
+    // 3. Month YYYY
+    /(?:mfg|mfd|packed|pkd)[:\s.-]*\b([a-z]{3,9}\s+(?:20)?\d{2,4})\b/i,
+    // 4. Standalone DD/MM/YYYY
+    /\b((?:0?[1-9]|[12]\d|3[01])[\/\-\.](?:0?[1-9]|1[0-2])[\/\-\.](?:20\d{2}|\d{2}))\b/,
+    // 5. Standalone MM/YYYY
+    /\b((?:0?[1-9]|1[0-2])[\/\-](?:20\d{2}|\d{2}))\b/
   ];
 
   for (const regex of datePatterns) {
     const match = text.match(regex);
     if (match && match[1]) {
       const rawDate = match[1].trim();
-      const isCompliantFormat = /^([0-1]?\d\/(?:20\d{2}|\d{2}))|([a-z]{3,9}\s+20\d{2})$/i.test(rawDate);
+      const isDDMMYYYY = /^(?:0?[1-9]|[12]\d|3[01])[\/\-\.](?:0?[1-9]|1[0-2])[\/\-\.](?:20\d{2}|\d{2})$/.test(rawDate);
+      const isMMYYYY = /^(?:0?[1-9]|1[0-2])[\/\-](?:20\d{2}|\d{2})$/.test(rawDate);
+      const isMonthYYYY = /^[a-z]{3,9}\s+(?:20)?\d{2,4}$/i.test(rawDate);
+
+      const isCompliantFormat = isDDMMYYYY || isMMYYYY || isMonthYYYY;
       return {
         date: rawDate,
+        format: isDDMMYYYY ? "DD/MM/YYYY" : isMMYYYY ? "MM/YYYY" : "Month YYYY",
         is_compliant: isCompliantFormat,
-        error: isCompliantFormat ? null : "Non-standard date format. Must be MM/YYYY or Month YYYY as per Rule 6(1)(d)."
+        error: isCompliantFormat ? null : "Non-standard date format. Must be MM/YYYY, DD/MM/YYYY, or Month YYYY as per Rule 6(1)(d)."
       };
     }
   }
@@ -154,33 +166,45 @@ function extractDates(text) {
 }
 
 function extractMRP(text) {
-  // Maximum Retail Price declaration
-  // Must check "inclusive of all taxes" or "incl. of all taxes"
+  // Maximum Retail Price declaration:
+  // Regex validation for MRP (₹ or Rs. + numeric value):
   const mrpRegex = /(?:m\.?r\.?p\.?|max(?:imum)?\s*retail\s*price|retail\s*price)[:\s]*(?:rs\.?|inr|₹)?\s*(\d+(?:\.\d{1,2})?)/i;
   const match = text.match(mrpRegex);
 
   const rawMrpSection = (text.match(/(?:m\.?r\.?p\.?|maximum\s*retail\s*price)[^\n.]*(?:\n[^\n.]*)?/i) || [""])[0];
-
   const hasTaxClause = /(?:incl(?:usive)?\.?\s*of\s*all\s*taxes|incl\.\s*taxes)/i.test(text);
+  const hasCurrencySymbol = /(?:₹|rs\.?|inr)/i.test(rawMrpSection || text);
 
   if (match) {
     const price = parseFloat(match[1]);
+    let error = null;
+    if (!hasTaxClause) {
+      error = "Missing mandatory statutory clause '(inclusive of all taxes)'. Mandatory under Rule 6(1)(e).";
+    } else if (!hasCurrencySymbol) {
+      error = "Missing official currency denomination symbol ('₹' or 'Rs.').";
+    }
+
     return {
       value: price,
-      raw: rawMrpSection.trim() || `MRP Rs. ${price}`,
+      currency: hasCurrencySymbol ? (rawMrpSection.includes('₹') ? '₹' : 'Rs.') : '₹',
+      raw: rawMrpSection.trim() || `MRP ₹ ${price} (inclusive of all taxes)`,
       includes_taxes: hasTaxClause,
-      error: hasTaxClause ? null : "Missing mandatory statutory clause '(inclusive of all taxes)'. Mandatory under Rule 6(1)(e)."
+      has_currency_symbol: hasCurrencySymbol,
+      error
     };
   }
 
-  // Fallback if ₹ or Rs followed by digits
-  const fallback = text.match(/(?:rs\.?|₹)\s*(\d+(?:\.\d{1,2})?)/i);
+  // Fallback: search for ₹ or Rs followed by digits
+  const fallback = text.match(/(?:₹|rs\.?)\s*(\d+(?:\.\d{1,2})?)/i);
   if (fallback) {
+    const price = parseFloat(fallback[1]);
     return {
-      value: parseFloat(fallback[1]),
+      value: price,
+      currency: fallback[0].includes('₹') ? '₹' : 'Rs.',
       raw: fallback[0],
       includes_taxes: hasTaxClause,
-      error: "Omitted explicit 'MRP' declaration and tax inclusion clause."
+      has_currency_symbol: true,
+      error: "Omitted explicit 'MRP' statutory prefix and tax inclusion clause."
     };
   }
 

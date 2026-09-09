@@ -310,6 +310,31 @@ class Database {
     return user;
   }
 
+  async getUsers() {
+    if (this.isMongo) {
+      return await UserModel.find({}, { password: 0 }).sort({ createdAt: -1 }).lean();
+    }
+    return this.data.users.map(({ password: _, ...safeUser }) => safeUser);
+  }
+
+  async updateUserRole(id, role) {
+    if (this.isMongo) {
+      return await UserModel.findOneAndUpdate(
+        { id },
+        { $set: { role } },
+        { new: true, projection: { password: 0 } }
+      ).lean();
+    }
+    const user = this.data.users.find(u => u.id === id);
+    if (user) {
+      user.role = role;
+      this.saveLocal();
+      const { password: _, ...safeUser } = user;
+      return safeUser;
+    }
+    return null;
+  }
+
   // Products
   async getProducts() {
     if (this.isMongo) {

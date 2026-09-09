@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { 
   CheckCircle2, AlertTriangle, XCircle, ArrowLeft, ArrowRight, 
-  Eye, Edit3, ShieldAlert, Sparkles, Scale, FileText 
+  Eye, Edit3, ShieldAlert, Sparkles, Scale, FileText, Copy, Check 
 } from 'lucide-react';
 import { BoundingBoxOverlay } from '../components/BoundingBoxOverlay';
 import { ParsedFields } from '../types';
@@ -44,8 +44,15 @@ export const ScanResultsPage: React.FC<ScanResultsPageProps> = ({
   });
 
   const [selectedField, setSelectedField] = useState<string | null>(null);
-  const [showRawText, setShowRawText] = useState(false);
+  const [leftTab, setLeftTab] = useState<'visual' | 'raw'>('visual');
+  const [copied, setCopied] = useState(false);
   const [isValidating, setIsValidating] = useState(false);
+
+  const handleCopyRawText = () => {
+    navigator.clipboard.writeText(scanData.rawText || '');
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   // Field change helpers
   const updateField = (section: keyof ParsedFields, key: string, value: any) => {
@@ -136,36 +143,78 @@ export const ScanResultsPage: React.FC<ScanResultsPageProps> = ({
 
       {/* Main Workspace: Left Label Visual vs Right Form */}
       <div className="grid-2" style={{ gap: '24px', alignItems: 'start' }}>
-        {/* Left: Interactive Packaging Label Visual */}
+        {/* Left: Interactive Packaging Label Visual & Extracted OCR Text */}
         <div className="glass-panel" style={{ padding: '20px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
-            <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-secondary)' }}>
-              PACKAGING LABEL VISUAL INSPECTION
-            </span>
-            <button
-              onClick={() => setShowRawText(!showRawText)}
-              className="btn btn-secondary"
-              style={{ fontSize: '0.75rem', padding: '4px 10px' }}
-            >
-              <FileText size={14} />
-              {showRawText ? 'Hide Raw OCR Text' : 'View Raw OCR Text'}
-            </button>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button
+                onClick={() => setLeftTab('visual')}
+                className={`btn ${leftTab === 'visual' ? 'btn-primary' : 'btn-secondary'}`}
+                style={{ fontSize: '0.78rem', padding: '5px 12px' }}
+              >
+                <Eye size={14} />
+                Visual Inspection Overlay
+              </button>
+              <button
+                onClick={() => setLeftTab('raw')}
+                className={`btn ${leftTab === 'raw' ? 'btn-primary' : 'btn-secondary'}`}
+                style={{ fontSize: '0.78rem', padding: '5px 12px' }}
+              >
+                <FileText size={14} />
+                Extracted OCR Raw Text
+              </button>
+            </div>
+
+            {leftTab === 'raw' && (
+              <button
+                onClick={handleCopyRawText}
+                className="btn btn-secondary"
+                style={{ fontSize: '0.75rem', padding: '4px 10px', gap: '6px' }}
+              >
+                {copied ? <Check size={14} color="#34d399" /> : <Copy size={14} />}
+                {copied ? 'Copied' : 'Copy Text'}
+              </button>
+            )}
           </div>
 
-          {showRawText ? (
-            <div style={{
-              background: 'var(--bg-app)',
-              border: '1px solid var(--border-card)',
-              borderRadius: '8px',
-              padding: '16px',
-              fontFamily: 'var(--font-mono)',
-              fontSize: '0.8rem',
-              whiteSpace: 'pre-wrap',
-              maxHeight: '400px',
-              overflowY: 'auto',
-              color: '#93c5fd'
-            }}>
-              {scanData.rawText}
+          {leftTab === 'raw' ? (
+            <div>
+              {/* Text Metrics Ribbon */}
+              <div style={{
+                display: 'flex',
+                gap: '12px',
+                padding: '8px 12px',
+                background: 'rgba(59, 130, 246, 0.1)',
+                border: '1px solid rgba(59, 130, 246, 0.25)',
+                borderRadius: '6px',
+                marginBottom: '10px',
+                fontSize: '0.75rem',
+                color: '#93c5fd'
+              }}>
+                <span><strong>Words:</strong> {scanData.rawText ? scanData.rawText.split(/\s+/).filter(Boolean).length : 0}</span>
+                <span>•</span>
+                <span><strong>Lines:</strong> {scanData.rawText ? scanData.rawText.split('\n').length : 0}</span>
+                <span>•</span>
+                <span><strong>Characters:</strong> {scanData.rawText ? scanData.rawText.length : 0}</span>
+                <span>•</span>
+                <span style={{ color: '#34d399' }}><strong>OCR Status:</strong> Extracted</span>
+              </div>
+
+              <div style={{
+                background: '#090d16',
+                border: '1px solid var(--border-card)',
+                borderRadius: '8px',
+                padding: '16px',
+                fontFamily: 'var(--font-mono)',
+                fontSize: '0.85rem',
+                lineHeight: 1.6,
+                whiteSpace: 'pre-wrap',
+                maxHeight: '400px',
+                overflowY: 'auto',
+                color: '#e2e8f0'
+              }}>
+                {scanData.rawText || 'No text recognized.'}
+              </div>
             </div>
           ) : (
             <BoundingBoxOverlay

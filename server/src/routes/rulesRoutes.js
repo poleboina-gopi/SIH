@@ -1,10 +1,11 @@
 import express from 'express';
 import { db } from '../db.js';
+import { authenticateToken, requireAdmin } from '../middleware/auth.js';
 
 const router = express.Router();
 
-// GET /api/rules
-router.get('/rules', async (req, res) => {
+// GET /api/rules (Secured: Authenticated Officers)
+router.get('/rules', authenticateToken, async (req, res) => {
   try {
     const rules = await db.getRules();
     res.json({ rules });
@@ -13,8 +14,8 @@ router.get('/rules', async (req, res) => {
   }
 });
 
-// PUT /api/rules/:id
-router.put('/rules/:id', async (req, res) => {
+// PUT /api/rules/:id (Secured: Sworn Administrators Only)
+router.put('/rules/:id', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const { isActive, severity } = req.body;
     const updated = await db.updateRule(req.params.id, {

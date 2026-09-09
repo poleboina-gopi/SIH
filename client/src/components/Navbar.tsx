@@ -102,34 +102,29 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
         </div>
 
-        {/* Navigation Tabs */}
+        {/* Navigation Tabs (Strict RBAC Enforced) */}
         <nav style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-          <button
-            onClick={() => onSelectTab('inspector')}
-            className={`btn ${currentTab === 'inspector' ? 'btn-primary' : 'btn-secondary'}`}
-            style={{ fontSize: '0.8rem', padding: '7px 14px' }}
-          >
-            <Shield size={16} />
-            Inspector Hub
-          </button>
+          {user?.role === 'inspector' && (
+            <>
+              <button
+                onClick={() => onSelectTab('inspector')}
+                className={`btn ${currentTab === 'inspector' ? 'btn-primary' : 'btn-secondary'}`}
+                style={{ fontSize: '0.8rem', padding: '7px 14px' }}
+              >
+                <Shield size={16} />
+                Inspector Hub
+              </button>
 
-          <button
-            onClick={() => onSelectTab('scan')}
-            className={`btn ${currentTab === 'scan' ? 'btn-primary' : 'btn-secondary'}`}
-            style={{ fontSize: '0.8rem', padding: '7px 14px' }}
-          >
-            <ScanLine size={16} />
-            New Inspection
-          </button>
-
-          <button
-            onClick={() => onSelectTab('repository')}
-            className={`btn ${currentTab === 'repository' ? 'btn-primary' : 'btn-secondary'}`}
-            style={{ fontSize: '0.8rem', padding: '7px 14px' }}
-          >
-            <Database size={16} />
-            Audit Repository
-          </button>
+              <button
+                onClick={() => onSelectTab('scan')}
+                className={`btn ${currentTab === 'scan' ? 'btn-primary' : 'btn-secondary'}`}
+                style={{ fontSize: '0.8rem', padding: '7px 14px' }}
+              >
+                <ScanLine size={16} />
+                New Inspection
+              </button>
+            </>
+          )}
 
           {user?.role === 'admin' && (
             <button
@@ -142,9 +137,18 @@ export const Navbar: React.FC<NavbarProps> = ({
               }}
             >
               <BarChart3 size={16} color="#facc15" />
-              Admin Intelligence
+              Central Analytics &amp; Admin
             </button>
           )}
+
+          <button
+            onClick={() => onSelectTab('repository')}
+            className={`btn ${currentTab === 'repository' ? 'btn-primary' : 'btn-secondary'}`}
+            style={{ fontSize: '0.8rem', padding: '7px 14px' }}
+          >
+            <Database size={16} />
+            Audit Repository
+          </button>
         </nav>
 
         {/* Authenticated Officer Profile */}

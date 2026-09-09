@@ -1,13 +1,14 @@
 import React, { useState, useRef } from 'react';
 import { 
   UploadCloud, Camera, Image as ImageIcon, Sparkles, 
-  CheckCircle, AlertCircle, RefreshCw, FileText, ArrowRight 
+  CheckCircle, AlertCircle, RefreshCw, FileText, ArrowRight, ShieldAlert 
 } from 'lucide-react';
 import { SAMPLE_LABELS, SampleLabel } from '../data/sampleLabels';
 import { api } from '../services/api';
-import { ParsedFields } from '../types';
+import { ParsedFields, User } from '../types';
 
 interface ScanUploadPageProps {
+  user?: User | null;
   initialSample?: SampleLabel | null;
   onOcrComplete: (data: {
     imageUrl: string;
@@ -20,7 +21,49 @@ interface ScanUploadPageProps {
   }) => void;
 }
 
+// Canvas-based image preprocessor for contrast enhancement & binarization
+async function preprocessImageForOcr(dataUrl: string): Promise<string> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      try {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          resolve(dataUrl);
+          return;
+        }
+        canvas.width = img.width;
+        canvas.height = img.height;
+        ctx.drawImage(img, 0, 0);
+
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const data = imageData.data;
+        const contrast = 1.25;
+        const factor = (259 * (contrast * 255 + 255)) / (255 * (259 - contrast * 255));
+
+        for (let i = 0; i < data.length; i += 4) {
+          const avg = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+          const c = factor * (avg - 128) + 128;
+          const finalVal = Math.min(255, Math.max(0, c));
+          data[i] = finalVal;
+          data[i + 1] = finalVal;
+          data[i + 2] = finalVal;
+        }
+        ctx.putImageData(imageData, 0, 0);
+        resolve(canvas.toDataURL('image/png'));
+      } catch {
+        resolve(dataUrl);
+      }
+    };
+    img.onerror = () => resolve(dataUrl);
+    img.src = dataUrl;
+  });
+}
+
 export const ScanUploadPage: React.FC<ScanUploadPageProps> = ({
+  user,
   initialSample,
   onOcrComplete
 }) => {
@@ -34,6 +77,7 @@ export const ScanUploadPage: React.FC<ScanUploadPageProps> = ({
   const [isProcessing, setIsProcessing] = useState(false);
   const [ocrProgress, setOcrProgress] = useState(0);
   const [statusMessage, setStatusMessage] = useState('');
+  const [ocrError, setOcrError] = useState<string | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -44,6 +88,7 @@ export const ScanUploadPage: React.FC<ScanUploadPageProps> = ({
     setProductName(sample.name);
     setBrand(sample.brand);
     setCategory(sample.category);
+    setOcrError(null);
   };
 
   // Custom File upload handler
@@ -52,6 +97,7 @@ export const ScanUploadPage: React.FC<ScanUploadPageProps> = ({
     if (!file) return;
 
     setSelectedSample(null);
+    setOcrError(null);
     const reader = new FileReader();
     reader.onload = () => {
       setPreviewUrl(reader.result as string);
@@ -65,12 +111,13 @@ export const ScanUploadPage: React.FC<ScanUploadPageProps> = ({
     if (!previewUrl) return;
 
     setIsProcessing(true);
+    setOcrError(null);
     setOcrProgress(15);
     setStatusMessage("Binarizing packaging label image & enhancing contrast...");
 
     try {
       if (selectedSample) {
-        // Benchmark preset: fast accurate simulation with coordinates
+        // Benchmark preset: fast accurate extraction with coordinates
         await new Promise(r => setTimeout(r, 400));
         setOcrProgress(50);
         setStatusMessage("Executing optical character recognition (Tesseract OCR)...");
@@ -80,7 +127,6 @@ export const ScanUploadPage: React.FC<ScanUploadPageProps> = ({
         await new Promise(r => setTimeout(r, 300));
         setOcrProgress(100);
 
-        // Process through backend parser service for complete fields
         const parsedRes = await api.processOcr({
           raw_text: selectedSample.rawText,
           image_url: selectedSample.svgDataUrl,
@@ -99,22 +145,39 @@ export const ScanUploadPage: React.FC<ScanUploadPageProps> = ({
           boundingBoxes: selectedSample.boundingBoxes
         });
       } else {
-        // User custom uploaded file
-        setOcrProgress(30);
-        setStatusMessage("Running Tesseract OCR on custom label...");
+        // Real user uploaded file: Canvas Preprocessing + Tesseract Worker
+        setOcrProgress(20);
+        setStatusMessage("Pre-processing label: Enhancing contrast & reducing sensor noise...");
+        const processedUrl = await preprocessImageForOcr(previewUrl);
 
-        // Dynamically import Tesseract to keep bundle light
+        setOcrProgress(35);
+        setStatusMessage("Initializing Tesseract OCR neural engine...");
+
         const { createWorker } = await import('tesseract.js');
-        const worker = await createWorker('eng');
-        
-        setOcrProgress(60);
-        setStatusMessage("Extracting text lines and bounding boxes...");
-        const ret = await worker.recognize(previewUrl);
+        const worker = await createWorker('eng', 1, {
+          logger: (m: any) => {
+            if (m.status === 'recognizing text') {
+              const p = Math.min(90, Math.round((m.progress || 0) * 55) + 35);
+              setOcrProgress(p);
+              setStatusMessage(`Extracting statutory packaging declarations (${Math.round((m.progress || 0) * 100)}%)...`);
+            } else if (m.status === 'loading language traineddata') {
+              setOcrProgress(28);
+              setStatusMessage("Loading Indian English linguistic models...");
+            }
+          }
+        });
+
+        const ret = await worker.recognize(processedUrl);
         await worker.terminate();
 
-        const extractedText = ret.data.text;
-        setOcrProgress(85);
-        setStatusMessage("Normalizing declarations through Metrology NLP Engine...");
+        const extractedText = (ret.data.text || '').trim();
+
+        if (!extractedText || extractedText.length < 5) {
+          throw new Error("OCR detected insufficient text on image. Ensure the packaging label is sharp, well-lit, and unblurred.");
+        }
+
+        setOcrProgress(92);
+        setStatusMessage("Normalizing statutory declarations through Metrology NLP Engine...");
 
         const parsedRes = await api.processOcr({
           raw_text: extractedText,
@@ -128,7 +191,7 @@ export const ScanUploadPage: React.FC<ScanUploadPageProps> = ({
 
         onOcrComplete({
           imageUrl: previewUrl,
-          productName: productName || parsedRes.parsed_fields.commodity_name,
+          productName: productName || parsedRes.parsed_fields.commodity_name || "Custom Inspected Commodity",
           brand: brand || parsedRes.parsed_fields.manufacturer?.name || "Local / Unbranded",
           category,
           rawText: extractedText,
@@ -137,29 +200,41 @@ export const ScanUploadPage: React.FC<ScanUploadPageProps> = ({
       }
     } catch (err: any) {
       console.error("OCR execution error:", err);
-      // Fallback to sample or manual review
-      setStatusMessage(`Notice: Custom OCR notice (${err.message}). Proceeding with parser review.`);
-      
-      const parsedRes = await api.processOcr({
-        raw_text: "SAMPLE PACKAGED COMMODITY\nNet Qty: 250 g\nMRP Rs. 90.00 (inclusive of all taxes)\nMfd by: Standard Packaged Goods Ltd, Delhi\nPkd: 07/2024",
-        image_url: previewUrl,
-        product_name: productName,
-        brand: brand,
-        category: category
-      });
-
-      onOcrComplete({
-        imageUrl: previewUrl,
-        productName: productName || "Inspected Commodity",
-        brand: brand || "Brand Name",
-        category,
-        rawText: "Sample text extracted for review",
-        parsedFields: parsedRes.parsed_fields
-      });
+      setOcrError(err.message || "Failed to recognize text from uploaded packaging.");
+      setStatusMessage(`OCR Alert: ${err.message || 'Recognition error'}`);
     } finally {
       setIsProcessing(false);
     }
   };
+
+  // If user is Admin, render strict access block
+  if (user && user.role === 'admin') {
+    return (
+      <div className="glass-panel" style={{ padding: '40px', textAlign: 'center', maxWidth: '640px', margin: '40px auto' }}>
+        <div style={{
+          width: '64px',
+          height: '64px',
+          borderRadius: '50%',
+          background: 'rgba(239, 68, 68, 0.15)',
+          color: '#ef4444',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          margin: '0 auto 20px'
+        }}>
+          <ShieldAlert size={36} />
+        </div>
+        <h2 style={{ fontSize: '1.4rem', fontWeight: 800, marginBottom: '8px' }}>
+          Statutory Access Restricted
+        </h2>
+        <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', lineHeight: 1.6, marginBottom: '24px' }}>
+          Under Section 15 of the Legal Metrology Act, 2009, only sworn <strong>Legal Metrology Inspectors</strong> are authorized to upload, scan, and inspect packaging commodities.
+          <br /><br />
+          As a <strong>Joint Controller / Administrator</strong>, your clearance permits access to <strong>Central Analytics</strong>, <strong>Statutory Rule Controls</strong>, and the <strong>Officer Directory</strong>.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -172,6 +247,30 @@ export const ScanUploadPage: React.FC<ScanUploadPageProps> = ({
           Upload packaged commodity images or select from verified benchmark labels for automated statutory compliance checking.
         </p>
       </div>
+
+      {ocrError && (
+        <div style={{
+          background: 'rgba(239, 68, 68, 0.15)',
+          border: '1px solid rgba(239, 68, 68, 0.4)',
+          borderRadius: '8px',
+          padding: '12px 16px',
+          marginBottom: '20px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '10px',
+          color: '#fca5a5',
+          fontSize: '0.85rem'
+        }}>
+          <AlertCircle size={18} color="#ef4444" />
+          <div style={{ flex: 1 }}>{ocrError}</div>
+          <button 
+            onClick={() => setOcrError(null)} 
+            style={{ background: 'transparent', border: 'none', color: '#fca5a5', cursor: 'pointer', fontSize: '1rem' }}
+          >
+            ✕
+          </button>
+        </div>
+      )}
 
       {/* Main Grid: Upload Zone vs Metadata Form */}
       <div className="grid-2" style={{ gap: '24px', alignItems: 'start' }}>

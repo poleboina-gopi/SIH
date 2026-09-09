@@ -13,9 +13,12 @@ interface AdminDashboardProps {
 export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [rules, setRules] = useState<StatutoryRule[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [updatingRuleId, setUpdatingRuleId] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'analytics' | 'rules'>('analytics');
+  const [updatingUserId, setUpdatingUserId] = useState<string | null>(null);
+  const [userSuccessMessage, setUserSuccessMessage] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'analytics' | 'users' | 'rules'>('analytics');
 
   useEffect(() => {
     loadAdminData();
@@ -23,16 +26,32 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
 
   const loadAdminData = async () => {
     try {
-      const [statsData, rulesData] = await Promise.all([
+      const [statsData, rulesData, usersData] = await Promise.all([
         api.getStats(),
-        api.getRules()
+        api.getRules(),
+        api.getAdminUsers()
       ]);
       setStats(statsData);
       setRules(rulesData.rules);
+      setUsers(usersData.users);
     } catch (err) {
       console.error("Failed to load admin data:", err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleRoleChange = async (userId: string, newRole: string) => {
+    setUpdatingUserId(userId);
+    try {
+      const res = await api.updateUserRole(userId, newRole);
+      setUsers(prev => prev.map(u => u.id === userId ? { ...u, role: newRole as any } : u));
+      setUserSuccessMessage(`Updated ${res.user.name}'s role to ${newRole.toUpperCase()}`);
+      setTimeout(() => setUserSuccessMessage(null), 3500);
+    } catch (err: any) {
+      alert(err.message || "Failed to update role");
+    } finally {
+      setUpdatingUserId(null);
     }
   };
 
@@ -105,6 +124,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
             Analytics &amp; Trends
           </button>
           <button
+            onClick={() => setActiveTab('users')}
+            className={`tab-trigger ${activeTab === 'users' ? 'active' : ''}`}
+          >
+            Officer Directory &amp; Roles
+          </button>
+          <button
             onClick={() => setActiveTab('rules')}
             className={`tab-trigger ${activeTab === 'rules' ? 'active' : ''}`}
           >
@@ -113,7 +138,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
         </div>
       </div>
 
-      {activeTab === 'analytics' ? (
+      {activeTab === 'analytics' && (
         <div>
           {/* Top Admin KPI Counters */}
           <div className="grid-4" style={{ marginBottom: '28px' }}>
@@ -222,9 +247,204 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user }) => {
               </div>
             </div>
           </div>
+
+          {/* Central Scan History Register */}
+          <div className="glass-panel" style={{ padding: '24px', marginBottom: '24px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <div>
+                <h2 style={{ fontSize: '1.1rem', fontWeight: 700 }}>
+                  Recent Statutory Package Inspections
+                </h2>
+                <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                  Audit log of commodities inspected across all departmental circles
+                </p>
+              </div>
+              <span className="badge badge-neutral">
+                {stats?.recent_inspections?.length || 0} Sealed Logs
+              </span>
+            </div>
+
+            <div className="data-table-wrapper">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>COMMODITY &amp; BRAND</th>
+                    <th>CATEGORY</th>
+                    <th>STATUTORY STATUS</th>
+                    <th>COMPLIANCE SCORE</th>
+                    <th>VIOLATIONS</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {stats?.recent_inspections && stats.recent_inspections.length > 0 ? (
+                    stats.recent_inspections.map((scan) => (
+                      <tr key={scan.scan_id}>
+                        <td>
+                          <div style={{ fontWeight: 600, color: '#ffffff' }}>{scan.product_name}</div>
+                          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{scan.brand}</div>
+                        </td>
+                        <td style={{ fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
+                          {scan.category}
+                        </td>
+                        <td>
+                          <span className={`badge ${
+                            scan.compliance_status === 'COMPLIANT' 
+                              ? 'badge-compliant' 
+                              : scan.compliance_status === 'NON_COMPLIANT' 
+                                ? 'badge-noncompliant' 
+                                : 'badge-warning'
+                          }`}>
+                            {scan.compliance_status}
+                          </span>
+                        </td>
+                        <td>
+                          <span style={{
+                            fontWeight: 700,
+                            color: scan.compliance_score >= 80 ? '#34d399' : scan.compliance_score >= 50 ? '#fbbf24' : '#f87171'
+                          }}>
+                            {scan.compliance_score}%
+                          </span>
+                        </td>
+                        <td>
+                          {scan.violations_count > 0 ? (
+                            <span style={{ color: '#f87171', fontWeight: 700 }}>{scan.violations_count} Detected</span>
+                          ) : (
+                            <span style={{ color: '#34d399' }}>None (Compliant)</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={5} style={{ textAlign: 'center', padding: '24px', color: 'var(--text-muted)' }}>
+                        No commodity inspection logs registered yet.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
-      ) : (
-        /* Statutory Rules Configurator Tab */
+      )}
+
+      {/* Officer Directory & Role Management Tab */}
+      {activeTab === 'users' && (
+        <div className="glass-panel" style={{ padding: '24px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+            <div>
+              <h2 style={{ fontSize: '1.2rem', fontWeight: 700, marginBottom: '4px' }}>
+                Authorized Officer Directory &amp; RBAC Control
+              </h2>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
+                Manage sworn inspectors and administrators. Sworn Inspectors hold statutory authority to upload and scan packages under the Legal Metrology Act.
+              </p>
+            </div>
+            {userSuccessMessage && (
+              <div style={{
+                background: 'rgba(16, 185, 129, 0.2)',
+                border: '1px solid rgba(16, 185, 129, 0.4)',
+                color: '#34d399',
+                padding: '6px 14px',
+                borderRadius: '8px',
+                fontSize: '0.82rem',
+                fontWeight: 600
+              }}>
+                ✓ {userSuccessMessage}
+              </div>
+            )}
+          </div>
+
+          <div className="data-table-wrapper">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>OFFICER NAME &amp; DETAILS</th>
+                  <th>OFFICIAL EMAIL</th>
+                  <th>INDIAN MOBILE</th>
+                  <th>BADGE &amp; CIRCLE</th>
+                  <th>CURRENT ROLE</th>
+                  <th>ROLE PERMISSION</th>
+                </tr>
+              </thead>
+              <tbody>
+                {users && users.length > 0 ? (
+                  users.map((u) => (
+                    <tr key={u.id}>
+                      <td>
+                        <div style={{ fontWeight: 700, color: '#ffffff' }}>{u.name}</div>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                          {u.designation || 'Enforcement Officer'}
+                        </div>
+                        <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>
+                          {u.department}
+                        </div>
+                      </td>
+                      <td style={{ fontSize: '0.82rem', fontFamily: 'var(--font-mono)', color: '#93c5fd' }}>
+                        {u.email}
+                      </td>
+                      <td style={{ fontSize: '0.82rem', fontFamily: 'var(--font-mono)' }}>
+                        {u.phone || 'N/A'}
+                      </td>
+                      <td>
+                        <span style={{
+                          background: 'rgba(255,255,255,0.06)',
+                          padding: '3px 8px',
+                          borderRadius: '4px',
+                          fontSize: '0.75rem',
+                          fontFamily: 'var(--font-mono)',
+                          color: '#e2e8f0'
+                        }}>
+                          {u.badgeNumber || 'LM-REG-1001'}
+                        </span>
+                      </td>
+                      <td>
+                        <span className={`badge ${u.role === 'admin' ? 'badge-warning' : 'badge-compliant'}`}>
+                          {u.role === 'admin' ? 'ADMINISTRATOR' : 'INSPECTOR'}
+                        </span>
+                      </td>
+                      <td>
+                        <select
+                          value={u.role}
+                          disabled={updatingUserId === u.id || u.id === user.id}
+                          onChange={(e) => handleRoleChange(u.id, e.target.value)}
+                          style={{
+                            padding: '6px 12px',
+                            borderRadius: '6px',
+                            background: 'var(--bg-glass-heavy)',
+                            border: '1px solid var(--border-card)',
+                            color: u.role === 'admin' ? '#facc15' : '#60a5fa',
+                            fontSize: '0.8rem',
+                            fontWeight: 700,
+                            cursor: u.id === user.id ? 'not-allowed' : 'pointer'
+                          }}
+                        >
+                          <option value="inspector">INSPECTOR (Field Authority)</option>
+                          <option value="admin">ADMINISTRATOR (Central Control)</option>
+                        </select>
+                        {u.id === user.id && (
+                          <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', marginTop: '2px' }}>
+                            (Current Active Session)
+                          </div>
+                        )}
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={6} style={{ textAlign: 'center', padding: '24px', color: 'var(--text-muted)' }}>
+                      No registered officers found in directory.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Statutory Rules Configurator Tab */}
+      {activeTab === 'rules' && (
         <div className="glass-panel" style={{ padding: '24px' }}>
           <div style={{ marginBottom: '20px' }}>
             <h2 style={{ fontSize: '1.2rem', fontWeight: 700, marginBottom: '4px' }}>
