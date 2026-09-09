@@ -85,9 +85,7 @@ function extractCommodityName(text, lines) {
 }
 
 function extractNetQuantity(text) {
-  // Matches "Net Qty: 100 g", "Net Weight: 500 gms", "Net Content: 750 ml", "500g", "1 kg"
-  const regex = /(?:net\s*(?:qty|quantity|weight|wt|contents?|volume)?[:\s]*)?(\d+(?:\.\d+)?)\s*([a-zA-Z.]+)\b/i;
-  
+  // Matches "Net Qty: 100 g", "Net Weight: 500 gms", "Net Content: 750 ml", "500g", "1.5 kg"
   // Specific lookups for Net Qty line
   const netLineMatch = text.match(/(?:net\s*(?:qty|quantity|weight|wt|contents?|volume))[:\s]*(\d+(?:\.\d+)?)\s*([a-zA-Z.]+)/i);
   const match = netLineMatch || text.match(/\b(\d+(?:\.\d+)?)\s*(gms|gm|g\.|g|kg|kgs|kilos|ml|mls|ml\.|l|ltr|ltrs|cl|m|cm|mm|units?|pieces?|N|u)\b/i);
@@ -95,7 +93,7 @@ function extractNetQuantity(text) {
   if (match) {
     const val = parseFloat(match[1]);
     const rawUnit = match[2].trim();
-    const unitLower = rawUnit.toLowerCase();
+    const unitLower = rawUnit.toLowerCase().replace(/\.$/, '');
 
     // Check against illegal unit symbols
     let isStandard = true;
@@ -130,18 +128,18 @@ function extractNetQuantity(text) {
 }
 
 function extractDates(text) {
-  // Checks DD/MM/YYYY, MM/YYYY, DD-MM-YYYY, MM-YYYY, Month YYYY
+  // Checks DD/MM/YYYY, MM/YYYY, DD-MM-YYYY, MM-YYYY, Month YYYY, DD.MM.YYYY
   const datePatterns = [
     // 1. Prefixed DD/MM/YYYY or DD-MM-YYYY or DD.MM.YYYY
     /(?:mfg|mfd|packed|pkd|date\s*of\s*pkd|date\s*of\s*mfg|dom|dop)[:\s.-]*\b([0-3]?\d[\/\-\.][0-1]?\d[\/\-\.](?:20\d{2}|\d{2}))\b/i,
-    // 2. Prefixed MM/YYYY or MM-YYYY
-    /(?:mfg|mfd|packed|pkd|date\s*of\s*pkd|date\s*of\s*mfg|dom|dop)[:\s.-]*\b([0-1]?\d[\/\-](?:20\d{2}|\d{2}))\b/i,
+    // 2. Prefixed MM/YYYY or MM-YYYY or MM.YYYY
+    /(?:mfg|mfd|packed|pkd|date\s*of\s*pkd|date\s*of\s*mfg|dom|dop)[:\s.-]*\b([0-1]?\d[\/\-\.](?:20\d{2}|\d{2}))\b/i,
     // 3. Month YYYY
     /(?:mfg|mfd|packed|pkd)[:\s.-]*\b([a-z]{3,9}\s+(?:20)?\d{2,4})\b/i,
-    // 4. Standalone DD/MM/YYYY
+    // 4. Standalone DD/MM/YYYY or DD.MM.YYYY
     /\b((?:0?[1-9]|[12]\d|3[01])[\/\-\.](?:0?[1-9]|1[0-2])[\/\-\.](?:20\d{2}|\d{2}))\b/,
-    // 5. Standalone MM/YYYY
-    /\b((?:0?[1-9]|1[0-2])[\/\-](?:20\d{2}|\d{2}))\b/
+    // 5. Standalone MM/YYYY or MM.YYYY
+    /\b((?:0?[1-9]|1[0-2])[\/\-\.](?:20\d{2}|\d{2}))\b/
   ];
 
   for (const regex of datePatterns) {
@@ -149,7 +147,7 @@ function extractDates(text) {
     if (match && match[1]) {
       const rawDate = match[1].trim();
       const isDDMMYYYY = /^(?:0?[1-9]|[12]\d|3[01])[\/\-\.](?:0?[1-9]|1[0-2])[\/\-\.](?:20\d{2}|\d{2})$/.test(rawDate);
-      const isMMYYYY = /^(?:0?[1-9]|1[0-2])[\/\-](?:20\d{2}|\d{2})$/.test(rawDate);
+      const isMMYYYY = /^(?:0?[1-9]|1[0-2])[\/\-\.](?:20\d{2}|\d{2})$/.test(rawDate);
       const isMonthYYYY = /^[a-z]{3,9}\s+(?:20)?\d{2,4}$/i.test(rawDate);
 
       const isCompliantFormat = isDDMMYYYY || isMMYYYY || isMonthYYYY;
@@ -168,7 +166,7 @@ function extractDates(text) {
 function extractMRP(text) {
   // Maximum Retail Price declaration:
   // Regex validation for MRP (₹ or Rs. + numeric value):
-  const mrpRegex = /(?:m\.?r\.?p\.?|max(?:imum)?\s*retail\s*price|retail\s*price)[:\s]*(?:rs\.?|inr|₹)?\s*(\d+(?:\.\d{1,2})?)/i;
+  const mrpRegex = /(?:m\.?r\.?p\.?|max(?:imum)?\s*retail\s*price|retail\s*price)[:\s]*(?:rs\.?|inr|₹)?\s*([\d,]+(?:\.\d{1,2})?)/i;
   const match = text.match(mrpRegex);
 
   const rawMrpSection = (text.match(/(?:m\.?r\.?p\.?|maximum\s*retail\s*price)[^\n.]*(?:\n[^\n.]*)?/i) || [""])[0];
@@ -176,7 +174,8 @@ function extractMRP(text) {
   const hasCurrencySymbol = /(?:₹|rs\.?|inr)/i.test(rawMrpSection || text);
 
   if (match) {
-    const price = parseFloat(match[1]);
+    const cleanNum = match[1].replace(/,/g, '');
+    const price = parseFloat(cleanNum);
     let error = null;
     if (!hasTaxClause) {
       error = "Missing mandatory statutory clause '(inclusive of all taxes)'. Mandatory under Rule 6(1)(e).";
@@ -195,9 +194,10 @@ function extractMRP(text) {
   }
 
   // Fallback: search for ₹ or Rs followed by digits
-  const fallback = text.match(/(?:₹|rs\.?)\s*(\d+(?:\.\d{1,2})?)/i);
+  const fallback = text.match(/(?:₹|rs\.?)\s*([\d,]+(?:\.\d{1,2})?)/i);
   if (fallback) {
-    const price = parseFloat(fallback[1]);
+    const cleanNum = fallback[1].replace(/,/g, '');
+    const price = parseFloat(cleanNum);
     return {
       value: price,
       currency: fallback[0].includes('₹') ? '₹' : 'Rs.',
@@ -212,8 +212,8 @@ function extractMRP(text) {
 }
 
 function extractConsumerCare(text) {
-  // Phone/toll free: 1800-xxx-xxxx, 011-xxxx, etc.
-  const phoneMatch = text.match(/(?:call|phone|tel|contact|helpline|care)[:\s]*([0-9\s-]{8,15})|(?:1800[-\s]?[0-9]{3}[-\s]?[0-9]{3,4})/i);
+  // Phone/toll free: 1800-xxx-xxxx, 011-xxxx, 98xxxx, +91...
+  const phoneMatch = text.match(/(?:consumer\s*care|customer\s*care|consumer\s*cell|helpline|toll[\s-]*free|call|phone|tel|contact)[:\s]*([+0-9\s-]{8,18})|(?:1800[-\s]?[0-9]{3}[-\s]?[0-9]{3,4})/i);
   
   // Email: something@domain.ext
   const emailMatch = text.match(/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/);
@@ -221,7 +221,7 @@ function extractConsumerCare(text) {
   // Postal/Physical address
   const addressMention = /(?:feedback|queries|complaints|consumer\s*cell|write\s*to)[:\s-]+([^\n]+)/i.exec(text);
 
-  const phone = phoneMatch ? phoneMatch[0].replace(/(?:call|phone|tel|contact|helpline|care)[:\s]*/i, '').trim() : null;
+  const phone = phoneMatch ? phoneMatch[0].replace(/(?:consumer\s*care|customer\s*care|consumer\s*cell|helpline|toll[\s-]*free|call|phone|tel|contact)[:\s]*/i, '').trim() : null;
   const email = emailMatch ? emailMatch[1].trim() : null;
 
   if (phone || email || addressMention) {

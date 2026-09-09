@@ -36,6 +36,8 @@ export interface ParsedMRP {
   value: number;
   raw: string;
   includes_taxes: boolean;
+  has_currency_symbol?: boolean;
+  currency?: string;
   error?: string | null;
 }
 

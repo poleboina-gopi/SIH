@@ -271,6 +271,72 @@ export const ComplianceReportPage: React.FC<ComplianceReportPageProps> = ({
           </div>
         </div>
 
+        {/* Missing Statutory Fields High-Priority Callout (If Any Missing) */}
+        {(() => {
+          const missingViolations = violations.filter(v => v.violation_type.includes('MISSING_') || v.severity === 'CRITICAL');
+          if (missingViolations.length === 0) return null;
+
+          return (
+            <div style={{
+              background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.15) 0%, rgba(127, 29, 29, 0.25) 100%)',
+              border: '2px solid rgba(239, 68, 68, 0.5)',
+              borderRadius: '12px',
+              padding: '20px 24px',
+              marginBottom: '28px',
+              boxShadow: '0 6px 20px rgba(239, 68, 68, 0.15)'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                <div style={{
+                  width: '36px',
+                  height: '36px',
+                  borderRadius: '8px',
+                  background: '#ef4444',
+                  color: '#ffffff',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}>
+                  <AlertOctagon size={22} />
+                </div>
+                <div>
+                  <h3 style={{ fontSize: '1.05rem', fontWeight: 800, color: '#ffffff', margin: 0 }}>
+                    CRITICAL STATUTORY DEFECTS: MANDATORY DECLARATIONS OMITTED
+                  </h3>
+                  <div style={{ fontSize: '0.8rem', color: '#fca5a5', marginTop: '2px' }}>
+                    {missingViolations.length} essential declaration(s) required under Rule 6 of the Legal Metrology (Packaged Commodities) Rules, 2011 were not found on this packaging.
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '10px', marginTop: '10px' }}>
+                {missingViolations.map((mv, idx) => (
+                  <div key={idx} style={{
+                    background: 'rgba(0, 0, 0, 0.35)',
+                    border: '1px solid rgba(239, 68, 68, 0.4)',
+                    borderRadius: '8px',
+                    padding: '10px 14px'
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                      <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#f87171' }}>
+                        {mv.rule_code}
+                      </span>
+                      <span className="badge badge-noncompliant" style={{ fontSize: '0.65rem' }}>
+                        CRITICAL OMISSION
+                      </span>
+                    </div>
+                    <div style={{ fontWeight: 700, fontSize: '0.88rem', color: '#ffffff', marginBottom: '3px' }}>
+                      {mv.violation_type.replace(/_/g, ' ')}
+                    </div>
+                    <div style={{ fontSize: '0.76rem', color: '#cbd5e1', lineHeight: 1.4 }}>
+                      {mv.description}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        })()}
+
         {/* Violations Ledger (If Any) */}
         {violations && violations.length > 0 && (
           <div style={{ marginBottom: '28px' }}>
@@ -295,12 +361,12 @@ export const ComplianceReportPage: React.FC<ComplianceReportPageProps> = ({
                 </thead>
                 <tbody>
                   {violations.map((v, idx) => (
-                    <tr key={idx}>
+                    <tr key={idx} style={{ background: v.severity === 'CRITICAL' ? 'rgba(239, 68, 68, 0.05)' : undefined }}>
                       <td style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, color: '#60a5fa' }}>
                         {v.rule_code}
                       </td>
                       <td>
-                        <div style={{ fontWeight: 600, color: '#ffffff', marginBottom: '2px' }}>
+                        <div style={{ fontWeight: 700, color: '#ffffff', marginBottom: '2px', fontSize: '0.9rem' }}>
                           {v.violation_type.replace(/_/g, ' ')}
                         </div>
                         <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', lineHeight: 1.4 }}>
@@ -321,7 +387,7 @@ export const ComplianceReportPage: React.FC<ComplianceReportPageProps> = ({
                       <td style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
                         {v.statutory_provision}
                       </td>
-                      <td style={{ fontWeight: 700, color: '#facc15' }}>
+                      <td style={{ fontWeight: 700, color: '#facc15', fontSize: '0.95rem' }}>
                         {v.penalty_fine || '₹25,000'}
                       </td>
                     </tr>
@@ -332,7 +398,7 @@ export const ComplianceReportPage: React.FC<ComplianceReportPageProps> = ({
           </div>
         )}
 
-        {/* Statutory Declarations Breakdown Matrix */}
+        {/* Statutory Declarations Breakdown Matrix with Visual Missing Field Highlights */}
         <div style={{ marginBottom: '28px' }}>
           <h2 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
             <FileText size={18} color="var(--accent-blue-light)" />
@@ -351,100 +417,155 @@ export const ComplianceReportPage: React.FC<ComplianceReportPageProps> = ({
               </thead>
               <tbody>
                 {/* Rule 6(1)(a) */}
-                <tr>
-                  <td style={{ fontWeight: 700 }}>Rule 6(1)(a)</td>
-                  <td>Complete name and physical address of Manufacturer / Packer / Importer</td>
-                  <td style={{ fontSize: '0.82rem' }}>
-                    {scan?.parsed_fields?.manufacturer?.address || 'Not detected on package'}
-                  </td>
-                  <td>
-                    {scan?.parsed_fields?.manufacturer ? (
-                      <span className="badge badge-compliant">VERIFIED</span>
-                    ) : (
-                      <span className="badge badge-noncompliant">OMITTED</span>
-                    )}
-                  </td>
-                </tr>
+                {(() => {
+                  const isMissing = !scan?.parsed_fields?.manufacturer || !scan?.parsed_fields?.manufacturer?.name;
+                  return (
+                    <tr style={{ background: isMissing ? 'rgba(239, 68, 68, 0.08)' : undefined, borderLeft: isMissing ? '4px solid #ef4444' : undefined }}>
+                      <td style={{ fontWeight: 700 }}>Rule 6(1)(a)</td>
+                      <td>Complete name and physical address of Manufacturer / Packer / Importer</td>
+                      <td style={{ fontSize: '0.82rem', color: isMissing ? '#f87171' : undefined }}>
+                        {scan?.parsed_fields?.manufacturer?.address || scan?.parsed_fields?.manufacturer?.raw || 'Not detected on package'}
+                      </td>
+                      <td>
+                        {!isMissing ? (
+                          <span className="badge badge-compliant">VERIFIED</span>
+                        ) : (
+                          <span className="badge badge-noncompliant">OMITTED (CRITICAL DEFECT)</span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })()}
 
                 {/* Rule 6(1)(b) */}
-                <tr>
-                  <td style={{ fontWeight: 700 }}>Rule 6(1)(b)</td>
-                  <td>Common or generic name of commodity</td>
-                  <td style={{ fontSize: '0.82rem' }}>
-                    {scan?.parsed_fields?.commodity_name || 'Generic Commodity'}
-                  </td>
-                  <td>
-                    {scan?.parsed_fields?.commodity_name ? (
-                      <span className="badge badge-compliant">VERIFIED</span>
-                    ) : (
-                      <span className="badge badge-warning">AMBIGUOUS</span>
-                    )}
-                  </td>
-                </tr>
+                {(() => {
+                  const isMissing = !scan?.parsed_fields?.commodity_name || scan?.parsed_fields?.commodity_name === 'Packaged Commodity';
+                  return (
+                    <tr style={{ background: isMissing ? 'rgba(239, 68, 68, 0.08)' : undefined, borderLeft: isMissing ? '4px solid #ef4444' : undefined }}>
+                      <td style={{ fontWeight: 700 }}>Rule 6(1)(b)</td>
+                      <td>Common or generic name of commodity</td>
+                      <td style={{ fontSize: '0.82rem', color: isMissing ? '#f87171' : undefined }}>
+                        {scan?.parsed_fields?.commodity_name || 'Generic Commodity'}
+                      </td>
+                      <td>
+                        {!isMissing ? (
+                          <span className="badge badge-compliant">VERIFIED</span>
+                        ) : (
+                          <span className="badge badge-noncompliant">OMITTED</span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })()}
 
                 {/* Rule 6(1)(c) */}
-                <tr>
-                  <td style={{ fontWeight: 700 }}>Rule 6(1)(c)</td>
-                  <td>Net quantity in standard metric units (Rule 12 &amp; 13: g, kg, ml, l)</td>
-                  <td style={{ fontSize: '0.82rem' }}>
-                    {scan?.parsed_fields?.net_quantity?.raw || 'Not detected'}
-                  </td>
-                  <td>
-                    {scan?.parsed_fields?.net_quantity?.is_standard ? (
-                      <span className="badge badge-compliant">STANDARD</span>
-                    ) : (
-                      <span className="badge badge-noncompliant">ILLEGAL UNIT</span>
-                    )}
-                  </td>
-                </tr>
+                {(() => {
+                  const isMissing = !scan?.parsed_fields?.net_quantity || !scan?.parsed_fields?.net_quantity?.raw;
+                  const isIllegal = scan?.parsed_fields?.net_quantity && !scan?.parsed_fields?.net_quantity?.is_standard;
+                  return (
+                    <tr style={{ 
+                      background: isMissing ? 'rgba(239, 68, 68, 0.08)' : isIllegal ? 'rgba(245, 158, 11, 0.08)' : undefined, 
+                      borderLeft: isMissing ? '4px solid #ef4444' : isIllegal ? '4px solid #f59e0b' : undefined 
+                    }}>
+                      <td style={{ fontWeight: 700 }}>Rule 6(1)(c)</td>
+                      <td>Net quantity in standard metric units (Rule 12 &amp; 13: g, kg, ml, l)</td>
+                      <td style={{ fontSize: '0.82rem', color: isMissing ? '#f87171' : isIllegal ? '#fbbf24' : undefined }}>
+                        {scan?.parsed_fields?.net_quantity?.raw || 'Not detected on package'}
+                      </td>
+                      <td>
+                        {isMissing ? (
+                          <span className="badge badge-noncompliant">OMITTED (CRITICAL DEFECT)</span>
+                        ) : isIllegal ? (
+                          <span className="badge badge-warning">ILLEGAL UNIT ('{scan?.parsed_fields?.net_quantity?.unit}')</span>
+                        ) : (
+                          <span className="badge badge-compliant">STANDARD</span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })()}
 
                 {/* Rule 6(1)(d) */}
-                <tr>
-                  <td style={{ fontWeight: 700 }}>Rule 6(1)(d)</td>
-                  <td>Month and year of manufacture or pre-packing (MM/YYYY or Month YYYY)</td>
-                  <td style={{ fontSize: '0.82rem' }}>
-                    {scan?.parsed_fields?.mfg_date?.date || 'Not detected'}
-                  </td>
-                  <td>
-                    {scan?.parsed_fields?.mfg_date?.is_compliant ? (
-                      <span className="badge badge-compliant">VERIFIED</span>
-                    ) : (
-                      <span className="badge badge-warning">FORMAT DEFECT</span>
-                    )}
-                  </td>
-                </tr>
+                {(() => {
+                  const isMissing = !scan?.parsed_fields?.mfg_date || !scan?.parsed_fields?.mfg_date?.date;
+                  const isInvalid = scan?.parsed_fields?.mfg_date && !scan?.parsed_fields?.mfg_date?.is_compliant;
+                  return (
+                    <tr style={{ 
+                      background: isMissing ? 'rgba(239, 68, 68, 0.08)' : isInvalid ? 'rgba(245, 158, 11, 0.08)' : undefined, 
+                      borderLeft: isMissing ? '4px solid #ef4444' : isInvalid ? '4px solid #f59e0b' : undefined 
+                    }}>
+                      <td style={{ fontWeight: 700 }}>Rule 6(1)(d)</td>
+                      <td>Month and year of manufacture or pre-packing (MM/YYYY or Month YYYY)</td>
+                      <td style={{ fontSize: '0.82rem', color: isMissing ? '#f87171' : isInvalid ? '#fbbf24' : undefined }}>
+                        {scan?.parsed_fields?.mfg_date?.date || 'Not detected on package'}
+                      </td>
+                      <td>
+                        {isMissing ? (
+                          <span className="badge badge-noncompliant">OMITTED (CRITICAL DEFECT)</span>
+                        ) : isInvalid ? (
+                          <span className="badge badge-warning">INVALID DATE FORMAT</span>
+                        ) : (
+                          <span className="badge badge-compliant">VERIFIED</span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })()}
 
                 {/* Rule 6(1)(e) */}
-                <tr>
-                  <td style={{ fontWeight: 700 }}>Rule 6(1)(e)</td>
-                  <td>Maximum Retail Price (MRP) including "(inclusive of all taxes)"</td>
-                  <td style={{ fontSize: '0.82rem' }}>
-                    {scan?.parsed_fields?.mrp?.raw || 'Not detected'}
-                  </td>
-                  <td>
-                    {scan?.parsed_fields?.mrp?.includes_taxes ? (
-                      <span className="badge badge-compliant">VERIFIED</span>
-                    ) : (
-                      <span className="badge badge-noncompliant">MISSING TAX CLAUSE</span>
-                    )}
-                  </td>
-                </tr>
+                {(() => {
+                  const isMissing = !scan?.parsed_fields?.mrp || !scan?.parsed_fields?.mrp?.raw;
+                  const noTaxClause = scan?.parsed_fields?.mrp && !scan?.parsed_fields?.mrp?.includes_taxes;
+                  return (
+                    <tr style={{ 
+                      background: isMissing ? 'rgba(239, 68, 68, 0.08)' : noTaxClause ? 'rgba(245, 158, 11, 0.08)' : undefined, 
+                      borderLeft: isMissing ? '4px solid #ef4444' : noTaxClause ? '4px solid #f59e0b' : undefined 
+                    }}>
+                      <td style={{ fontWeight: 700 }}>Rule 6(1)(e)</td>
+                      <td>Maximum Retail Price (MRP) including "(inclusive of all taxes)"</td>
+                      <td style={{ fontSize: '0.82rem', color: isMissing ? '#f87171' : noTaxClause ? '#fbbf24' : undefined }}>
+                        {scan?.parsed_fields?.mrp?.raw || 'Not detected on package'}
+                      </td>
+                      <td>
+                        {isMissing ? (
+                          <span className="badge badge-noncompliant">MRP MISSING (CRITICAL)</span>
+                        ) : noTaxClause ? (
+                          <span className="badge badge-warning">MISSING TAX CLAUSE</span>
+                        ) : (
+                          <span className="badge badge-compliant">VERIFIED</span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })()}
 
                 {/* Rule 6(1)(n) */}
-                <tr>
-                  <td style={{ fontWeight: 700 }}>Rule 6(1)(n)</td>
-                  <td>Consumer grievance redressal details (Phone number AND Email ID)</td>
-                  <td style={{ fontSize: '0.82rem' }}>
-                    Tel: {scan?.parsed_fields?.consumer_care?.phone || 'Omitted'} | Email: {scan?.parsed_fields?.consumer_care?.email || 'Omitted'}
-                  </td>
-                  <td>
-                    {scan?.parsed_fields?.consumer_care?.is_complete ? (
-                      <span className="badge badge-compliant">COMPLETE</span>
-                    ) : (
-                      <span className="badge badge-noncompliant">INCOMPLETE</span>
-                    )}
-                  </td>
-                </tr>
+                {(() => {
+                  const isMissing = !scan?.parsed_fields?.consumer_care;
+                  const missingEmail = scan?.parsed_fields?.consumer_care && !scan?.parsed_fields?.consumer_care?.email;
+                  const missingPhone = scan?.parsed_fields?.consumer_care && !scan?.parsed_fields?.consumer_care?.phone;
+                  return (
+                    <tr style={{ 
+                      background: isMissing ? 'rgba(239, 68, 68, 0.08)' : (missingEmail || missingPhone) ? 'rgba(245, 158, 11, 0.08)' : undefined, 
+                      borderLeft: isMissing ? '4px solid #ef4444' : (missingEmail || missingPhone) ? '4px solid #f59e0b' : undefined 
+                    }}>
+                      <td style={{ fontWeight: 700 }}>Rule 6(1)(n)</td>
+                      <td>Consumer grievance redressal details (Phone number AND Email ID mandatory)</td>
+                      <td style={{ fontSize: '0.82rem' }}>
+                        Tel: {scan?.parsed_fields?.consumer_care?.phone || 'Omitted'} &bull; Email: {scan?.parsed_fields?.consumer_care?.email || 'Omitted'}
+                      </td>
+                      <td>
+                        {isMissing ? (
+                          <span className="badge badge-noncompliant">OMITTED (CRITICAL)</span>
+                        ) : (missingEmail || missingPhone) ? (
+                          <span className="badge badge-warning">INCOMPLETE (EMAIL/PHONE MISSING)</span>
+                        ) : (
+                          <span className="badge badge-compliant">COMPLETE</span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })()}
 
                 {/* Rule 7 */}
                 <tr>

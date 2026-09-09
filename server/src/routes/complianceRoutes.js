@@ -87,7 +87,7 @@ router.post('/validate', authenticateToken, requireInspector, async (req, res) =
       score: evaluation.compliance_score,
       inspector_id: assignedInspectorId,
       inspector_name: assignedInspectorName,
-      statutory_notice: evaluation.compliance_status === "NON_COMPLIANT" ? evaluation.show_cause_notice : null,
+      statutory_notice: evaluation.compliance_status === "NON_COMPLIANT" ? (evaluation.statutory_notice || evaluation.show_cause_notice) : null,
       generated_at: new Date().toISOString()
     };
     const savedReport = await db.addReport(report);
