@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Navbar } from './components/Navbar';
 import { LoginPage } from './pages/LoginPage';
 import { InspectorDashboard } from './pages/InspectorDashboard';
@@ -12,22 +12,17 @@ import { SampleLabel } from './data/sampleLabels';
 import { api } from './services/api';
 
 export function App() {
+  // Only load real authenticated user from localStorage; no demo fallbacks
   const [user, setUser] = useState<User | null>(() => {
-    // Default to active inspector session for seamless evaluation
-    const stored = api.getCurrentUser();
-    if (stored) return stored;
-    return {
-      id: "usr_inspector_01",
-      name: "R. K. Sharma",
-      email: "inspector@gov.in",
-      role: "inspector",
-      designation: "Legal Metrology Officer (Zonal)",
-      badgeNumber: "LM-DEL-2024-890",
-      department: "Directorate of Legal Metrology, Delhi Circle"
-    };
+    return api.getCurrentUser();
   });
 
-  const [currentTab, setCurrentTab] = useState<string>('inspector');
+  const [currentTab, setCurrentTab] = useState<string>(() => {
+    const stored = api.getCurrentUser();
+    if (stored?.role === 'admin') return 'admin';
+    return 'inspector';
+  });
+
   const [activeSample, setActiveSample] = useState<SampleLabel | null>(null);
 
   // Scan workflow state
@@ -42,37 +37,6 @@ export function App() {
   } | null>(null);
 
   const [activeReportId, setActiveReportId] = useState<string | null>(null);
-
-  // Switch role handler (Inspector <-> Admin)
-  const handleSwitchRole = (role: 'inspector' | 'admin') => {
-    if (role === 'admin') {
-      const adminUser: User = {
-        id: "usr_admin_01",
-        name: "Dr. S. Mukherjee",
-        email: "admin@gov.in",
-        role: "admin",
-        designation: "Joint Controller, Legal Metrology",
-        badgeNumber: "LM-HQ-9901",
-        department: "Department of Consumer Affairs, MoCA"
-      };
-      setUser(adminUser);
-      localStorage.setItem('lm_user', JSON.stringify(adminUser));
-      setCurrentTab('admin');
-    } else {
-      const inspectorUser: User = {
-        id: "usr_inspector_01",
-        name: "R. K. Sharma",
-        email: "inspector@gov.in",
-        role: "inspector",
-        designation: "Legal Metrology Officer (Zonal)",
-        badgeNumber: "LM-DEL-2024-890",
-        department: "Directorate of Legal Metrology, Delhi Circle"
-      };
-      setUser(inspectorUser);
-      localStorage.setItem('lm_user', JSON.stringify(inspectorUser));
-      setCurrentTab('inspector');
-    }
-  };
 
   const handleLogout = () => {
     api.logout();
@@ -104,8 +68,16 @@ export function App() {
     setCurrentTab('report');
   };
 
+  // If unauthenticated, show enterprise LoginPage
   if (!user || currentTab === 'login') {
-    return <LoginPage onLoginSuccess={(u) => { setUser(u); setCurrentTab(u.role === 'admin' ? 'admin' : 'inspector'); }} />;
+    return (
+      <LoginPage
+        onLoginSuccess={(u) => {
+          setUser(u);
+          setCurrentTab(u.role === 'admin' ? 'admin' : 'inspector');
+        }}
+      />
+    );
   }
 
   return (
@@ -115,7 +87,6 @@ export function App() {
         user={user}
         currentTab={currentTab}
         onSelectTab={(tab) => setCurrentTab(tab)}
-        onSwitchRole={handleSwitchRole}
         onLogout={handleLogout}
       />
 

@@ -2,8 +2,11 @@ export type UserRole = 'inspector' | 'admin';
 
 export interface User {
   id: string;
+  firstName?: string;
+  lastName?: string;
   name: string;
   email: string;
+  phone?: string;
   role: UserRole;
   designation?: string;
   badgeNumber?: string;

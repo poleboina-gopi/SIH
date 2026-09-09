@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import mongoose from 'mongoose';
+import bcrypt from 'bcryptjs';
 import { STATUTORY_RULES } from './rules/metrologyRules.js';
 import { UserModel } from './models/User.js';
 import { ProductModel } from './models/Product.js';
@@ -19,24 +20,34 @@ if (!fs.existsSync(DATA_DIR)) {
   fs.mkdirSync(DATA_DIR, { recursive: true });
 }
 
+// Bcrypt hash for seed accounts (Salt rounds: 12)
+const SEED_PASSWORD_INSPECTOR = bcrypt.hashSync("Inspector@2024!", 12);
+const SEED_PASSWORD_ADMIN = bcrypt.hashSync("Admin@2024!", 12);
+
 export const DEFAULT_DB = {
   users: [
     {
       id: "usr_inspector_01",
+      firstName: "R. K.",
+      lastName: "Sharma",
       name: "R. K. Sharma",
       designation: "Legal Metrology Officer (Zonal)",
       email: "inspector@gov.in",
-      password: "inspector123",
+      phone: "+91 98765 43210",
+      password: SEED_PASSWORD_INSPECTOR,
       role: "inspector",
       badgeNumber: "LM-DEL-2024-890",
       department: "Directorate of Legal Metrology, Delhi Circle"
     },
     {
       id: "usr_admin_01",
+      firstName: "Dr. S.",
+      lastName: "Mukherjee",
       name: "Dr. S. Mukherjee",
       designation: "Joint Controller, Legal Metrology",
       email: "admin@gov.in",
-      password: "admin123",
+      phone: "+91 98111 22233",
+      password: SEED_PASSWORD_ADMIN,
       role: "admin",
       badgeNumber: "LM-HQ-9901",
       department: "Department of Consumer Affairs, MoCA"
@@ -183,6 +194,11 @@ export const DEFAULT_DB = {
   rules: STATUTORY_RULES
 };
 
+// Helper: Normalize phone numbers to 10 digits for comparison
+export function normalizePhone(phone = "") {
+  return phone.replace(/\D/g, '').slice(-10);
+}
+
 class Database {
   constructor() {
     this.data = null;
@@ -255,6 +271,26 @@ class Database {
       return await UserModel.findOne({ email: email.toLowerCase() }).lean();
     }
     return this.data.users.find(u => u.email.toLowerCase() === email.toLowerCase());
+  }
+
+  async getUserByPhone(phone) {
+    const norm = normalizePhone(phone);
+    if (this.isMongo) {
+      const all = await UserModel.find().lean();
+      return all.find(u => normalizePhone(u.phone) === norm);
+    }
+    return this.data.users.find(u => normalizePhone(u.phone) === norm);
+  }
+
+  async getUserByEmailOrPhone(identifier) {
+    const cleaned = identifier.trim().toLowerCase();
+    const isEmail = cleaned.includes('@');
+
+    if (isEmail) {
+      return await this.getUserByEmail(cleaned);
+    } else {
+      return await this.getUserByPhone(cleaned);
+    }
   }
 
   async getUserById(id) {

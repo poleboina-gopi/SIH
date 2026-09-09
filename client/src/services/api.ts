@@ -12,11 +12,11 @@ function getAuthHeaders(): HeadersInit {
 
 export const api = {
   // Auth
-  async login(email: string, password: string): Promise<{ token: string; user: User }> {
+  async login(identifier: string, password: string): Promise<{ token: string; user: User }> {
     const res = await fetch(`${API_BASE_URL}/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password })
+      body: JSON.stringify({ identifier, password })
     });
     if (!res.ok) {
       const err = await res.json().catch(() => ({ error: 'Login failed' }));
@@ -28,20 +28,28 @@ export const api = {
     return data;
   },
 
-  async register(userData: Partial<User> & { password: string }): Promise<{ token: string; user: User }> {
+  async register(data: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone: string;
+    password: string;
+    role?: string;
+    department?: string;
+  }): Promise<{ token: string; user: User }> {
     const res = await fetch(`${API_BASE_URL}/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(userData)
+      body: JSON.stringify(data)
     });
     if (!res.ok) {
       const err = await res.json().catch(() => ({ error: 'Registration failed' }));
       throw new Error(err.error || 'Registration failed');
     }
-    const data = await res.json();
-    localStorage.setItem('lm_token', data.token);
-    localStorage.setItem('lm_user', JSON.stringify(data.user));
-    return data;
+    const resData = await res.json();
+    localStorage.setItem('lm_token', resData.token);
+    localStorage.setItem('lm_user', JSON.stringify(resData.user));
+    return resData;
   },
 
   getCurrentUser(): User | null {

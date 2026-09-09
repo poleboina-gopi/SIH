@@ -1,12 +1,11 @@
 import React from 'react';
-import { Shield, ScanLine, FileText, BarChart3, Database, UserCheck, Scale, LogOut } from 'lucide-react';
+import { Shield, ScanLine, BarChart3, Database, Scale, LogOut, Phone } from 'lucide-react';
 import { User } from '../types';
 
 interface NavbarProps {
   user: User | null;
   currentTab: string;
   onSelectTab: (tab: string) => void;
-  onSwitchRole: (role: 'inspector' | 'admin') => void;
   onLogout: () => void;
 }
 
@@ -14,7 +13,6 @@ export const Navbar: React.FC<NavbarProps> = ({
   user,
   currentTab,
   onSelectTab,
-  onSwitchRole,
   onLogout
 }) => {
   return (
@@ -133,109 +131,79 @@ export const Navbar: React.FC<NavbarProps> = ({
             Audit Repository
           </button>
 
-          <button
-            onClick={() => onSelectTab('admin')}
-            className={`btn ${currentTab === 'admin' ? 'btn-primary' : 'btn-secondary'}`}
-            style={{
-              fontSize: '0.8rem',
-              padding: '7px 14px',
-              border: user?.role === 'admin' ? '1px solid #ca8a04' : undefined
-            }}
-          >
-            <BarChart3 size={16} color={user?.role === 'admin' ? '#facc15' : undefined} />
-            Admin Intelligence
-          </button>
+          {user?.role === 'admin' && (
+            <button
+              onClick={() => onSelectTab('admin')}
+              className={`btn ${currentTab === 'admin' ? 'btn-primary' : 'btn-secondary'}`}
+              style={{
+                fontSize: '0.8rem',
+                padding: '7px 14px',
+                border: '1px solid #ca8a04'
+              }}
+            >
+              <BarChart3 size={16} color="#facc15" />
+              Admin Intelligence
+            </button>
+          )}
         </nav>
 
-        {/* User Profile & Role Switcher */}
+        {/* Authenticated Officer Profile */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          {/* Quick Role Toggle for Seamless Testing */}
-          <div style={{
-            display: 'flex',
-            background: 'var(--bg-glass)',
-            border: '1px solid var(--border-subtle)',
-            borderRadius: '8px',
-            padding: '2px'
-          }}>
-            <button
-              onClick={() => onSwitchRole('inspector')}
-              style={{
-                padding: '4px 10px',
-                fontSize: '0.75rem',
-                fontWeight: 600,
-                border: 'none',
-                borderRadius: '6px',
-                cursor: 'pointer',
-                background: user?.role === 'inspector' ? 'var(--accent-blue)' : 'transparent',
-                color: user?.role === 'inspector' ? '#ffffff' : 'var(--text-secondary)'
-              }}
-              title="Switch to Legal Metrology Inspector view"
-            >
-              Inspector
-            </button>
-            <button
-              onClick={() => onSwitchRole('admin')}
-              style={{
-                padding: '4px 10px',
-                fontSize: '0.75rem',
-                fontWeight: 600,
-                border: 'none',
-                borderRadius: '6px',
-                cursor: 'pointer',
-                background: user?.role === 'admin' ? '#ca8a04' : 'transparent',
-                color: user?.role === 'admin' ? '#ffffff' : 'var(--text-secondary)'
-              }}
-              title="Switch to Joint Controller / Admin view"
-            >
-              Admin
-            </button>
-          </div>
-
-          {/* User Badge */}
+          {/* User Details Badge */}
           <div style={{
             display: 'flex',
             alignItems: 'center',
-            gap: '8px',
-            padding: '6px 12px',
+            gap: '10px',
+            padding: '6px 14px',
             background: 'var(--bg-glass)',
             border: '1px solid var(--border-card)',
             borderRadius: '8px'
           }}>
             <div style={{
-              width: '28px',
-              height: '28px',
+              width: '32px',
+              height: '32px',
               borderRadius: '50%',
               background: user?.role === 'admin' ? '#ca8a04' : '#2563eb',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               color: '#ffffff',
-              fontSize: '0.75rem',
-              fontWeight: 700
+              fontSize: '0.8rem',
+              fontWeight: 800
             }}>
-              {user?.name ? user.name.charAt(0) : 'U'}
+              {user?.firstName ? user.firstName.charAt(0) : user?.name ? user.name.charAt(0) : 'O'}
             </div>
-            <div style={{ lineHeight: 1.2 }}>
-              <div style={{ fontSize: '0.8rem', fontWeight: 600 }}>{user?.name || 'Authorized Officer'}</div>
-              <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>
-                {user?.badgeNumber || (user?.role === 'admin' ? 'Joint Controller' : 'Inspector')}
+            <div style={{ lineHeight: 1.25 }}>
+              <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#ffffff' }}>
+                {user?.name || 'Officer'}
+              </div>
+              <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span style={{
+                  color: user?.role === 'admin' ? '#facc15' : '#60a5fa',
+                  fontWeight: 600,
+                  textTransform: 'uppercase'
+                }}>
+                  {user?.role === 'admin' ? 'Joint Controller' : 'Inspector'}
+                </span>
+                {user?.phone && (
+                  <span>• {user.phone}</span>
+                )}
               </div>
             </div>
           </div>
 
           <button
             onClick={onLogout}
-            title="Log out"
+            title="Log out of session"
+            className="btn btn-secondary"
             style={{
-              background: 'transparent',
-              border: '1px solid var(--border-subtle)',
-              color: 'var(--text-secondary)',
-              borderRadius: '8px',
-              padding: '8px',
-              cursor: 'pointer'
+              padding: '8px 12px',
+              fontSize: '0.78rem',
+              gap: '6px'
             }}
           >
-            <LogOut size={16} />
+            <LogOut size={15} />
+            <span>Sign Out</span>
           </button>
         </div>
       </div>
