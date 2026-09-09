@@ -136,9 +136,12 @@ export const ScanUploadPage: React.FC<ScanUploadPageProps> = ({
   const [manualTextFallback, setManualTextFallback] = useState(false);
   const [manualText, setManualText] = useState('');
   const [isCameraOpen, setIsCameraOpen] = useState(false);
+  const [cameraTargetSide, setCameraTargetSide] = useState<PackageSide>('front');
+  const [dragOverSide, setDragOverSide] = useState<PackageSide | null>(null);
 
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const frontInputRef = useRef<HTMLInputElement>(null);
+  const backInputRef = useRef<HTMLInputElement>(null);
+  const sideInputRef = useRef<HTMLInputElement>(null);
 
   const updateSideImage = (side: PackageSide, url: string | null, meta: ImageMetadata | null) => {
     setSideImages(prev => ({
@@ -147,14 +150,28 @@ export const ScanUploadPage: React.FC<ScanUploadPageProps> = ({
     }));
   };
 
+  const openCameraForSide = (side: PackageSide) => {
+    setCameraTargetSide(side);
+    setActiveSide(side);
+    setIsCameraOpen(true);
+  };
+
+  const openFileInputForSide = (side: PackageSide) => {
+    setActiveSide(side);
+    if (side === 'front') frontInputRef.current?.click();
+    else if (side === 'back') backInputRef.current?.click();
+    else sideInputRef.current?.click();
+  };
+
   const handleCameraCapture = (captured: CapturedImageData) => {
     setSelectedSample(null);
-    updateSideImage(activeSide, captured.dataUrl, {
-      name: `${captured.name.replace('.jpg', '')}_${activeSide}.jpg`,
+    updateSideImage(cameraTargetSide, captured.dataUrl, {
+      name: `${captured.name.replace('.jpg', '')}_${cameraTargetSide}.jpg`,
       size: captured.size,
       width: captured.width,
       height: captured.height
     });
+    setActiveSide(cameraTargetSide);
     setOcrError(null);
     setManualTextFallback(false);
   };
@@ -183,8 +200,8 @@ export const ScanUploadPage: React.FC<ScanUploadPageProps> = ({
     setManualTextFallback(false);
   };
 
-  // Custom File upload handler
-  const processUploadedFile = (file: File) => {
+  // Custom File upload handler for specific side
+  const processUploadedFile = (file: File, targetSide: PackageSide = activeSide) => {
     if (!file.type.startsWith('image/')) {
       setOcrError('Please upload a valid image file (PNG, JPG, WEBP).');
       return;
@@ -202,7 +219,7 @@ export const ScanUploadPage: React.FC<ScanUploadPageProps> = ({
     reader.onload = () => {
       const dataUrl = reader.result as string;
       const meta: ImageMetadata = {
-        name: `${file.name} (${activeSide.toUpperCase()})`,
+        name: `${file.name} (${targetSide.toUpperCase()})`,
         size: sizeFormatted,
         width: 0,
         height: 0
@@ -212,10 +229,10 @@ export const ScanUploadPage: React.FC<ScanUploadPageProps> = ({
       img.onload = () => {
         meta.width = img.naturalWidth || img.width;
         meta.height = img.naturalHeight || img.height;
-        updateSideImage(activeSide, dataUrl, meta);
+        updateSideImage(targetSide, dataUrl, meta);
       };
       img.onerror = () => {
-        updateSideImage(activeSide, dataUrl, meta);
+        updateSideImage(targetSide, dataUrl, meta);
       };
       img.src = dataUrl;
 
@@ -226,25 +243,25 @@ export const ScanUploadPage: React.FC<ScanUploadPageProps> = ({
       }
     };
     reader.readAsDataURL(file);
+    setActiveSide(targetSide);
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChangeForSide = (e: React.ChangeEvent<HTMLInputElement>, side: PackageSide) => {
     const file = e.target.files?.[0];
     if (file) {
-      processUploadedFile(file);
-      // Reset input value so same file can be chosen again if needed
+      processUploadedFile(file, side);
       e.target.value = '';
     }
   };
 
-  const handleDrop = (e: React.DragEvent) => {
+  const handleDropForSide = (e: React.DragEvent, side: PackageSide) => {
     e.preventDefault();
-    setIsDragOver(false);
+    setDragOverSide(null);
     const file = e.dataTransfer.files?.[0];
-    if (file) processUploadedFile(file);
+    if (file) processUploadedFile(file, side);
   };
 
-  const handleClearImage = (sideToClear: PackageSide = activeSide) => {
+  const handleClearImage = (sideToClear: PackageSide) => {
     updateSideImage(sideToClear, null, null);
     setSelectedSample(null);
     setOcrError(null);
@@ -573,138 +590,307 @@ export const ScanUploadPage: React.FC<ScanUploadPageProps> = ({
         
         {/* Left Column: Image Upload & Live Preview Card */}
         <div className="glass-panel" style={{ padding: '24px' }}>
+          {/* Hidden File Inputs for Each Independent Panel */}
+          <input
+            type="file"
+            ref={frontInputRef}
+            onChange={(e) => handleFileChangeForSide(e, 'front')}
+            accept="image/png, image/jpeg, image/webp, image/bmp"
+            style={{ display: 'none' }}
+          />
+          <input
+            type="file"
+            ref={backInputRef}
+            onChange={(e) => handleFileChangeForSide(e, 'back')}
+            accept="image/png, image/jpeg, image/webp, image/bmp"
+            style={{ display: 'none' }}
+          />
+          <input
+            type="file"
+            ref={sideInputRef}
+            onChange={(e) => handleFileChangeForSide(e, 'side')}
+            accept="image/png, image/jpeg, image/webp, image/bmp"
+            style={{ display: 'none' }}
+          />
+
+          {/* Section Header */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', flexWrap: 'wrap', gap: '8px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ fontSize: '0.82rem', fontWeight: 800, letterSpacing: '0.05em', color: 'var(--text-secondary)' }}>
-                1. COMMODITY LABEL PANELS
-              </span>
-              <span style={{
-                fontSize: '0.7rem',
-                background: totalUploadedCount > 0 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(255, 255, 255, 0.08)',
-                color: totalUploadedCount > 0 ? '#34d399' : 'var(--text-muted)',
-                padding: '2px 8px',
-                borderRadius: '9999px',
-                fontWeight: 600
-              }}>
-                {totalUploadedCount}/3 Uploaded
-              </span>
-            </div>
-            
-            {/* Multi-side tabs with independent status */}
-            <div style={{ display: 'flex', gap: '4px', background: 'rgba(15, 23, 42, 0.7)', padding: '3px', borderRadius: '8px', border: '1px solid var(--border-subtle)' }}>
-              {(['front', 'back', 'side'] as const).map((side) => {
-                const hasImg = !!sideImages[side].previewUrl;
-                return (
-                  <button
-                    key={side}
-                    type="button"
-                    onClick={() => setActiveSide(side)}
-                    style={{
-                      padding: '4px 10px',
-                      fontSize: '0.74rem',
-                      fontWeight: 700,
-                      textTransform: 'capitalize',
-                      borderRadius: '6px',
-                      border: activeSide === side ? '1px solid rgba(59, 130, 246, 0.6)' : '1px solid transparent',
-                      background: activeSide === side ? 'var(--accent-blue)' : 'transparent',
-                      color: activeSide === side ? '#ffffff' : hasImg ? '#93c5fd' : 'var(--text-secondary)',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '6px',
-                      transition: 'all 0.15s ease'
-                    }}
-                  >
-                    <span style={{
-                      display: 'inline-block',
-                      width: '7px',
-                      height: '7px',
-                      borderRadius: '50%',
-                      background: hasImg ? '#34d399' : 'rgba(255,255,255,0.25)',
-                      boxShadow: hasImg ? '0 0 6px #34d399' : 'none'
-                    }} />
-                    <span>{side}</span>
-                    {hasImg && <span style={{ fontSize: '0.65rem', opacity: 0.85 }}>✓</span>}
-                  </button>
-                );
-              })}
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ fontSize: '0.84rem', fontWeight: 800, letterSpacing: '0.04em', color: 'var(--text-secondary)' }}>
+                  1. COMMODITY LABEL PANELS (3 SIDES / 3 భుజాలు)
+                </span>
+                <span style={{
+                  fontSize: '0.7rem',
+                  background: totalUploadedCount > 0 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(255, 255, 255, 0.08)',
+                  color: totalUploadedCount > 0 ? '#34d399' : 'var(--text-muted)',
+                  padding: '2px 8px',
+                  borderRadius: '9999px',
+                  fontWeight: 600
+                }}>
+                  {totalUploadedCount}/3 Uploaded
+                </span>
+              </div>
+              <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)', marginTop: '2px' }}>
+                Upload 3 distinct photos for Front (ముందు), Back (వెనుక), and Side (ప్రక్క). All 3 panels are scanned together.
+              </div>
             </div>
           </div>
 
-          {/* Upload Drop Zone / Image Preview for Active Side */}
-          <div
-            onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
-            onDragLeave={() => setIsDragOver(false)}
-            onDrop={handleDrop}
-            style={{
-              border: `2px dashed ${isDragOver ? '#3b82f6' : previewUrl ? 'var(--border-card)' : 'var(--border-hover)'}`,
-              borderRadius: '12px',
-              padding: previewUrl ? '12px' : '36px 20px',
-              textAlign: 'center',
-              background: isDragOver ? 'rgba(59, 130, 246, 0.08)' : 'var(--bg-glass-heavy)',
-              position: 'relative',
-              overflow: 'hidden',
-              minHeight: '280px',
+          {/* 3 Simultaneous Independent Upload Cards */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+            gap: '12px',
+            marginBottom: '16px'
+          }}>
+            {[
+              {
+                side: 'front' as PackageSide,
+                title: 'Front View',
+                telugu: 'ముందు వైపు',
+                badge: 'Primary Surface',
+                mandatory: true,
+                requiredFields: 'Brand, Name, Net Qty',
+                color: '#3b82f6',
+                ref: frontInputRef
+              },
+              {
+                side: 'back' as PackageSide,
+                title: 'Back View',
+                telugu: 'వెనుక వైపు',
+                badge: 'Info Panel',
+                mandatory: true,
+                requiredFields: 'MRP, Mfg Date, Address',
+                color: '#10b981',
+                ref: backInputRef
+              },
+              {
+                side: 'side' as PackageSide,
+                title: 'Side View',
+                telugu: 'ప్రక్క వైపు',
+                badge: 'Support & Origin',
+                mandatory: false,
+                requiredFields: 'Helpline, Origin, Care',
+                color: '#8b5cf6',
+                ref: sideInputRef
+              }
+            ].map((slot) => {
+              const data = sideImages[slot.side];
+              const hasImg = !!data.previewUrl;
+              const isSelected = activeSide === slot.side;
+              const isDragging = dragOverSide === slot.side;
+
+              return (
+                <div
+                  key={slot.side}
+                  onClick={() => setActiveSide(slot.side)}
+                  onDragOver={(e) => { e.preventDefault(); setDragOverSide(slot.side); }}
+                  onDragLeave={() => setDragOverSide(null)}
+                  onDrop={(e) => handleDropForSide(e, slot.side)}
+                  style={{
+                    borderRadius: '12px',
+                    border: `2px solid ${isDragging ? '#3b82f6' : isSelected ? slot.color : 'var(--border-card)'}`,
+                    background: isSelected ? 'rgba(15, 23, 42, 0.9)' : 'var(--bg-glass-heavy)',
+                    padding: '12px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '8px',
+                    boxShadow: isSelected ? `0 0 16px ${slot.color}33` : 'none',
+                    transition: 'all 0.2s ease',
+                    cursor: 'pointer'
+                  }}
+                >
+                  {/* Slot Header */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <div>
+                      <div style={{ fontWeight: 800, fontSize: '0.82rem', color: isSelected ? slot.color : '#ffffff' }}>
+                        {slot.title} <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>({slot.telugu})</span>
+                      </div>
+                      <div style={{ fontSize: '0.67rem', color: 'var(--text-secondary)' }}>
+                        {slot.requiredFields}
+                      </div>
+                    </div>
+                    <span style={{
+                      fontSize: '0.66rem',
+                      padding: '2px 6px',
+                      borderRadius: '9999px',
+                      fontWeight: 700,
+                      background: hasImg ? 'rgba(16, 185, 129, 0.2)' : 'rgba(255, 255, 255, 0.08)',
+                      color: hasImg ? '#34d399' : 'var(--text-muted)',
+                      flexShrink: 0
+                    }}>
+                      {hasImg ? '✓ Loaded' : slot.mandatory ? 'Required' : 'Optional'}
+                    </span>
+                  </div>
+
+                  {/* Slot Preview or Dropzone */}
+                  {hasImg ? (
+                    <div style={{ position: 'relative', borderRadius: '8px', overflow: 'hidden', background: '#090d16', border: '1px solid var(--border-subtle)' }}>
+                      <img
+                        src={data.previewUrl!}
+                        alt={`${slot.title} preview`}
+                        style={{ width: '100%', height: '110px', objectFit: 'contain', display: 'block' }}
+                      />
+                      <div style={{
+                        padding: '6px 8px',
+                        background: 'rgba(15, 23, 42, 0.92)',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        fontSize: '0.7rem'
+                      }}>
+                        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '80px', color: '#94a3b8' }}>
+                          {data.imageMeta?.name || 'Image'}
+                        </span>
+                        <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                          <button
+                            type="button"
+                            onClick={(e) => { e.stopPropagation(); openFileInputForSide(slot.side); }}
+                            style={{ background: 'transparent', border: 'none', color: '#60a5fa', cursor: 'pointer', fontSize: '0.7rem', fontWeight: 600 }}
+                          >
+                            Change
+                          </button>
+                          <span>•</span>
+                          <button
+                            type="button"
+                            onClick={(e) => { e.stopPropagation(); openCameraForSide(slot.side); }}
+                            style={{ background: 'transparent', border: 'none', color: '#38bdf8', cursor: 'pointer', fontSize: '0.7rem', fontWeight: 600 }}
+                          >
+                            Camera
+                          </button>
+                          <span>•</span>
+                          <button
+                            type="button"
+                            onClick={(e) => { e.stopPropagation(); handleClearImage(slot.side); }}
+                            style={{ background: 'transparent', border: 'none', color: '#f87171', cursor: 'pointer', fontSize: '0.7rem', fontWeight: 600 }}
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div style={{
+                      border: '1px dashed var(--border-hover)',
+                      borderRadius: '8px',
+                      padding: '14px 6px',
+                      textAlign: 'center',
+                      background: isDragging ? 'rgba(59, 130, 246, 0.1)' : 'rgba(15, 23, 42, 0.4)',
+                      minHeight: '110px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '8px'
+                    }}>
+                      <UploadCloud size={20} color="var(--text-muted)" />
+                      <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)' }}>
+                        Upload {slot.title}
+                      </div>
+                      <div style={{ display: 'flex', gap: '6px' }}>
+                        <button
+                          type="button"
+                          onClick={(e) => { e.stopPropagation(); openFileInputForSide(slot.side); }}
+                          className="btn btn-primary"
+                          style={{ padding: '4px 8px', fontSize: '0.7rem', gap: '4px' }}
+                        >
+                          <UploadCloud size={11} />
+                          Browse
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(e) => { e.stopPropagation(); openCameraForSide(slot.side); }}
+                          className="btn btn-secondary"
+                          style={{ padding: '4px 8px', fontSize: '0.7rem', gap: '4px' }}
+                        >
+                          <Camera size={11} />
+                          Camera
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Active Panel Inspection Canvas */}
+          <div style={{
+            borderRadius: '12px',
+            border: '1px solid var(--border-card)',
+            background: 'rgba(15, 23, 42, 0.8)',
+            overflow: 'hidden'
+          }}>
+            <div style={{
+              padding: '10px 14px',
+              background: 'rgba(15, 23, 42, 0.95)',
+              borderBottom: '1px solid var(--border-subtle)',
               display: 'flex',
-              flexDirection: 'column',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              flexWrap: 'wrap',
+              gap: '8px'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ fontSize: '0.78rem', fontWeight: 800, color: '#ffffff', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                  Full Inspection Canvas: {activeSide} Panel
+                </span>
+                {sideImages[activeSide].previewUrl && (
+                  <span className="badge badge-compliant" style={{ fontSize: '0.68rem' }}>
+                    ✓ Ready for OCR
+                  </span>
+                )}
+              </div>
+
+              {/* Quick Tab Switcher for Inspector Canvas */}
+              <div style={{ display: 'flex', gap: '4px' }}>
+                {(['front', 'back', 'side'] as const).map((s) => (
+                  <button
+                    key={s}
+                    type="button"
+                    onClick={() => setActiveSide(s)}
+                    style={{
+                      padding: '3px 8px',
+                      fontSize: '0.72rem',
+                      fontWeight: 700,
+                      textTransform: 'capitalize',
+                      borderRadius: '6px',
+                      border: activeSide === s ? '1px solid #3b82f6' : '1px solid transparent',
+                      background: activeSide === s ? 'var(--accent-blue)' : 'rgba(255, 255, 255, 0.05)',
+                      color: activeSide === s ? '#ffffff' : 'var(--text-secondary)',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    {s} {sideImages[s].previewUrl ? '✓' : ''}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div style={{
+              minHeight: '260px',
+              position: 'relative',
+              display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              transition: 'all 0.2s ease'
-            }}
-          >
-            <input
-              type="file"
-              ref={fileInputRef}
-              onChange={handleFileChange}
-              accept="image/png, image/jpeg, image/webp, image/bmp"
-              style={{ display: 'none' }}
-            />
-            <input
-              type="file"
-              ref={cameraInputRef}
-              onChange={handleFileChange}
-              accept="image/*"
-              capture="environment"
-              style={{ display: 'none' }}
-            />
-
-            {previewUrl ? (
-              <div style={{ width: '100%', position: 'relative' }}>
-                {/* Active Panel Badge */}
-                <div style={{
-                  position: 'absolute',
-                  top: '10px',
-                  left: '10px',
-                  zIndex: 15,
-                  background: 'rgba(15, 23, 42, 0.85)',
-                  border: '1px solid rgba(59, 130, 246, 0.5)',
-                  padding: '3px 10px',
-                  borderRadius: '6px',
-                  fontSize: '0.72rem',
-                  fontWeight: 700,
-                  color: '#93c5fd',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.04em'
-                }}>
-                  {activeSide} Panel Active
-                </div>
-
-                {/* Image Container with Scanning Animation when processing */}
-                <div style={{ position: 'relative', overflow: 'hidden', borderRadius: '8px' }}>
+              background: '#090d16',
+              padding: '12px'
+            }}>
+              {sideImages[activeSide].previewUrl ? (
+                <div style={{ width: '100%', position: 'relative' }}>
                   <img
-                    src={previewUrl}
-                    alt={`${activeSide} Label Preview`}
+                    src={sideImages[activeSide].previewUrl!}
+                    alt={`${activeSide} Active Inspection Preview`}
                     style={{
                       width: '100%',
-                      maxHeight: '320px',
+                      maxHeight: '280px',
                       objectFit: 'contain',
                       borderRadius: '8px',
-                      display: 'block',
-                      background: '#090d16'
+                      display: 'block'
                     }}
                   />
-
-                  {/* Sleek Cyan Laser Scanner Animation during OCR processing */}
+                  {/* Laser Scanner Animation during OCR Processing */}
                   {isProcessing && (
                     <div style={{
                       position: 'absolute',
@@ -719,205 +905,27 @@ export const ScanUploadPage: React.FC<ScanUploadPageProps> = ({
                     }} />
                   )}
                 </div>
-
-                {/* Image Metadata Bar */}
-                {imageMeta && (
-                  <div style={{
-                    marginTop: '10px',
-                    padding: '8px 12px',
-                    background: 'rgba(15, 23, 42, 0.75)',
-                    border: '1px solid var(--border-subtle)',
-                    borderRadius: '8px',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    fontSize: '0.74rem',
-                    color: 'var(--text-secondary)'
-                  }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      <ImageIcon size={14} color="#60a5fa" />
-                      <span style={{ fontWeight: 600, color: '#ffffff' }}>{imageMeta.name}</span>
-                      <span>({imageMeta.size})</span>
-                      {imageMeta.width > 0 && (
-                        <span style={{ color: '#94a3b8' }}>• {imageMeta.width}×{imageMeta.height}px</span>
-                      )}
-                    </div>
-
-                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                      <button
-                        type="button"
-                        onClick={() => fileInputRef.current?.click()}
-                        style={{
-                          background: 'transparent',
-                          border: 'none',
-                          color: '#60a5fa',
-                          cursor: 'pointer',
-                          fontSize: '0.74rem',
-                          fontWeight: 600
-                        }}
-                      >
-                        Change Photo
-                      </button>
-                      <span>•</span>
-                      <button
-                        type="button"
-                        onClick={() => setIsCameraOpen(true)}
-                        style={{
-                          background: 'transparent',
-                          border: 'none',
-                          color: '#38bdf8',
-                          cursor: 'pointer',
-                          fontSize: '0.74rem',
-                          fontWeight: 600,
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '4px'
-                        }}
-                      >
-                        <Camera size={12} />
-                        <span>Use Camera</span>
-                      </button>
-                      <span>•</span>
-                      <button
-                        type="button"
-                        onClick={() => handleClearImage(activeSide)}
-                        style={{
-                          background: 'transparent',
-                          border: 'none',
-                          color: '#f87171',
-                          cursor: 'pointer',
-                          fontSize: '0.74rem',
-                          fontWeight: 600
-                        }}
-                      >
-                        Remove
-                      </button>
-                    </div>
+              ) : (
+                <div style={{ textAlign: 'center', padding: '30px 20px', color: 'var(--text-muted)' }}>
+                  <UploadCloud size={32} style={{ margin: '0 auto 10px', opacity: 0.5 }} />
+                  <div style={{ fontWeight: 700, fontSize: '0.88rem', color: 'var(--text-secondary)', marginBottom: '4px' }}>
+                    No Image Uploaded for {activeSide.toUpperCase()} Panel
                   </div>
-                )}
-              </div>
-            ) : (
-              <div>
-                <div style={{
-                  width: '60px',
-                  height: '60px',
-                  borderRadius: '50%',
-                  background: 'rgba(37, 99, 235, 0.15)',
-                  color: '#60a5fa',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  margin: '0 auto 14px'
-                }}>
-                  <UploadCloud size={30} />
-                </div>
-                <div style={{ fontWeight: 700, fontSize: '1rem', marginBottom: '6px', textTransform: 'capitalize' }}>
-                  Upload {activeSide} Packaging Panel
-                </div>
-                <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '16px', maxWidth: '360px', lineHeight: 1.4 }}>
-                  {activeSide === 'front'
-                    ? 'Upload front view (Brand, Commodity Name, and Net Quantity declarations).'
-                    : activeSide === 'back'
-                    ? 'Upload back view (Manufacturer Name & Address, Date of Mfg, and MRP with Taxes).'
-                    : 'Upload side view (Consumer Care helpline, Country of Origin, or Unit Sale Price).'}
-                </div>
-
-                <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
+                  <div style={{ fontSize: '0.78rem', marginBottom: '14px', maxWidth: '340px', margin: '0 auto 14px' }}>
+                    Click "Browse" or "Camera" on the <strong>{activeSide.toUpperCase()}</strong> card above to add this panel's image.
+                  </div>
                   <button
                     type="button"
-                    onClick={() => fileInputRef.current?.click()}
+                    onClick={() => openFileInputForSide(activeSide)}
                     className="btn btn-primary"
-                    style={{ padding: '8px 16px', fontSize: '0.82rem', gap: '6px' }}
+                    style={{ padding: '6px 14px', fontSize: '0.78rem', gap: '6px' }}
                   >
-                    <UploadCloud size={16} />
-                    Browse Photo
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setIsCameraOpen(true)}
-                    className="btn btn-secondary"
-                    style={{ padding: '8px 16px', fontSize: '0.82rem', gap: '6px' }}
-                  >
-                    <Camera size={16} />
-                    Camera Capture
+                    <UploadCloud size={14} />
+                    Browse {activeSide.toUpperCase()} Photo
                   </button>
                 </div>
-              </div>
-            )}
-          </div>
-
-          {/* Multi-Side 3-Panel Thumbnail Strip */}
-          <div style={{
-            marginTop: '14px',
-            display: 'grid',
-            gridTemplateColumns: 'repeat(3, 1fr)',
-            gap: '8px'
-          }}>
-            {(['front', 'back', 'side'] as const).map((side) => {
-              const data = sideImages[side];
-              const isActive = activeSide === side;
-              const hasImg = !!data.previewUrl;
-              return (
-                <div
-                  key={side}
-                  onClick={() => setActiveSide(side)}
-                  style={{
-                    padding: '8px 10px',
-                    borderRadius: '8px',
-                    border: `1px solid ${isActive ? 'var(--accent-blue)' : 'var(--border-subtle)'}`,
-                    background: isActive ? 'rgba(37, 99, 235, 0.15)' : 'var(--bg-glass)',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                    transition: 'all 0.15s ease'
-                  }}
-                >
-                  <div style={{
-                    width: '36px',
-                    height: '36px',
-                    borderRadius: '6px',
-                    background: '#090d16',
-                    overflow: 'hidden',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    flexShrink: 0,
-                    border: '1px solid var(--border-card)'
-                  }}>
-                    {hasImg ? (
-                      <img
-                        src={data.previewUrl!}
-                        alt={`${side} thumbnail`}
-                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                      />
-                    ) : (
-                      <ImageIcon size={16} color="var(--text-muted)" />
-                    )}
-                  </div>
-                  <div style={{ minWidth: 0, flex: 1 }}>
-                    <div style={{
-                      fontSize: '0.74rem',
-                      fontWeight: 700,
-                      textTransform: 'capitalize',
-                      color: isActive ? '#60a5fa' : '#ffffff'
-                    }}>
-                      {side} View
-                    </div>
-                    <div style={{
-                      fontSize: '0.68rem',
-                      color: hasImg ? '#34d399' : 'var(--text-muted)',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap'
-                    }}>
-                      {hasImg ? 'Uploaded ✓' : '+ Upload'}
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
+              )}
+            </div>
           </div>
 
           {/* Quick Benchmark Comparison Presets */}
@@ -1050,6 +1058,43 @@ export const ScanUploadPage: React.FC<ScanUploadPageProps> = ({
               </div>
             </div>
 
+            {/* Multi-Panel Packaging Panels Status Bar */}
+            <div style={{
+              background: 'rgba(15, 23, 42, 0.75)',
+              border: '1px solid var(--border-subtle)',
+              borderRadius: '10px',
+              padding: '12px 14px',
+              fontSize: '0.78rem'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                <span style={{ fontWeight: 700, color: '#ffffff', letterSpacing: '0.02em', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <Layers size={14} color="#38bdf8" />
+                  <span>PACKAGING PANELS STATUS</span>
+                </span>
+                <span style={{
+                  fontSize: '0.7rem',
+                  fontWeight: 700,
+                  color: totalUploadedCount > 0 ? '#34d399' : '#f87171'
+                }}>
+                  {totalUploadedCount}/3 Panels Ready
+                </span>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', color: sideImages.front.previewUrl ? '#93c5fd' : 'var(--text-muted)' }}>
+                  <span>Front (ముందు వైపు):</span>
+                  <span style={{ fontWeight: 600 }}>{sideImages.front.previewUrl ? '✓ Ready (Net Qty, Brand)' : '— Not uploaded'}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', color: sideImages.back.previewUrl ? '#86efac' : 'var(--text-muted)' }}>
+                  <span>Back (వెనుక వైపు):</span>
+                  <span style={{ fontWeight: 600 }}>{sideImages.back.previewUrl ? '✓ Ready (MRP, Mfg Date)' : '— Not uploaded'}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', color: sideImages.side.previewUrl ? '#c4b5fd' : 'var(--text-muted)' }}>
+                  <span>Side (ప్రక్క వైపు):</span>
+                  <span style={{ fontWeight: 600 }}>{sideImages.side.previewUrl ? '✓ Ready (Helpline, Origin)' : '— Not uploaded'}</span>
+                </div>
+              </div>
+            </div>
+
             {/* Statutory Legal Rules Tested */}
             <div style={{
               background: 'rgba(15, 23, 42, 0.65)',
@@ -1172,6 +1217,7 @@ export const ScanUploadPage: React.FC<ScanUploadPageProps> = ({
         isOpen={isCameraOpen}
         onClose={() => setIsCameraOpen(false)}
         onCapture={handleCameraCapture}
+        panelTitle={`${cameraTargetSide.toUpperCase()} PANEL (${cameraTargetSide === 'front' ? 'ముందు వైపు' : cameraTargetSide === 'back' ? 'వెనుక వైపు' : 'ప్రక్క వైపు'})`}
       />
 
       <style>{`

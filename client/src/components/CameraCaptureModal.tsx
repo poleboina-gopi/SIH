@@ -13,12 +13,14 @@ interface CameraCaptureModalProps {
   isOpen: boolean;
   onClose: () => void;
   onCapture: (image: CapturedImageData) => void;
+  panelTitle?: string;
 }
 
 export const CameraCaptureModal: React.FC<CameraCaptureModalProps> = ({
   isOpen,
   onClose,
-  onCapture
+  onCapture,
+  panelTitle
 }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -218,7 +220,7 @@ export const CameraCaptureModal: React.FC<CameraCaptureModalProps> = ({
             </div>
             <div>
               <div style={{ fontWeight: 800, fontSize: '1rem', color: '#ffffff' }}>
-                System Camera Viewfinder
+                {panelTitle ? `Camera Capture: ${panelTitle}` : 'System Camera Viewfinder'}
               </div>
               <div style={{ fontSize: '0.74rem', color: 'var(--text-secondary)' }}>
                 Position commodity packaging inside the alignment frame for high-accuracy OCR
