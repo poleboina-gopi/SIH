@@ -7,6 +7,10 @@ export interface SampleLabel {
   category: string;
   expectedStatus: 'COMPLIANT' | 'NON_COMPLIANT' | 'BORDERLINE';
   description: string;
+  keyIssues: Array<{
+    type: 'violation' | 'warning' | 'compliant';
+    text: string;
+  }>;
   rawText: string;
   svgDataUrl: string;
   boundingBoxes: Array<{
@@ -158,6 +162,10 @@ export const SAMPLE_LABELS: SampleLabel[] = [
     category: "Dairy & Food",
     expectedStatus: "COMPLIANT",
     description: "Benchmark 100% legally compliant packaged commodity with standard metric symbol 'g', complete tax clause, full postal and digital consumer care details.",
+    keyIssues: [
+      { type: 'compliant', text: "Standard metric unit 'g' declared (Rule 12)" },
+      { type: 'compliant', text: "Mandatory tax clause & consumer care present" }
+    ],
     svgDataUrl: createSvgDataUrl(butterSvg),
     rawText: `AMUL PASTEURISED BUTTER
 Generic Name: Table Butter
@@ -186,6 +194,10 @@ Customer Care: 1800-258-3333 | customercare@amul.coop | PO Box 10, Anand - 38800
     category: "Household & Cleaning",
     expectedStatus: "NON_COMPLIANT",
     description: "High-violation benchmark: Illegal metric unit symbol 'gms' (Rule 12 & 13), omitted tax inclusion clause in MRP (Rule 6(1)(e)), and missing consumer redressal email (Rule 6(1)(n)).",
+    keyIssues: [
+      { type: 'violation', text: "Illegal unit symbol 'gms' (Rule 12 & 13)" },
+      { type: 'violation', text: "Missing '(incl. of all taxes)' on MRP (Rule 6(1)(e))" }
+    ],
     svgDataUrl: createSvgDataUrl(detergentSvg),
     rawText: `SUPERCLEAN POWER DETERGENT
 Net Weight: 500 gms
@@ -210,6 +222,10 @@ Customer Care Phone: 011-26987455`,
     category: "Confectionery (Imported)",
     expectedStatus: "NON_COMPLIANT",
     description: "Imported goods compliance defect: Missing Country of Origin declaration (Rule 6(1)(m)) and incomplete Indian importer registration address (Rule 6(1)(a)).",
+    keyIssues: [
+      { type: 'violation', text: "Missing Country of Origin (Rule 6(1)(m))" },
+      { type: 'violation', text: "Incomplete importer address PIN (Rule 6(1)(a))" }
+    ],
     svgDataUrl: createSvgDataUrl(trufflesSvg),
     rawText: `ALPINA SWISS DARK TRUFFLES
 Generic Name: Cocoa Confectionery
@@ -231,6 +247,10 @@ Mfg: 06/2024`,
     category: "Personal Care & Cosmetics",
     expectedStatus: "BORDERLINE",
     description: "Borderline case: Low numeral height under Rule 7 (estimated 1.8mm against 2.0mm statutory standard) and non-standard date format 'Sep-24' under Rule 6(1)(d).",
+    keyIssues: [
+      { type: 'warning', text: "Numeral height 1.8mm < 2.0mm (Rule 7)" },
+      { type: 'warning', text: "Non-standard date format 'Sep-24' (Rule 6(1)(d))" }
+    ],
     svgDataUrl: createSvgDataUrl(shampooSvg),
     rawText: `GLOWHERB ORGANIC SHAMPOO
 Net Vol: 200 ml

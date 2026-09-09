@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { 
   ShieldCheck, AlertOctagon, AlertTriangle, ScanLine, 
-  ArrowUpRight, Clock, FileCheck, IndianRupee, Layers, CheckCircle2, Trash2 
+  ArrowUpRight, Clock, FileCheck, FileText, IndianRupee, Layers, 
+  CheckCircle2, XCircle, Trash2, Eye, X 
 } from 'lucide-react';
 import { api } from '../services/api';
 import { DashboardStats, User } from '../types';
@@ -26,6 +27,7 @@ export const InspectorDashboard: React.FC<InspectorDashboardProps> = ({
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
+  const [selectedDetailSample, setSelectedDetailSample] = useState<SampleLabel | null>(null);
 
   useEffect(() => {
     loadDashboardData();
@@ -62,8 +64,8 @@ export const InspectorDashboard: React.FC<InspectorDashboardProps> = ({
     <div>
       {/* Top Welcome Banner */}
       <div className="glass-panel" style={{
-        padding: '24px 28px',
-        marginBottom: '24px',
+        padding: '26px 32px',
+        marginBottom: '32px',
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
@@ -71,7 +73,7 @@ export const InspectorDashboard: React.FC<InspectorDashboardProps> = ({
         border: '1px solid rgba(59, 130, 246, 0.3)'
       }}>
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
             <span style={{
               background: 'rgba(16, 185, 129, 0.2)',
               color: '#34d399',
@@ -83,12 +85,12 @@ export const InspectorDashboard: React.FC<InspectorDashboardProps> = ({
             }}>
               OFFICIAL ENFORCEMENT SESSION ACTIVE
             </span>
-            <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>• Circle: Delhi Central</span>
+            <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>• Circle: Delhi Central</span>
           </div>
-          <h1 style={{ fontSize: '1.6rem', fontWeight: 800 }}>
+          <h1 style={{ fontSize: '1.85rem', fontWeight: 800, color: '#ffffff', letterSpacing: '-0.02em', margin: 0 }}>
             Inspector Portal: {user.name}
           </h1>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', marginTop: '2px' }}>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '0.82rem', marginTop: '4px', margin: '4px 0 0' }}>
             {user.designation} • Badge: {user.badgeNumber || 'LM-DEL-2024'}
           </p>
         </div>
@@ -98,7 +100,7 @@ export const InspectorDashboard: React.FC<InspectorDashboardProps> = ({
           <button
             onClick={onNavigateScan}
             className="btn btn-primary"
-            style={{ padding: '12px 24px', fontSize: '0.95rem', gap: '10px' }}
+            style={{ padding: '12px 24px', fontSize: '0.92rem', fontWeight: 700, gap: '10px' }}
           >
             <ScanLine size={18} />
             Start New Inspection
@@ -107,87 +109,93 @@ export const InspectorDashboard: React.FC<InspectorDashboardProps> = ({
       </div>
 
       {/* KPI Counters Grid */}
-      <div className="grid-4" style={{ marginBottom: '28px' }}>
+      <div className="grid-4" style={{ marginBottom: '32px', gap: '16px' }}>
         {/* Total Scans */}
-        <div className="glass-panel" style={{ padding: '20px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: 'var(--text-secondary)', fontSize: '0.8rem', fontWeight: 600 }}>
+        <div className="glass-panel" style={{ padding: '20px 22px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: 'var(--text-secondary)', fontSize: '0.74rem', fontWeight: 700, letterSpacing: '0.04em' }}>
             <span>TOTAL INSPECTIONS</span>
             <Layers size={18} color="#60a5fa" />
           </div>
-          <div style={{ fontSize: '2rem', fontWeight: 800, margin: '8px 0 4px', color: '#ffffff' }}>
+          <div style={{ fontSize: '2.2rem', fontWeight: 800, margin: '8px 0 2px', color: '#ffffff', lineHeight: 1.1 }}>
             {stats ? stats.total_scans : 2}
           </div>
-          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+          <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
             Packaged commodities analyzed
           </div>
         </div>
 
         {/* Compliant Scans */}
-        <div className="glass-panel" style={{ padding: '20px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: 'var(--text-secondary)', fontSize: '0.8rem', fontWeight: 600 }}>
+        <div className="glass-panel" style={{ padding: '20px 22px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: '#34d399', fontSize: '0.74rem', fontWeight: 700, letterSpacing: '0.04em' }}>
             <span>COMPLIANT LABELS</span>
-            <ShieldCheck size={18} color="#34d399" />
+            <CheckCircle2 size={18} color="#10b981" />
           </div>
-          <div style={{ fontSize: '2rem', fontWeight: 800, margin: '8px 0 4px', color: '#10b981' }}>
+          <div style={{ fontSize: '2.2rem', fontWeight: 800, margin: '8px 0 2px', color: '#10b981', lineHeight: 1.1 }}>
             {stats ? stats.compliant_scans : 1}
           </div>
-          <div style={{ fontSize: '0.75rem', color: '#34d399' }}>
-            {stats ? `${stats.compliance_rate}% compliance rate` : '50% compliance rate'}
+          <div style={{ fontSize: '0.72rem', color: '#34d399', display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <span>✅</span>
+            <span>{stats ? `${stats.compliance_rate}% pass rate` : '50% pass rate'}</span>
           </div>
         </div>
 
         {/* Non-Compliant Scans */}
-        <div className="glass-panel" style={{ padding: '20px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: 'var(--text-secondary)', fontSize: '0.8rem', fontWeight: 600 }}>
+        <div className="glass-panel" style={{ padding: '20px 22px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: '#f87171', fontSize: '0.74rem', fontWeight: 700, letterSpacing: '0.04em' }}>
             <span>VIOLATIONS DETECTED</span>
             <AlertOctagon size={18} color="#f43f5e" />
           </div>
-          <div style={{ fontSize: '2rem', fontWeight: 800, margin: '8px 0 4px', color: '#f43f5e' }}>
+          <div style={{ fontSize: '2.2rem', fontWeight: 800, margin: '8px 0 2px', color: '#f43f5e', lineHeight: 1.1 }}>
             {stats ? stats.total_violations : 3}
           </div>
-          <div style={{ fontSize: '0.75rem', color: '#f87171' }}>
-            Across {stats ? stats.non_compliant_scans : 1} non-compliant packages
+          <div style={{ fontSize: '0.72rem', color: '#f87171', display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <span>❌</span>
+            <span>Across {stats ? stats.non_compliant_scans : 1} non-compliant packages</span>
           </div>
         </div>
 
         {/* Penalties Estimated */}
-        <div className="glass-panel" style={{ padding: '20px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: 'var(--text-secondary)', fontSize: '0.8rem', fontWeight: 600 }}>
+        <div className="glass-panel" style={{ padding: '20px 22px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: '#fbbf24', fontSize: '0.74rem', fontWeight: 700, letterSpacing: '0.04em' }}>
             <span>COMPOUNDING FINES</span>
             <IndianRupee size={18} color="#facc15" />
           </div>
-          <div style={{ fontSize: '2rem', fontWeight: 800, margin: '8px 0 4px', color: '#facc15' }}>
+          <div style={{ fontSize: '2.2rem', fontWeight: 800, margin: '8px 0 2px', color: '#facc15', lineHeight: 1.1 }}>
             ₹{stats ? stats.total_penalties_estimated.toLocaleString('en-IN') : '75,000'}
           </div>
-          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+          <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
             Statutory fines under Sec. 36
           </div>
         </div>
       </div>
 
       {/* 1-Click Benchmark Test Suite Launcher */}
-      <div className="glass-panel" style={{ padding: '22px', marginBottom: '28px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+      <div className="glass-panel" style={{ padding: '24px 28px', marginBottom: '32px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px' }}>
           <div>
-            <h2 style={{ fontSize: '1.1rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span>🚀 1-Click Benchmark Test Suite</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px' }}>
+              <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#ffffff', margin: 0 }}>
+                1-Click Benchmark Test Suite
+              </h2>
               <span style={{
-                fontSize: '0.7rem',
+                fontSize: '0.68rem',
+                fontWeight: 700,
                 background: 'rgba(59, 130, 246, 0.2)',
                 color: '#60a5fa',
                 padding: '2px 8px',
-                borderRadius: '9999px'
+                borderRadius: '9999px',
+                border: '1px solid rgba(59, 130, 246, 0.3)'
               }}>
-                Instant Demonstration
+                Instant Demo
               </span>
-            </h2>
-            <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-              Test the OCR and statutory rule engine with pre-verified compliant and non-compliant packaged commodity samples:
+            </div>
+            <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', margin: 0 }}>
+              Pre-calibrated packaging samples to test real-time OCR and statutory compliance rules
             </p>
           </div>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '14px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '18px' }}>
           {SAMPLE_LABELS.map((sample) => {
             const isCompliant = sample.expectedStatus === 'COMPLIANT';
             const isNonCompliant = sample.expectedStatus === 'NON_COMPLIANT';
@@ -195,54 +203,134 @@ export const InspectorDashboard: React.FC<InspectorDashboardProps> = ({
             return (
               <div
                 key={sample.id}
-                onClick={() => onSelectSample(sample)}
                 style={{
                   background: 'var(--bg-glass-heavy)',
-                  border: `1px solid ${isCompliant ? 'rgba(16, 185, 129, 0.4)' : isNonCompliant ? 'rgba(239, 68, 68, 0.4)' : 'rgba(245, 158, 11, 0.4)'}`,
-                  borderRadius: '12px',
-                  padding: '16px',
-                  cursor: 'pointer',
+                  border: `1px solid ${isCompliant ? 'rgba(16, 185, 129, 0.35)' : isNonCompliant ? 'rgba(239, 68, 68, 0.35)' : 'rgba(245, 158, 11, 0.35)'}`,
+                  borderRadius: '14px',
+                  padding: '18px 20px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'space-between',
                   transition: 'all 0.2s ease',
-                  position: 'relative',
-                  overflow: 'hidden'
+                  position: 'relative'
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.transform = 'translateY(-2px)';
-                  e.currentTarget.style.boxShadow = '0 6px 20px rgba(0,0,0,0.4)';
+                  e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.35)';
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.transform = 'none';
                   e.currentTarget.style.boxShadow = 'none';
                 }}
               >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
-                  <span className={`badge ${isCompliant ? 'badge-compliant' : isNonCompliant ? 'badge-noncompliant' : 'badge-warning'}`}>
-                    {sample.expectedStatus}
-                  </span>
-                  <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{sample.category}</span>
+                <div>
+                  {/* Status Badge with Icon & Category */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                    <span className={`badge ${isCompliant ? 'badge-compliant' : isNonCompliant ? 'badge-noncompliant' : 'badge-warning'}`}
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', fontSize: '0.72rem', fontWeight: 700 }}
+                    >
+                      <span>{isCompliant ? '✅' : isNonCompliant ? '❌' : '⚠️'}</span>
+                      <span>{sample.expectedStatus}</span>
+                    </span>
+                    <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{sample.category}</span>
+                  </div>
+
+                  {/* Product Name (Limited to 2 lines max with ellipsis) */}
+                  <div style={{
+                    fontWeight: 700,
+                    fontSize: '0.98rem',
+                    color: '#ffffff',
+                    marginBottom: '3px',
+                    lineHeight: 1.35,
+                    display: '-webkit-box',
+                    WebkitLineClamp: 2,
+                    WebkitBoxOrient: 'vertical',
+                    overflow: 'hidden'
+                  }}>
+                    {sample.name}
+                  </div>
+
+                  <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)', marginBottom: '12px' }}>
+                    Brand: {sample.brand}
+                  </div>
+
+                  {/* Key Issues (Max 2 bullet points with icons, zero paragraphs) */}
+                  <div style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '6px',
+                    marginBottom: '16px',
+                    padding: '8px 10px',
+                    borderRadius: '8px',
+                    background: 'rgba(0,0,0,0.25)',
+                    border: '1px solid var(--border-subtle)'
+                  }}>
+                    {sample.keyIssues && sample.keyIssues.slice(0, 2).map((issue, idx) => (
+                      <div
+                        key={idx}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          fontSize: '0.75rem',
+                          color: issue.type === 'violation' ? '#fca5a5' : issue.type === 'warning' ? '#fde68a' : '#a7f3d0'
+                        }}
+                      >
+                        <span style={{ flexShrink: 0, fontSize: '0.72rem' }}>
+                          {issue.type === 'violation' ? '❌' : issue.type === 'warning' ? '⚠️' : '✅'}
+                        </span>
+                        <span style={{
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                          fontWeight: 500
+                        }}>
+                          {issue.text}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
 
-                <div style={{ fontWeight: 700, fontSize: '0.95rem', color: '#ffffff', marginBottom: '4px' }}>
-                  {sample.name}
-                </div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginBottom: '10px' }}>
-                  Brand: {sample.brand}
-                </div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', lineHeight: 1.4 }}>
-                  {sample.description}
-                </div>
-
+                {/* Card Action Controls: View Details + Inspect */}
                 <div style={{
-                  marginTop: '12px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  fontSize: '0.78rem',
-                  fontWeight: 600,
-                  color: isCompliant ? '#34d399' : isNonCompliant ? '#f87171' : '#fbbf24'
+                  display: 'grid',
+                  gridTemplateColumns: '1fr 1fr',
+                  gap: '8px',
+                  paddingTop: '12px',
+                  borderTop: '1px solid var(--border-subtle)'
                 }}>
-                  <span>Inspect This Sample</span>
-                  <ArrowUpRight size={14} />
+                  <button
+                    type="button"
+                    onClick={() => setSelectedDetailSample(sample)}
+                    className="btn btn-secondary"
+                    style={{
+                      padding: '7px 10px',
+                      fontSize: '0.76rem',
+                      fontWeight: 600,
+                      gap: '5px',
+                      justifyContent: 'center'
+                    }}
+                  >
+                    <Eye size={13} />
+                    <span>View Details</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => onSelectSample(sample)}
+                    className="btn btn-primary"
+                    style={{
+                      padding: '7px 10px',
+                      fontSize: '0.76rem',
+                      fontWeight: 700,
+                      gap: '5px',
+                      justifyContent: 'center'
+                    }}
+                  >
+                    <span>Inspect</span>
+                    <ArrowUpRight size={13} />
+                  </button>
                 </div>
               </div>
             );
@@ -250,14 +338,155 @@ export const InspectorDashboard: React.FC<InspectorDashboardProps> = ({
         </div>
       </div>
 
+      {/* Benchmark Sample Details Modal (visible only after click) */}
+      {selectedDetailSample && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'rgba(0, 0, 0, 0.78)',
+          backdropFilter: 'blur(5px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 9999,
+          padding: '20px'
+        }}>
+          <div className="glass-panel" style={{
+            maxWidth: '600px',
+            width: '100%',
+            background: '#0f172a',
+            border: `1px solid ${
+              selectedDetailSample.expectedStatus === 'COMPLIANT' 
+                ? 'rgba(16, 185, 129, 0.4)' 
+                : selectedDetailSample.expectedStatus === 'NON_COMPLIANT' 
+                  ? 'rgba(239, 68, 68, 0.4)' 
+                  : 'rgba(245, 158, 11, 0.4)'
+            }`,
+            borderRadius: '16px',
+            padding: '26px',
+            boxShadow: '0 25px 60px rgba(0, 0, 0, 0.7)',
+            maxHeight: '90vh',
+            overflowY: 'auto'
+          }}>
+            {/* Modal Header */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+                  <span className={`badge ${
+                    selectedDetailSample.expectedStatus === 'COMPLIANT' 
+                      ? 'badge-compliant' 
+                      : selectedDetailSample.expectedStatus === 'NON_COMPLIANT' 
+                        ? 'badge-noncompliant' 
+                        : 'badge-warning'
+                  }`} style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
+                    <span>{selectedDetailSample.expectedStatus === 'COMPLIANT' ? '✅' : selectedDetailSample.expectedStatus === 'NON_COMPLIANT' ? '❌' : '⚠️'}</span>
+                    <span>{selectedDetailSample.expectedStatus}</span>
+                  </span>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{selectedDetailSample.category}</span>
+                </div>
+                <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#ffffff', margin: 0 }}>
+                  {selectedDetailSample.name}
+                </h3>
+                <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', margin: '3px 0 0' }}>
+                  Brand: {selectedDetailSample.brand}
+                </p>
+              </div>
+
+              <button
+                onClick={() => setSelectedDetailSample(null)}
+                style={{
+                  background: 'rgba(255, 255, 255, 0.08)',
+                  border: 'none',
+                  color: 'var(--text-secondary)',
+                  width: '32px',
+                  height: '32px',
+                  borderRadius: '8px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer'
+                }}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Full Technical Description */}
+            <div style={{
+              background: 'rgba(255, 255, 255, 0.04)',
+              border: '1px solid var(--border-subtle)',
+              borderRadius: '10px',
+              padding: '12px 14px',
+              marginBottom: '16px'
+            }}>
+              <div style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '4px', textTransform: 'uppercase' }}>
+                Statutory Benchmark Overview
+              </div>
+              <p style={{ fontSize: '0.84rem', color: 'var(--text-primary)', lineHeight: 1.5, margin: 0 }}>
+                {selectedDetailSample.description}
+              </p>
+            </div>
+
+            {/* Verified Declarations & Breaches */}
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '8px', textTransform: 'uppercase' }}>
+                Key Statutory Declarations &amp; Breaches
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                {selectedDetailSample.keyIssues?.map((issue, idx) => (
+                  <div key={idx} style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                    padding: '8px 12px',
+                    borderRadius: '8px',
+                    background: issue.type === 'violation' ? 'rgba(239, 68, 68, 0.1)' : issue.type === 'warning' ? 'rgba(245, 158, 11, 0.1)' : 'rgba(16, 185, 129, 0.1)',
+                    border: `1px solid ${issue.type === 'violation' ? 'rgba(239, 68, 68, 0.25)' : issue.type === 'warning' ? 'rgba(245, 158, 11, 0.25)' : 'rgba(16, 185, 129, 0.25)'}`,
+                    fontSize: '0.82rem'
+                  }}>
+                    <span>{issue.type === 'violation' ? '❌' : issue.type === 'warning' ? '⚠️' : '✅'}</span>
+                    <span style={{ color: issue.type === 'violation' ? '#fca5a5' : issue.type === 'warning' ? '#fde68a' : '#a7f3d0', fontWeight: 600 }}>
+                      {issue.text}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', borderTop: '1px solid var(--border-subtle)', paddingTop: '16px' }}>
+              <button
+                onClick={() => setSelectedDetailSample(null)}
+                className="btn btn-secondary"
+                style={{ padding: '8px 16px', fontSize: '0.85rem' }}
+              >
+                Close
+              </button>
+              <button
+                onClick={() => {
+                  const sample = selectedDetailSample;
+                  setSelectedDetailSample(null);
+                  onSelectSample(sample);
+                }}
+                className="btn btn-primary"
+                style={{ padding: '8px 18px', fontSize: '0.85rem', fontWeight: 700, gap: '8px' }}
+              >
+                <ScanLine size={16} />
+                <span>Inspect This Commodity</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Recent Inspections Table */}
-      <div className="glass-panel" style={{ padding: '22px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+      <div className="glass-panel" style={{ padding: '24px 28px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px' }}>
           <div>
-            <h2 style={{ fontSize: '1.15rem', fontWeight: 700 }}>
+            <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#ffffff', margin: 0 }}>
               Recent Commodity Inspections
             </h2>
-            <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+            <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginTop: '3px', margin: '3px 0 0' }}>
               Official verification log with legal status and statutory penalties
             </p>
           </div>
@@ -293,8 +522,9 @@ export const InspectorDashboard: React.FC<InspectorDashboardProps> = ({
                           : scan.compliance_status === 'NON_COMPLIANT' 
                             ? 'badge-noncompliant' 
                             : 'badge-warning'
-                      }`}>
-                        {scan.compliance_status}
+                      }`} style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
+                        <span>{scan.compliance_status === 'COMPLIANT' ? '✅' : scan.compliance_status === 'NON_COMPLIANT' ? '❌' : '⚠️'}</span>
+                        <span>{scan.compliance_status}</span>
                       </span>
                     </td>
                     <td>
@@ -318,11 +548,15 @@ export const InspectorDashboard: React.FC<InspectorDashboardProps> = ({
                     </td>
                     <td>
                       {scan.violations_count > 0 ? (
-                        <span style={{ color: '#f87171', fontWeight: 700, fontSize: '0.85rem' }}>
-                          {scan.violations_count} Detected
+                        <span style={{ color: '#f87171', fontWeight: 700, fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                          <span>❌</span>
+                          <span>{scan.violations_count} Detected</span>
                         </span>
                       ) : (
-                        <span style={{ color: '#34d399', fontSize: '0.85rem' }}>None (Passed)</span>
+                        <span style={{ color: '#34d399', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                          <span>✅</span>
+                          <span>None (Passed)</span>
+                        </span>
                       )}
                     </td>
                     <td>
@@ -332,8 +566,8 @@ export const InspectorDashboard: React.FC<InspectorDashboardProps> = ({
                           className="btn btn-secondary"
                           style={{ padding: '6px 12px', fontSize: '0.78rem', gap: '6px' }}
                         >
-                          <FileCheck size={14} />
-                          <span>View Legal Report</span>
+                          <FileText size={14} />
+                          <span>View Report</span>
                         </button>
 
                         <button
