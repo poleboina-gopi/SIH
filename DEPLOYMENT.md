@@ -119,8 +119,16 @@ graph LR
 
 ## 4️⃣ Step 4: Verification & Testing
 
-1. Open your Vercel deployment URL.
-2. Click **"Inspector Demo"** to log in automatically.
+1. Open your Vercel deployment URL (or `http://localhost:5173` locally).
+2. Sign in using the official credentials, or create your own protected officer account:
+   - **Admin Account**:
+     - **Login ID**: `admin@gov.in` OR Indian Mobile: `9811122233`
+     - **Password**: `Admin@2026!`
+   - **Inspector Account**:
+     - **Login ID**: `inspector@gov.in` OR Indian Mobile: `9876543210`
+     - **Password**: `Inspector@2026!`
+   - **Create New Officer Account**:
+     - Click **Create Account** to register with First Name, Last Name, Indian Mobile (`+91`), Official Email, and a Google-standard password.
 3. On the Inspector Hub, select **"SuperClean Power Detergent 500gms"** from the 1-Click Benchmark Test Suite.
 4. Click **"Execute Compliance Scan"** → **"Validate Statutory Compliance"**.
 5. Verify the **Statutory Commodity Inspection Certificate** and **Form 1 Show Cause Notice** render with legal citations (Rule 6(1)(c), Rule 6(1)(e), Rule 6(1)(n)).

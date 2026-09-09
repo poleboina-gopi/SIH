@@ -21,8 +21,8 @@ if (!fs.existsSync(DATA_DIR)) {
 }
 
 // Bcrypt hash for seed accounts (Salt rounds: 12)
-const SEED_PASSWORD_INSPECTOR = bcrypt.hashSync("Inspector@2024!", 12);
-const SEED_PASSWORD_ADMIN = bcrypt.hashSync("Admin@2024!", 12);
+const SEED_PASSWORD_INSPECTOR = bcrypt.hashSync("Inspector@2026!", 12);
+const SEED_PASSWORD_ADMIN = bcrypt.hashSync("Admin@2026!", 12);
 
 export const DEFAULT_DB = {
   users: [
