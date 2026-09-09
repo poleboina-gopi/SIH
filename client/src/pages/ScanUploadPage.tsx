@@ -7,6 +7,7 @@ import {
 import { SAMPLE_LABELS, SampleLabel } from '../data/sampleLabels';
 import { api } from '../services/api';
 import { ParsedFields, User } from '../types';
+import { CameraCaptureModal, CapturedImageData } from '../components/CameraCaptureModal';
 
 interface ScanUploadPageProps {
   user?: User | null;
@@ -106,9 +107,23 @@ export const ScanUploadPage: React.FC<ScanUploadPageProps> = ({
   const [ocrError, setOcrError] = useState<string | null>(null);
   const [manualTextFallback, setManualTextFallback] = useState(false);
   const [manualText, setManualText] = useState('');
+  const [isCameraOpen, setIsCameraOpen] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
+
+  const handleCameraCapture = (captured: CapturedImageData) => {
+    setSelectedSample(null);
+    setPreviewUrl(captured.dataUrl);
+    setImageMeta({
+      name: captured.name,
+      size: captured.size,
+      width: captured.width,
+      height: captured.height
+    });
+    setOcrError(null);
+    setManualTextFallback(false);
+  };
 
   // Inspect image dimensions whenever previewUrl changes
   useEffect(() => {
@@ -630,7 +645,7 @@ export const ScanUploadPage: React.FC<ScanUploadPageProps> = ({
                       )}
                     </div>
 
-                    <div style={{ display: 'flex', gap: '8px' }}>
+                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                       <button
                         type="button"
                         onClick={() => fileInputRef.current?.click()}
@@ -643,7 +658,26 @@ export const ScanUploadPage: React.FC<ScanUploadPageProps> = ({
                           fontWeight: 600
                         }}
                       >
-                        Change
+                        Change Photo
+                      </button>
+                      <span>•</span>
+                      <button
+                        type="button"
+                        onClick={() => setIsCameraOpen(true)}
+                        style={{
+                          background: 'transparent',
+                          border: 'none',
+                          color: '#38bdf8',
+                          cursor: 'pointer',
+                          fontSize: '0.74rem',
+                          fontWeight: 600,
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '4px'
+                        }}
+                      >
+                        <Camera size={12} />
+                        <span>Use Camera</span>
                       </button>
                       <span>•</span>
                       <button
@@ -699,7 +733,7 @@ export const ScanUploadPage: React.FC<ScanUploadPageProps> = ({
 
                   <button
                     type="button"
-                    onClick={() => cameraInputRef.current?.click()}
+                    onClick={() => setIsCameraOpen(true)}
                     className="btn btn-secondary"
                     style={{ padding: '8px 16px', fontSize: '0.82rem', gap: '6px' }}
                   >
@@ -950,6 +984,12 @@ export const ScanUploadPage: React.FC<ScanUploadPageProps> = ({
           </div>
         </div>
       </div>
+
+      <CameraCaptureModal
+        isOpen={isCameraOpen}
+        onClose={() => setIsCameraOpen(false)}
+        onCapture={handleCameraCapture}
+      />
 
       <style>{`
         @keyframes scanLaser {
