@@ -138,6 +138,8 @@ export const ScanUploadPage: React.FC<ScanUploadPageProps> = ({
   const [isCameraOpen, setIsCameraOpen] = useState(false);
   const [cameraTargetSide, setCameraTargetSide] = useState<PackageSide>('front');
   const [dragOverSide, setDragOverSide] = useState<PackageSide | null>(null);
+  const [showRulesDetail, setShowRulesDetail] = useState(false);
+  const [showBenchmarkDetail, setShowBenchmarkDetail] = useState(false);
 
   const frontInputRef = useRef<HTMLInputElement>(null);
   const backInputRef = useRef<HTMLInputElement>(null);
@@ -507,21 +509,18 @@ export const ScanUploadPage: React.FC<ScanUploadPageProps> = ({
   return (
     <div>
       {/* Page Header */}
-      <div style={{ marginBottom: '24px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
-          <span className="badge badge-compliant" style={{ fontSize: '0.72rem' }}>
-            ● LIVE TESSERACT OCR V7
+      <div style={{ marginBottom: '20px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+          <span className="badge badge-compliant" style={{ fontSize: '0.7rem', padding: '2px 8px' }}>
+            ● Tesseract Neural OCR
           </span>
-          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-            Legal Metrology (Packaged Commodities) Rules, 2011 Enforcement
+          <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>
+            Statutory Packaging Audit • Rules, 2011
           </span>
         </div>
-        <h1 style={{ fontSize: '1.65rem', fontWeight: 800, marginBottom: '6px', letterSpacing: '-0.01em' }}>
-          Real-Time Packaging Label OCR &amp; Inspection
+        <h1 style={{ fontSize: '1.5rem', fontWeight: 800, margin: 0, letterSpacing: '-0.02em' }}>
+          Packaging Label Inspection &amp; Audit
         </h1>
-        <p style={{ color: 'var(--text-secondary)', fontSize: '0.88rem' }}>
-          Upload any genuine packaged commodity label or capture via mobile camera. The system applies real-time neural OCR to extract and dynamically validate all mandatory declarations.
-        </p>
       </div>
 
       {/* Error Alert */}
@@ -925,56 +924,79 @@ export const ScanUploadPage: React.FC<ScanUploadPageProps> = ({
             </div>
           </div>
 
-          {/* Quick Benchmark Comparison Presets */}
-          <div style={{ marginTop: '20px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-              <span style={{ fontSize: '0.76rem', fontWeight: 700, color: 'var(--text-secondary)', letterSpacing: '0.04em' }}>
-                OR TEST WITH BENCHMARK LABELS:
+          {/* Quick Benchmark Comparison Presets (Click for Details) */}
+          <div style={{ marginTop: '16px' }}>
+            <button
+              type="button"
+              onClick={() => setShowBenchmarkDetail(!showBenchmarkDetail)}
+              style={{
+                width: '100%',
+                background: 'rgba(255, 255, 255, 0.03)',
+                border: '1px solid var(--border-subtle)',
+                borderRadius: '8px',
+                padding: '8px 12px',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                color: 'var(--text-secondary)',
+                cursor: 'pointer',
+                fontSize: '0.76rem',
+                fontWeight: 600
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Sparkles size={13} color="#60a5fa" />
+                <span>Test with Certified Benchmark Commodities</span>
+                {selectedSample && (
+                  <span style={{ color: '#60a5fa', fontWeight: 700 }}>
+                    ({selectedSample.name.split(' ').slice(0, 2).join(' ')})
+                  </span>
+                )}
+              </div>
+              <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>
+                {showBenchmarkDetail ? '▲ Hide' : '▼ View Samples'}
               </span>
-              <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
-                Certified Rule Testbeds
-              </span>
-            </div>
+            </button>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-              {SAMPLE_LABELS.map((sample) => {
-                const isSelected = selectedSample?.id === sample.id;
-                return (
-                  <button
-                    key={sample.id}
-                    type="button"
-                    onClick={() => handleSelectBenchmark(sample)}
-                    style={{
-                      padding: '8px 12px',
-                      borderRadius: '8px',
-                      border: `1px solid ${isSelected ? 'var(--accent-blue)' : 'var(--border-subtle)'}`,
-                      background: isSelected ? 'rgba(37, 99, 235, 0.2)' : 'var(--bg-glass)',
-                      color: isSelected ? '#ffffff' : 'var(--text-secondary)',
-                      textAlign: 'left',
-                      cursor: 'pointer',
-                      fontSize: '0.75rem',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: '3px',
-                      transition: 'all 0.15s ease'
-                    }}
-                  >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            {showBenchmarkDetail && (
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginTop: '8px' }}>
+                {SAMPLE_LABELS.map((sample) => {
+                  const isSelected = selectedSample?.id === sample.id;
+                  return (
+                    <button
+                      key={sample.id}
+                      type="button"
+                      onClick={() => handleSelectBenchmark(sample)}
+                      style={{
+                        padding: '8px 12px',
+                        borderRadius: '8px',
+                        border: `1px solid ${isSelected ? 'var(--accent-blue)' : 'var(--border-subtle)'}`,
+                        background: isSelected ? 'rgba(37, 99, 235, 0.2)' : 'var(--bg-glass)',
+                        color: isSelected ? '#ffffff' : 'var(--text-secondary)',
+                        textAlign: 'left',
+                        cursor: 'pointer',
+                        fontSize: '0.75rem',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        transition: 'all 0.15s ease'
+                      }}
+                    >
                       <span style={{ fontWeight: 700, color: isSelected ? '#60a5fa' : 'var(--text-primary)' }}>
                         {sample.name.split(' ').slice(0, 3).join(' ')}
                       </span>
-                    </div>
-                    <span style={{
-                      fontSize: '0.68rem',
-                      fontWeight: 600,
-                      color: sample.expectedStatus === 'COMPLIANT' ? '#34d399' : '#f87171'
-                    }}>
-                      ● {sample.expectedStatus}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
+                      <span style={{
+                        fontSize: '0.65rem',
+                        fontWeight: 700,
+                        color: sample.expectedStatus === 'COMPLIANT' ? '#34d399' : '#f87171'
+                      }}>
+                        {sample.expectedStatus}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </div>
         </div>
 
@@ -1092,26 +1114,62 @@ export const ScanUploadPage: React.FC<ScanUploadPageProps> = ({
               </div>
             </div>
 
-            {/* Statutory Legal Rules Tested */}
+            {/* Statutory Legal Rules Accordion (Click for Details) */}
             <div style={{
               background: 'rgba(15, 23, 42, 0.65)',
               border: '1px solid var(--border-subtle)',
               borderRadius: '10px',
-              padding: '14px',
+              padding: '12px 14px',
               fontSize: '0.78rem'
             }}>
-              <div style={{ fontWeight: 700, color: '#ffffff', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <Info size={15} color="#60a5fa" />
-                <span>Statutory Declarations Evaluated (Rules 2011):</span>
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', color: 'var(--text-secondary)' }}>
-                <div>• Rule 6(1)(a): Complete Mfr Address</div>
-                <div>• Rule 6(1)(b): Generic Commodity Name</div>
-                <div>• Rule 6(1)(c): Net Qty in Standard Units</div>
-                <div>• Rule 6(1)(d): Month &amp; Year of Pkd/Mfg</div>
-                <div>• Rule 6(1)(e): MRP with "(incl. of taxes)"</div>
-                <div>• Rule 6(1)(n): Consumer Care Phone &amp; Email</div>
-              </div>
+              <button
+                type="button"
+                onClick={() => setShowRulesDetail(!showRulesDetail)}
+                style={{
+                  width: '100%',
+                  background: 'transparent',
+                  border: 'none',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  color: '#ffffff',
+                  cursor: 'pointer',
+                  padding: 0
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 700 }}>
+                  <Info size={14} color="#60a5fa" />
+                  <span>Statutory Rule Engine (Rules, 2011)</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span className="badge badge-compliant" style={{ fontSize: '0.65rem' }}>
+                    6 Clauses
+                  </span>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                    {showRulesDetail ? '▲' : '▼'}
+                  </span>
+                </div>
+              </button>
+
+              {showRulesDetail && (
+                <div style={{
+                  marginTop: '10px',
+                  paddingTop: '10px',
+                  borderTop: '1px solid var(--border-subtle)',
+                  display: 'grid',
+                  gridTemplateColumns: '1fr 1fr',
+                  gap: '6px',
+                  color: 'var(--text-secondary)',
+                  fontSize: '0.74rem'
+                }}>
+                  <div>• Rule 6(1)(a): Mfr Address</div>
+                  <div>• Rule 6(1)(b): Commodity Name</div>
+                  <div>• Rule 6(1)(c): Net Quantity</div>
+                  <div>• Rule 6(1)(d): Month &amp; Year of Mfg</div>
+                  <div>• Rule 6(1)(e): MRP with Taxes</div>
+                  <div>• Rule 6(1)(n): Consumer Helpline</div>
+                </div>
+              )}
             </div>
 
             {/* Dedicated Multi-Step OCR Progress Card */}
