@@ -40,18 +40,38 @@ const upload = multer({
 const router = express.Router();
 
 /**
- * Helper to run server-side OCR on an image file using tesseract.js
+ * Cached persistent worker for high-speed Server-Side OCR (prevents 3-minute delays)
  */
+let cachedWorker = null;
+let workerInitPromise = null;
+
+async function getOcrWorker() {
+  if (cachedWorker) return cachedWorker;
+  if (!workerInitPromise) {
+    workerInitPromise = (async () => {
+      console.log('⚡ Initializing persistent Server-Side Tesseract OCR Worker...');
+      const worker = await createWorker('eng');
+      cachedWorker = worker;
+      console.log('✅ Persistent Server-Side OCR Worker ready.');
+      return worker;
+    })();
+  }
+  return workerInitPromise;
+}
+
 async function performServerOcr(imageFilePath) {
-  let worker = null;
   try {
-    worker = await createWorker('eng');
+    const worker = await getOcrWorker();
     const ret = await worker.recognize(imageFilePath);
     return (ret.data.text || '').trim();
-  } finally {
-    if (worker) {
-      await worker.terminate();
-    }
+  } catch (err) {
+    console.error(`OCR failed on ${imageFilePath}:`, err);
+    // If worker had an issue, re-create once
+    cachedWorker = null;
+    workerInitPromise = null;
+    const freshWorker = await getOcrWorker();
+    const ret = await freshWorker.recognize(imageFilePath);
+    return (ret.data.text || '').trim();
   }
 }
 
@@ -72,47 +92,85 @@ router.post('/upload-image', authenticateToken, requireInspector, upload.single(
 
 /**
  * POST /api/upload-and-validate
- * Uploads a product packaging image, performs Server-Side OCR via Tesseract,
- * parses all 14 mandatory FSSAI food packaging declarations, validates against
- * EXCLUSIVELY the 14 food safety rules, and generates an official report.
+ * Uploads packaging images (single image or up to 5 multi-panel images at once),
+ * performs high-speed Server-Side OCR in a single batch operation, parses all 14
+ * mandatory FSSAI food packaging declarations, validates against EXCLUSIVELY the
+ * 14 food safety rules, and generates an official compliance report immediately.
  */
-router.post('/upload-and-validate', authenticateToken, requireInspector, upload.single('image'), async (req, res) => {
+router.post('/upload-and-validate', authenticateToken, requireInspector, upload.any(), async (req, res) => {
   try {
-    if (!req.file) {
-      return res.status(400).json({ error: "No product image file provided for OCR and validation" });
+    const files = (req.files && req.files.length > 0) ? req.files : (req.file ? [req.file] : []);
+    
+    // Support base64 images if passed via body
+    const base64List = Array.isArray(req.body.images_base64) 
+      ? req.body.images_base64 
+      : (req.body.image_base64 ? [req.body.image_base64] : []);
+
+    if (files.length === 0 && base64List.length === 0 && !req.body.raw_text) {
+      return res.status(400).json({ error: "No product packaging images provided for scanning and validation" });
     }
 
-    const imageFilePath = path.join(UPLOADS_DIR, req.file.filename);
-    const imageUrl = `/uploads/${req.file.filename}`;
     const assignedInspectorId = req.user?.id || "usr_inspector_01";
     const assignedInspectorName = req.user?.name || "Food Safety Officer (FSO)";
 
-    // 1. Perform Server-Side OCR
-    console.log(`🔍 Running Server-Side OCR on ${req.file.filename}...`);
-    const extractedText = await performServerOcr(imageFilePath);
+    const panelTexts = [];
+    const imageUrls = [];
 
-    // 2. Parse text into the 14 FSSAI statutory declarations
+    // 1. Process all uploaded multipart image files
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const imageFilePath = path.join(UPLOADS_DIR, file.filename);
+      imageUrls.push(`/uploads/${file.filename}`);
+      console.log(`🔍 [${i + 1}/${files.length}] Scanning ${file.originalname || file.filename}...`);
+      const txt = await performServerOcr(imageFilePath);
+      if (txt) {
+        panelTexts.push(`--- PANEL ${i + 1} (${file.originalname || 'IMAGE'}) ---\n${txt}`);
+      }
+    }
+
+    // 2. Process any base64 images passed in JSON
+    for (let j = 0; j < base64List.length; j++) {
+      const b64 = base64List[j];
+      const matches = typeof b64 === 'string' ? b64.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/) : null;
+      if (matches && matches[2]) {
+        const ext = matches[1].includes('jpeg') ? '.jpg' : '.png';
+        const fn = `scan_${Date.now()}_b64_${j}${ext}`;
+        const fp = path.join(UPLOADS_DIR, fn);
+        fs.writeFileSync(fp, Buffer.from(matches[2], 'base64'));
+        imageUrls.push(`/uploads/${fn}`);
+        console.log(`🔍 [Base64 ${j + 1}/${base64List.length}] Scanning ${fn}...`);
+        const txt = await performServerOcr(fp);
+        if (txt) {
+          panelTexts.push(`--- BASE64 PANEL ${j + 1} ---\n${txt}`);
+        }
+      }
+    }
+
+    const extractedText = panelTexts.join('\n\n') || req.body.raw_text || '';
+
+    // 3. Parse text into the 14 FSSAI statutory declarations
     const parsed = parsePackagingText(extractedText);
 
-    // 3. Evaluate compliance against ONLY the 14 rules
+    // 4. Evaluate compliance against ONLY the 14 rules
     const allRules = await db.getRules();
     const activeRules = allRules.filter(r => r.isActive !== false);
     const evaluation = evaluateCompliance(parsed, activeRules);
 
-    // 4. Save Product
+    // 5. Save Product
     const productId = `prod_${Date.now()}`;
     const product = {
       id: productId,
       product_name: req.body.product_name || parsed.commodity_name || "Pre-packaged Food",
       brand: req.body.brand || parsed.manufacturer?.name || "Packer / Brand",
       category: req.body.category || "Food & Beverages",
-      image_url: imageUrl,
+      image_url: imageUrls[0] || "/uploads/sample_placeholder.png",
+      image_urls: imageUrls,
       uploaded_by: assignedInspectorId,
       created_at: new Date().toISOString()
     };
     const savedProduct = await db.addProduct(product);
 
-    // 5. Save Scan
+    // 6. Save Scan
     const scanId = `scan_${Date.now()}`;
     const scan = {
       id: scanId,
@@ -126,7 +184,7 @@ router.post('/upload-and-validate', authenticateToken, requireInspector, upload.
     };
     const savedScan = await db.addScan(scan);
 
-    // 6. Save Violations
+    // 7. Save Violations
     const savedViolations = [];
     for (const v of evaluation.violations) {
       const violationRecord = {
@@ -146,7 +204,7 @@ router.post('/upload-and-validate', authenticateToken, requireInspector, upload.
       savedViolations.push(sv);
     }
 
-    // 7. Save Report
+    // 8. Save Report
     const reportId = `rep_${Date.now()}`;
     const reportNumber = `FSSAI/REP/${new Date().getFullYear()}/${Math.floor(1000 + Math.random() * 9000)}`;
     const report = {
@@ -166,7 +224,7 @@ router.post('/upload-and-validate', authenticateToken, requireInspector, upload.
 
     res.json({
       success: true,
-      message: "OCR and FSSAI 14-point compliance validation completed successfully",
+      message: `Batch scanned ${imageUrls.length} packaging image(s) & validated all 14 FSSAI rules`,
       report_id: reportId,
       ocr_extracted_text: extractedText,
       parsed_declarations: parsed,

@@ -200,6 +200,55 @@ export const api = {
     return res.json();
   },
 
+  // Batch Upload Images & Instant 14-Rules Validation
+  async uploadAndValidate(data: {
+    files?: File[];
+    images_base64?: string[];
+    product_name?: string;
+    brand?: string;
+    category?: string;
+  }): Promise<{
+    report_id: string;
+    report: Report;
+    scan: Scan;
+    product: any;
+    violations: Violation[];
+    ocr_extracted_text?: string;
+  }> {
+    const token = localStorage.getItem('lm_token');
+    let res: Response;
+
+    if (data.files && data.files.length > 0) {
+      const formData = new FormData();
+      data.files.forEach((file) => {
+        formData.append('images', file);
+      });
+      if (data.product_name) formData.append('product_name', data.product_name);
+      if (data.brand) formData.append('brand', data.brand);
+      if (data.category) formData.append('category', data.category);
+
+      res = await fetch(`${API_BASE_URL}/upload-and-validate`, {
+        method: 'POST',
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
+        },
+        body: formData
+      });
+    } else {
+      res = await fetch(`${API_BASE_URL}/upload-and-validate`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(data)
+      });
+    }
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ error: 'Upload and validation failed' }));
+      throw new Error(err.error || 'Upload and validation failed');
+    }
+    return res.json();
+  },
+
   // Reports
   async getReport(id: string): Promise<{ report: Report; scan: Scan; product: any; violations: Violation[] }> {
     const res = await fetch(`${API_BASE_URL}/report/${id}`, {

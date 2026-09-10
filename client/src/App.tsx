@@ -153,6 +153,7 @@ export function App() {
                   user={user}
                   initialSample={activeSample}
                   onOcrComplete={handleOcrComplete}
+                  onDirectReportGenerated={handleValidationComplete}
                 />
               )
             )}
