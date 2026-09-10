@@ -233,7 +233,10 @@ class Database {
     const mongoUri = process.env.MONGODB_URI || process.env.MONGO_URI;
     if (mongoUri) {
       try {
-        await mongoose.connect(mongoUri);
+        await mongoose.connect(mongoUri, {
+          serverSelectionTimeoutMS: 5000,
+          connectTimeoutMS: 5000
+        });
         this.isMongo = true;
         console.log("🍃 Successfully connected to MongoDB Atlas!");
         await this.seedMongoIfEmpty();
@@ -270,12 +273,14 @@ class Database {
     if (this.isMongo) {
       return await UserModel.findOne({ email: email.toLowerCase() }).lean();
     }
-    return this.data.users.find(u => u.email.toLowerCase() === email.toLowerCase());
+    return this.data.users.find(u => u.email?.toLowerCase() === email.toLowerCase());
   }
 
   async getUserByPhone(phone) {
     const norm = normalizePhone(phone);
     if (this.isMongo) {
+      const byPhone = await UserModel.findOne({ phone: { $regex: norm } }).lean();
+      if (byPhone) return byPhone;
       const all = await UserModel.find().lean();
       return all.find(u => normalizePhone(u.phone) === norm);
     }
@@ -283,14 +288,55 @@ class Database {
   }
 
   async getUserByEmailOrPhone(identifier) {
-    const cleaned = identifier.trim().toLowerCase();
+    if (!identifier) return null;
+    const cleaned = identifier.trim();
+    const cleanedLower = cleaned.toLowerCase();
     const isEmail = cleaned.includes('@');
+    const norm = normalizePhone(cleaned);
 
-    if (isEmail) {
-      return await this.getUserByEmail(cleaned);
-    } else {
-      return await this.getUserByPhone(cleaned);
+    if (this.isMongo) {
+      if (isEmail) {
+        return await UserModel.findOne({ email: cleanedLower }).lean();
+      }
+      if (norm.length === 10) {
+        const byPhone = await UserModel.findOne({ phone: { $regex: norm } }).lean();
+        if (byPhone) return byPhone;
+      }
+      const byIdOrBadge = await UserModel.findOne({
+        $or: [
+          { id: cleaned },
+          { badgeNumber: cleaned },
+          { role: cleanedLower }
+        ]
+      }).lean();
+      if (byIdOrBadge) return byIdOrBadge;
+
+      if (norm.length > 0) {
+        const all = await UserModel.find().lean();
+        return all.find(u => normalizePhone(u.phone) === norm) || null;
+      }
+      return null;
     }
+
+    // Local file-store (JSON)
+    if (isEmail) {
+      return this.data.users.find(u => u.email?.toLowerCase() === cleanedLower) || null;
+    }
+    if (norm.length === 10) {
+      const byPhone = this.data.users.find(u => normalizePhone(u.phone) === norm);
+      if (byPhone) return byPhone;
+    }
+    const byIdOrBadge = this.data.users.find(u => 
+      u.id === cleaned || 
+      u.badgeNumber?.toLowerCase() === cleanedLower || 
+      u.role?.toLowerCase() === cleanedLower
+    );
+    if (byIdOrBadge) return byIdOrBadge;
+
+    if (norm.length > 0) {
+      return this.data.users.find(u => normalizePhone(u.phone) === norm) || null;
+    }
+    return null;
   }
 
   async getUserById(id) {

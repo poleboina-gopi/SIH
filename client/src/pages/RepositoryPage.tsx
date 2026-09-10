@@ -6,6 +6,7 @@ import {
 import { api } from '../services/api';
 import { Report, User } from '../types';
 import { DeleteConfirmModal } from '../components/DeleteConfirmModal';
+import { MagicCard } from '../components/MagicCard';
 
 interface RepositoryPageProps {
   user?: User | null;
@@ -76,10 +77,10 @@ export const RepositoryPage: React.FC<RepositoryPageProps> = ({
         marginBottom: '24px'
       }}>
         <div>
-          <h1 style={{ fontSize: '1.6rem', fontWeight: 800, marginBottom: '4px' }}>
-            Statutory Audit Repository
+          <h1 style={{ fontSize: '1.85rem', fontWeight: 800, marginBottom: '4px', color: 'var(--fg)', letterSpacing: '-0.025em' }}>
+            Statutory <span className="text-gradient-primary">Audit Repository</span>
           </h1>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
+          <p style={{ color: 'var(--muted-fg)', fontSize: '0.88rem' }}>
             Comprehensive register of packaging inspections, legal notices, and compliance records.
           </p>
         </div>
@@ -89,7 +90,7 @@ export const RepositoryPage: React.FC<RepositoryPageProps> = ({
           <button
             onClick={onNewScan}
             className="btn btn-primary"
-            style={{ gap: '8px' }}
+            style={{ gap: '8px', padding: '10px 22px' }}
           >
             <Layers size={16} />
             New Inspection
@@ -99,8 +100,9 @@ export const RepositoryPage: React.FC<RepositoryPageProps> = ({
 
       {/* Search & Filter Toolbar */}
       <div className="glass-panel" style={{
-        padding: '16px 20px',
-        marginBottom: '24px',
+        padding: '20px 26px',
+        marginBottom: '28px',
+        borderRadius: 'var(--radius-squircle)',
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
@@ -109,7 +111,7 @@ export const RepositoryPage: React.FC<RepositoryPageProps> = ({
       }}>
         {/* Search Bar */}
         <div style={{ position: 'relative', flex: 1, minWidth: '280px' }}>
-          <Search size={16} color="var(--text-muted)" style={{ position: 'absolute', left: '12px', top: '12px' }} />
+          <Search size={16} color="var(--muted-fg)" style={{ position: 'absolute', left: '16px', top: '12px' }} />
           <input
             type="text"
             value={searchTerm}
@@ -117,11 +119,11 @@ export const RepositoryPage: React.FC<RepositoryPageProps> = ({
             placeholder="Search by commodity name, brand, inspector or report number..."
             style={{
               width: '100%',
-              padding: '10px 14px 10px 38px',
-              background: 'var(--bg-glass-heavy)',
-              border: '1px solid var(--border-card)',
-              borderRadius: '8px',
-              color: 'var(--text-primary)',
+              padding: '10px 18px 10px 42px',
+              background: 'var(--card)',
+              border: '1px solid var(--border)',
+              borderRadius: '9999px',
+              color: 'var(--fg)',
               fontSize: '0.88rem',
               outline: 'none'
             }}
@@ -129,20 +131,23 @@ export const RepositoryPage: React.FC<RepositoryPageProps> = ({
         </div>
 
         {/* Status Filter Chips */}
-        <div style={{ display: 'flex', gap: '6px' }}>
+        <div style={{ display: 'flex', gap: '8px' }}>
           {(['ALL', 'COMPLIANT', 'NON_COMPLIANT', 'BORDERLINE'] as const).map((status) => (
             <button
               key={status}
               onClick={() => setStatusFilter(status)}
               style={{
-                padding: '7px 14px',
-                borderRadius: '8px',
-                fontSize: '0.78rem',
-                fontWeight: 600,
-                border: '1px solid var(--border-subtle)',
-                background: statusFilter === status ? 'var(--accent-blue)' : 'var(--bg-glass)',
-                color: statusFilter === status ? '#ffffff' : 'var(--text-secondary)',
-                cursor: 'pointer'
+                padding: '8px 16px',
+                borderRadius: '9999px',
+                fontSize: '0.76rem',
+                fontWeight: 700,
+                letterSpacing: '0.04em',
+                border: '1px solid var(--border)',
+                background: statusFilter === status ? 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)' : 'rgba(255, 255, 255, 0.04)',
+                color: statusFilter === status ? '#ffffff' : 'var(--muted-fg)',
+                boxShadow: statusFilter === status ? '0 0 14px rgba(139, 92, 246, 0.4)' : 'none',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease'
               }}
             >
               {status}
@@ -157,25 +162,26 @@ export const RepositoryPage: React.FC<RepositoryPageProps> = ({
           Loading repository records...
         </div>
       ) : filteredReports.length === 0 ? (
-        <div className="glass-panel" style={{ textAlign: 'center', padding: '60px 20px' }}>
-          <Database size={48} color="var(--text-muted)" style={{ margin: '0 auto 12px' }} />
-          <h3 style={{ marginBottom: '8px' }}>No Inspection Records Found</h3>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
+        <div className="glass-panel" style={{ textAlign: 'center', padding: '60px 20px', borderRadius: 'var(--radius-squircle)' }}>
+          <Database size={48} color="var(--muted-fg)" style={{ margin: '0 auto 12px' }} />
+          <h3 style={{ marginBottom: '8px', color: 'var(--fg)' }}>No Inspection Records Found</h3>
+          <p style={{ color: 'var(--muted-fg)', fontSize: '0.85rem' }}>
             No packaging inspections match your search criteria.
           </p>
         </div>
       ) : (
-        <div className="grid-3" style={{ gap: '20px' }}>
+        <div className="grid-3" style={{ gap: '22px' }}>
           {filteredReports.map((report) => {
             const isCompliant = report.status === 'COMPLIANT';
             const isNonCompliant = report.status === 'NON_COMPLIANT';
 
             return (
-              <div
+              <MagicCard
                 key={report.id}
-                className="glass-panel"
+                gradientColor={isCompliant ? 'rgba(16, 185, 129, 0.15)' : isNonCompliant ? 'rgba(244, 63, 94, 0.15)' : 'rgba(245, 158, 11, 0.15)'}
                 style={{
-                  padding: '20px',
+                  padding: '24px',
+                  borderRadius: 'var(--radius-squircle)',
                   display: 'flex',
                   flexDirection: 'column',
                   justifyContent: 'space-between'
@@ -188,32 +194,33 @@ export const RepositoryPage: React.FC<RepositoryPageProps> = ({
                     }`}>
                       {report.status}
                     </span>
-                    <span style={{ fontSize: '0.75rem', fontFamily: 'var(--font-mono)', color: 'var(--text-muted)' }}>
+                    <span style={{ fontSize: '0.75rem', fontFamily: 'var(--font-mono)', color: 'var(--muted-fg)' }}>
                       {report.report_number}
                     </span>
                   </div>
 
-                  <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#ffffff', marginBottom: '4px' }}>
+                  <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--fg)', marginBottom: '4px', letterSpacing: '-0.015em' }}>
                     {report.product_name}
                   </h3>
-                  <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '12px' }}>
+                  <div style={{ fontSize: '0.82rem', color: 'var(--muted-fg)', marginBottom: '14px' }}>
                     Brand: {report.brand}
                   </div>
 
                   {/* Score bar */}
                   <div style={{
-                    background: 'var(--bg-glass-heavy)',
+                    background: 'var(--card)',
+                    border: '1px solid var(--border)',
                     padding: '10px 14px',
-                    borderRadius: '8px',
+                    borderRadius: 'var(--radius-md)',
                     marginBottom: '14px',
                     display: 'flex',
                     justifyContent: 'space-between',
                     alignItems: 'center'
                   }}>
-                    <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Compliance Score</span>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--muted-fg)' }}>Compliance Score</span>
                     <span style={{
                       fontWeight: 800,
-                      color: isCompliant ? '#34d399' : isNonCompliant ? '#f87171' : '#fbbf24'
+                      color: isCompliant ? '#10b981' : isNonCompliant ? '#f43f5e' : '#f59e0b'
                     }}>
                       {report.score}%
                     </span>
@@ -221,20 +228,20 @@ export const RepositoryPage: React.FC<RepositoryPageProps> = ({
 
                   {/* Violations notice count */}
                   {report.violations_count && report.violations_count > 0 ? (
-                    <div style={{ fontSize: '0.78rem', color: '#f87171', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '14px' }}>
+                    <div style={{ fontSize: '0.78rem', color: '#f43f5e', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '14px' }}>
                       <AlertOctagon size={14} />
                       <span>{report.violations_count} violation(s) under Sec 36</span>
                     </div>
                   ) : (
-                    <div style={{ fontSize: '0.78rem', color: '#34d399', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '14px' }}>
+                    <div style={{ fontSize: '0.78rem', color: '#10b981', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '14px' }}>
                       <ShieldCheck size={14} />
                       <span>Full Statutory Compliance</span>
                     </div>
                   )}
                 </div>
 
-                <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: '14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                <div style={{ borderTop: '1px solid var(--border)', paddingTop: '14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div style={{ fontSize: '0.72rem', color: 'var(--muted-fg)' }}>
                     {new Date(report.generated_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
                   </div>
 
@@ -246,9 +253,9 @@ export const RepositoryPage: React.FC<RepositoryPageProps> = ({
                         style={{
                           padding: '6px 10px',
                           fontSize: '0.78rem',
-                          background: 'rgba(239, 68, 68, 0.15)',
-                          borderColor: 'rgba(239, 68, 68, 0.4)',
-                          color: '#ef4444'
+                          background: 'rgba(244, 63, 94, 0.15)',
+                          borderColor: 'rgba(244, 63, 94, 0.4)',
+                          color: '#f43f5e'
                         }}
                         title="Delete Inspection"
                       >
@@ -258,14 +265,14 @@ export const RepositoryPage: React.FC<RepositoryPageProps> = ({
                     <button
                       onClick={() => onViewReport(report.scan_id || report.id)}
                       className="btn btn-secondary"
-                      style={{ padding: '6px 12px', fontSize: '0.78rem', gap: '6px' }}
+                      style={{ padding: '6px 14px', fontSize: '0.78rem', gap: '6px' }}
                     >
                       <span>View Certificate</span>
                       <ArrowRight size={14} />
                     </button>
                   </div>
                 </div>
-              </div>
+              </MagicCard>
             );
           })}
         </div>

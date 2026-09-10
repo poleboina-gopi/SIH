@@ -480,7 +480,7 @@ export const ScanUploadPage: React.FC<ScanUploadPageProps> = ({
   // If user is Admin, render strict access block
   if (user && user.role === 'admin') {
     return (
-      <div className="glass-panel" style={{ padding: '40px', textAlign: 'center', maxWidth: '640px', margin: '40px auto' }}>
+      <div className="glass-panel" style={{ padding: '48px 40px', textAlign: 'center', maxWidth: '640px', margin: '40px auto', borderRadius: 'var(--radius-squircle)' }}>
         <div style={{
           width: '64px',
           height: '64px',
@@ -494,10 +494,10 @@ export const ScanUploadPage: React.FC<ScanUploadPageProps> = ({
         }}>
           <ShieldAlert size={36} />
         </div>
-        <h2 style={{ fontSize: '1.4rem', fontWeight: 800, marginBottom: '8px' }}>
+        <h2 style={{ fontSize: '1.45rem', fontWeight: 800, marginBottom: '8px', color: 'var(--fg)' }}>
           Statutory Access Restricted
         </h2>
-        <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', lineHeight: 1.6, marginBottom: '24px' }}>
+        <p style={{ color: 'var(--muted-fg)', fontSize: '0.9rem', lineHeight: 1.6, marginBottom: '24px' }}>
           Under Section 15 of the Legal Metrology Act, 2009, only sworn <strong>Legal Metrology Inspectors</strong> are authorized to upload, scan, and inspect packaging commodities.
           <br /><br />
           As an <strong>Administrator / Joint Controller</strong>, your clearance permits access to <strong>Central Analytics</strong>, <strong>Statutory Rule Controls</strong>, and the <strong>Officer Directory</strong>.
@@ -509,17 +509,18 @@ export const ScanUploadPage: React.FC<ScanUploadPageProps> = ({
   return (
     <div>
       {/* Page Header */}
-      <div style={{ marginBottom: '20px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-          <span className="badge badge-compliant" style={{ fontSize: '0.7rem', padding: '2px 8px' }}>
-            ● Tesseract Neural OCR
+      <div style={{ marginBottom: '24px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+          <span className="badge badge-compliant" style={{ fontSize: '0.7rem', padding: '3px 10px' }}>
+            <span className="status-dot-ping" />
+            Tesseract Neural OCR
           </span>
-          <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>
+          <span style={{ fontSize: '0.74rem', color: 'var(--muted-fg)' }}>
             Statutory Packaging Audit • Rules, 2011
           </span>
         </div>
-        <h1 style={{ fontSize: '1.5rem', fontWeight: 800, margin: 0, letterSpacing: '-0.02em' }}>
-          Packaging Label Inspection &amp; Audit
+        <h1 style={{ fontSize: '1.85rem', fontWeight: 800, margin: 0, letterSpacing: '-0.025em', color: 'var(--fg)' }}>
+          Packaging Label <span className="text-gradient-primary">Inspection &amp; Audit</span>
         </h1>
       </div>
 
@@ -588,7 +589,7 @@ export const ScanUploadPage: React.FC<ScanUploadPageProps> = ({
       <div className="grid-2" style={{ gap: '24px', alignItems: 'start' }}>
         
         {/* Left Column: Image Upload & Live Preview Card */}
-        <div className="glass-panel" style={{ padding: '24px' }}>
+        <div className="glass-panel" style={{ padding: '28px 30px', borderRadius: 'var(--radius-squircle)' }}>
           {/* Hidden File Inputs for Each Independent Panel */}
           <input
             type="file"
@@ -952,7 +953,7 @@ export const ScanUploadPage: React.FC<ScanUploadPageProps> = ({
         </div>
 
         {/* Right Column: Commodity Details & Multi-Stage Execution */}
-        <div className="glass-panel" style={{ padding: '24px' }}>
+        <div className="glass-panel" style={{ padding: '28px 30px', borderRadius: 'var(--radius-squircle)' }}>
           <div style={{ fontSize: '0.82rem', fontWeight: 800, letterSpacing: '0.05em', color: 'var(--text-secondary)', marginBottom: '18px' }}>
             2. INSPECTION METADATA &amp; CATEGORY
           </div>

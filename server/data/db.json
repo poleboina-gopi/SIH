@@ -2,20 +2,26 @@
   "users": [
     {
       "id": "usr_inspector_01",
+      "firstName": "R. K.",
+      "lastName": "Sharma",
       "name": "R. K. Sharma",
       "designation": "Legal Metrology Officer (Zonal)",
       "email": "inspector@gov.in",
-      "password": "inspector123",
+      "phone": "+91 98765 43210",
+      "password": "Inspector@2026!",
       "role": "inspector",
       "badgeNumber": "LM-DEL-2024-890",
       "department": "Directorate of Legal Metrology, Delhi Circle"
     },
     {
       "id": "usr_admin_01",
+      "firstName": "Dr. S.",
+      "lastName": "Mukherjee",
       "name": "Dr. S. Mukherjee",
       "designation": "Joint Controller, Legal Metrology",
       "email": "admin@gov.in",
-      "password": "admin123",
+      "phone": "+91 98111 22233",
+      "password": "Admin@2026!",
       "role": "admin",
       "badgeNumber": "LM-HQ-9901",
       "department": "Department of Consumer Affairs, MoCA"

@@ -1,5 +1,7 @@
-import React from 'react';
-import { Shield, ScanLine, BarChart3, Database, Scale, LogOut, Phone } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { 
+  Shield, ScanLine, BarChart3, Database, Scale, LogOut, Sun, Moon 
+} from 'lucide-react';
 import { User } from '../types';
 
 interface NavbarProps {
@@ -7,256 +9,394 @@ interface NavbarProps {
   currentTab: string;
   onSelectTab: (tab: string) => void;
   onLogout: () => void;
+  theme?: 'dark' | 'light';
+  onToggleTheme?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
   user,
   currentTab,
   onSelectTab,
-  onLogout
+  onLogout,
+  theme = 'dark',
+  onToggleTheme
 }) => {
+  const [isVisible, setIsVisible] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
+
+  // Auto-hide on scroll down, reveal on scroll up
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      if (currentScrollY > lastScrollY && currentScrollY > 70) {
+        setIsVisible(false);
+      } else {
+        setIsVisible(true);
+      }
+      setLastScrollY(currentScrollY);
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [lastScrollY]);
+
   return (
     <>
-      <header style={{
-        background: 'rgba(7, 12, 27, 0.85)',
-        borderBottom: '1px solid var(--border-card)',
-        position: 'sticky',
-        top: 0,
-        zIndex: 50,
-        backdropFilter: 'blur(20px)',
-        WebkitBackdropFilter: 'blur(20px)',
-        boxShadow: '0 8px 32px -4px rgba(0, 0, 0, 0.7), inset 0 1px 0 0 rgba(255, 255, 255, 0.08)'
-      }}>
-        {/* Top Directorate Ribbon */}
-        <div style={{
-          background: 'rgba(5, 9, 20, 0.95)',
-          borderBottom: '1px solid rgba(245, 158, 11, 0.25)',
-          padding: '5px 16px',
-          fontSize: '0.72rem',
-          color: '#cbd5e1',
+      {/* Floating Glass Header Container */}
+      <header
+        style={{
+          position: 'fixed',
+          top: '12px',
+          left: 0,
+          right: 0,
+          zIndex: 50,
           display: 'flex',
-          justifyContent: 'space-between',
+          flexDirection: 'column',
           alignItems: 'center',
-          boxShadow: '0 2px 12px rgba(0, 0, 0, 0.6)'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', letterSpacing: '0.04em' }}>
-            <Scale size={13} color="#f59e0b" style={{ filter: 'drop-shadow(0 0 4px rgba(245, 158, 11, 0.6))', flexShrink: 0 }} />
-            <span className="desktop-only" style={{ fontWeight: 600 }}>MINISTRY OF CONSUMER AFFAIRS, FOOD &amp; PUBLIC DISTRIBUTION • GOVT. OF INDIA</span>
-            <span className="mobile-only" style={{ fontWeight: 600, fontSize: '0.68rem' }}>GOVT. OF INDIA • LEGAL METROLOGY</span>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <span className="desktop-only" style={{ opacity: 0.85, fontSize: '0.7rem' }}>Statutory Portal: Rules, 2011</span>
-            <span style={{
-              background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(217, 119, 6, 0.1) 100%)',
-              border: '1px solid rgba(245, 158, 11, 0.4)',
-              color: '#fbbf24',
-              padding: '2px 8px',
-              borderRadius: '9999px',
-              fontSize: '0.64rem',
-              fontWeight: 700,
-              letterSpacing: '0.04em',
-              boxShadow: '0 0 10px rgba(245, 158, 11, 0.15)',
-              whiteSpace: 'nowrap'
-            }}>SEC. 36 ENFORCED</span>
-          </div>
-        </div>
-
-        {/* Main Navigation Bar */}
-        <div style={{
-          maxWidth: '1360px',
-          margin: '0 auto',
-          padding: '10px 16px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: '12px'
-        }}>
-          {/* Logo & Title */}
-          <div 
-            onClick={() => onSelectTab(user?.role === 'admin' ? 'admin' : 'inspector')}
-            style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}
-          >
-            <div style={{
-              width: '40px',
-              height: '40px',
-              borderRadius: '10px',
-              background: 'linear-gradient(135deg, #1e40af 0%, #2563eb 50%, #0284c7 100%)',
+          padding: '0 16px',
+          pointerEvents: 'none',
+          transition: 'transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease',
+          transform: isVisible ? 'translateY(0)' : 'translateY(-120%)',
+          opacity: isVisible ? 1 : 0
+        }}
+      >
+        <div
+          className="glass-panel"
+          style={{
+            pointerEvents: 'auto',
+            width: '100%',
+            maxWidth: '1360px',
+            borderRadius: 'var(--radius-squircle)',
+            background: 'var(--glass-bg)',
+            backdropFilter: 'blur(26px)',
+            WebkitBackdropFilter: 'blur(26px)',
+            border: '1px solid var(--border)',
+            boxShadow: '0 12px 40px -8px rgba(0, 0, 0, 0.45), 0 0 24px rgba(139, 92, 246, 0.1)',
+            overflow: 'hidden'
+          }}
+        >
+          {/* Top Directorate Ribbon */}
+          <div
+            style={{
+              background: 'rgba(15, 16, 20, 0.85)',
+              borderBottom: '1px solid var(--border)',
+              padding: '4px 20px',
+              fontSize: '0.7rem',
+              color: 'var(--muted-fg)',
               display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              boxShadow: '0 0 20px rgba(37, 99, 235, 0.55), inset 0 1px 1px rgba(255, 255, 255, 0.4)',
-              border: '1px solid rgba(255, 255, 255, 0.2)',
-              flexShrink: 0
-            }}>
-              <Shield size={20} color="#ffffff" style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))' }} />
+              justifyContent: 'space-between',
+              alignItems: 'center'
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', letterSpacing: '0.04em' }}>
+              <Scale size={12} color="#f59e0b" style={{ filter: 'drop-shadow(0 0 4px rgba(245, 158, 11, 0.6))', flexShrink: 0 }} />
+              <span className="desktop-only" style={{ fontWeight: 600 }}>
+                MINISTRY OF CONSUMER AFFAIRS, FOOD &amp; PUBLIC DISTRIBUTION • GOVT. OF INDIA
+              </span>
+              <span className="mobile-only" style={{ fontWeight: 600, fontSize: '0.66rem' }}>
+                GOVT. OF INDIA • LEGAL METROLOGY
+              </span>
             </div>
-            <div>
-              <div style={{
-                fontFamily: 'var(--font-heading)',
-                fontWeight: 800,
-                fontSize: '1.05rem',
-                letterSpacing: '-0.02em',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px'
-              }}>
-                <span style={{
-                  background: 'linear-gradient(180deg, #ffffff 0%, #e2e8f0 100%)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  whiteSpace: 'nowrap'
-                }}>LEGAL METROLOGY</span>
-                <span style={{
-                  fontSize: '0.64rem',
-                  background: 'rgba(56, 189, 248, 0.15)',
-                  color: '#38bdf8',
-                  padding: '2px 6px',
-                  borderRadius: '5px',
-                  border: '1px solid rgba(56, 189, 248, 0.35)',
-                  fontWeight: 700,
-                  letterSpacing: '0.04em',
-                  whiteSpace: 'nowrap'
-                }}>COMPLIANCE AI</span>
-              </div>
-              <div className="desktop-only" style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', letterSpacing: '0.02em' }}>
-                Packaged Commodities Automated Enforcement System
-              </div>
-            </div>
-          </div>
-
-          {/* Desktop Navigation Tabs (Hidden on Mobile) */}
-          <nav className="desktop-nav" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-            {user?.role === 'inspector' && (
-              <>
-                <button
-                  onClick={() => onSelectTab('inspector')}
-                  className={`btn ${currentTab === 'inspector' ? 'btn-primary' : 'btn-secondary'}`}
-                  style={{ fontSize: '0.82rem', padding: '8px 16px', gap: '8px' }}
-                >
-                  <Shield size={16} />
-                  Inspector Hub
-                </button>
-
-                <button
-                  onClick={() => onSelectTab('scan')}
-                  className={`btn ${currentTab === 'scan' ? 'btn-primary' : 'btn-secondary'}`}
-                  style={{ fontSize: '0.82rem', padding: '8px 16px', gap: '8px' }}
-                >
-                  <ScanLine size={16} />
-                  New Inspection
-                </button>
-              </>
-            )}
-
-            {user?.role === 'admin' && (
-              <button
-                onClick={() => onSelectTab('admin')}
-                className={`btn ${currentTab === 'admin' ? 'btn-primary' : 'btn-secondary'}`}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <span className="desktop-only" style={{ opacity: 0.85, fontSize: '0.68rem' }}>
+                Statutory Portal: Rules, 2011
+              </span>
+              <span
                 style={{
-                  fontSize: '0.82rem',
-                  padding: '8px 16px',
-                  border: currentTab === 'admin' ? '1px solid #facc15' : '1px solid rgba(202, 138, 4, 0.4)'
+                  background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.15) 0%, rgba(56, 189, 248, 0.1) 100%)',
+                  border: '1px solid rgba(139, 92, 246, 0.35)',
+                  color: '#a78bfa',
+                  padding: '2px 8px',
+                  borderRadius: '9999px',
+                  fontSize: '0.62rem',
+                  fontWeight: 700,
+                  letterSpacing: '0.05em',
+                  boxShadow: '0 0 10px rgba(139, 92, 246, 0.15)',
+                  whiteSpace: 'nowrap'
                 }}
               >
-                <BarChart3 size={16} color="#facc15" />
-                Central Analytics &amp; Admin
-              </button>
-            )}
+                SEC. 36 ENFORCED
+              </span>
+            </div>
+          </div>
 
-            <button
-              onClick={() => onSelectTab('repository')}
-              className={`btn ${currentTab === 'repository' ? 'btn-primary' : 'btn-secondary'}`}
-              style={{ fontSize: '0.82rem', padding: '8px 16px', gap: '8px' }}
-            >
-              <Database size={16} />
-              Audit Repository
-            </button>
-          </nav>
-
-          {/* Authenticated Officer Profile */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            {/* Desktop User Details Badge */}
-            <div className="desktop-only" style={{
+          {/* Main Navigation Row */}
+          <div
+            style={{
+              padding: '10px 20px',
               display: 'flex',
               alignItems: 'center',
-              gap: '10px',
-              padding: '6px 14px',
-              background: 'rgba(15, 23, 42, 0.75)',
-              border: '1px solid var(--border-card)',
-              borderRadius: '10px',
-              boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.06)'
-            }}>
-              <div style={{
-                width: '32px',
-                height: '32px',
-                borderRadius: '50%',
-                background: user?.role === 'admin' 
-                  ? 'linear-gradient(135deg, #d97706 0%, #ca8a04 100%)' 
-                  : 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',
-                border: user?.role === 'admin' ? '1px solid rgba(250, 204, 21, 0.4)' : '1px solid rgba(96, 165, 250, 0.4)',
-                boxShadow: user?.role === 'admin' ? '0 0 10px rgba(250, 204, 21, 0.3)' : '0 0 10px rgba(37, 99, 235, 0.3)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: '#ffffff',
-                fontSize: '0.8rem',
-                fontWeight: 800
-              }}>
-                {user?.firstName ? user.firstName.charAt(0) : user?.name ? user.name.charAt(0) : 'O'}
+              justifyContent: 'space-between',
+              gap: '12px'
+            }}
+          >
+            {/* Brand / Logo */}
+            <div
+              onClick={() => onSelectTab(user?.role === 'admin' ? 'admin' : 'inspector')}
+              style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', userSelect: 'none' }}
+            >
+              <div
+                style={{
+                  width: '40px',
+                  height: '40px',
+                  borderRadius: '12px',
+                  background: 'linear-gradient(135deg, #8b5cf6 0%, #6d28d9 50%, #0284c7 100%)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  boxShadow: '0 0 20px rgba(139, 92, 246, 0.5), inset 0 1px 1px rgba(255, 255, 255, 0.4)',
+                  border: '1px solid rgba(255, 255, 255, 0.25)',
+                  flexShrink: 0
+                }}
+              >
+                <Shield size={20} color="#ffffff" style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))' }} />
               </div>
-              <div style={{ lineHeight: 1.25 }}>
-                <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#ffffff' }}>
-                  {user?.name || 'Officer'}
-                </div>
-                <div style={{ fontSize: '0.68rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <span style={{
-                    color: user?.role === 'admin' ? '#facc15' : '#38bdf8',
-                    fontWeight: 700,
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.04em'
-                  }}>
-                    ● {user?.role === 'admin' ? 'Joint Controller' : 'Inspector'}
+              <div>
+                <div
+                  style={{
+                    fontFamily: 'var(--font-heading)',
+                    fontWeight: 800,
+                    fontSize: '1.05rem',
+                    letterSpacing: '-0.025em',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px'
+                  }}
+                >
+                  <span className="text-gradient-primary">
+                    LEGAL METROLOGY
                   </span>
-                  {user?.phone && (
-                    <span style={{ color: 'var(--text-muted)' }}>• {user.phone}</span>
-                  )}
+                  <span
+                    style={{
+                      fontSize: '0.62rem',
+                      background: 'rgba(139, 92, 246, 0.15)',
+                      color: '#a78bfa',
+                      padding: '2px 8px',
+                      borderRadius: '9999px',
+                      border: '1px solid rgba(139, 92, 246, 0.35)',
+                      fontWeight: 700,
+                      letterSpacing: '0.05em',
+                      whiteSpace: 'nowrap'
+                    }}
+                  >
+                    COMPLIANCE AI
+                  </span>
+                </div>
+                <div
+                  className="desktop-only"
+                  style={{ fontSize: '0.72rem', color: 'var(--muted-fg)', letterSpacing: '0.01em' }}
+                >
+                  Packaged Commodities Automated Enforcement System
                 </div>
               </div>
             </div>
 
-            {/* Mobile Compact Avatar */}
-            <div className="mobile-only" style={{
-              width: '32px',
-              height: '32px',
-              borderRadius: '50%',
-              background: user?.role === 'admin' 
-                ? 'linear-gradient(135deg, #d97706 0%, #ca8a04 100%)' 
-                : 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',
-              border: user?.role === 'admin' ? '1px solid rgba(250, 204, 21, 0.4)' : '1px solid rgba(96, 165, 250, 0.4)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: '#ffffff',
-              fontSize: '0.8rem',
-              fontWeight: 800
-            }}>
-              {user?.firstName ? user.firstName.charAt(0) : user?.name ? user.name.charAt(0) : 'O'}
-            </div>
+            {/* Desktop Navigation Tabs with Animated Glow Indicator */}
+            <nav className="desktop-nav" style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+              {user?.role === 'inspector' && (
+                <>
+                  <button
+                    onClick={() => onSelectTab('inspector')}
+                    className={`btn ${currentTab === 'inspector' ? 'btn-primary' : 'btn-secondary'}`}
+                    style={{
+                      fontSize: '0.82rem',
+                      padding: '8px 18px',
+                      position: 'relative'
+                    }}
+                  >
+                    <Shield size={15} />
+                    <span>Inspector Hub</span>
+                    {currentTab === 'inspector' && (
+                      <span
+                        style={{
+                          position: 'absolute',
+                          bottom: '-1px',
+                          left: '25%',
+                          right: '25%',
+                          height: '2.5px',
+                          background: '#ffffff',
+                          borderRadius: '9999px',
+                          boxShadow: '0 0 8px rgba(255, 255, 255, 0.8)'
+                        }}
+                      />
+                    )}
+                  </button>
 
-            {/* Sign Out Button */}
-            <button
-              onClick={onLogout}
-              title="Sign Out"
-              className="btn btn-secondary"
-              style={{
-                padding: '7px 12px',
-                fontSize: '0.78rem',
-                gap: '6px'
-              }}
-            >
-              <LogOut size={14} />
-              <span className="desktop-only">Sign Out</span>
-            </button>
+                  <button
+                    onClick={() => onSelectTab('scan')}
+                    className={`btn ${currentTab === 'scan' ? 'btn-primary' : 'btn-secondary'}`}
+                    style={{
+                      fontSize: '0.82rem',
+                      padding: '8px 18px',
+                      position: 'relative'
+                    }}
+                  >
+                    <ScanLine size={15} />
+                    <span>New Inspection</span>
+                    {currentTab === 'scan' && (
+                      <span
+                        style={{
+                          position: 'absolute',
+                          bottom: '-1px',
+                          left: '25%',
+                          right: '25%',
+                          height: '2.5px',
+                          background: '#ffffff',
+                          borderRadius: '9999px',
+                          boxShadow: '0 0 8px rgba(255, 255, 255, 0.8)'
+                        }}
+                      />
+                    )}
+                  </button>
+                </>
+              )}
+
+              {user?.role === 'admin' && (
+                <button
+                  onClick={() => onSelectTab('admin')}
+                  className={`btn ${currentTab === 'admin' ? 'btn-primary' : 'btn-secondary'}`}
+                  style={{
+                    fontSize: '0.82rem',
+                    padding: '8px 18px',
+                    position: 'relative'
+                  }}
+                >
+                  <BarChart3 size={15} color={currentTab === 'admin' ? '#ffffff' : '#facc15'} />
+                  <span>Central Analytics &amp; Admin</span>
+                  {currentTab === 'admin' && (
+                    <span
+                      style={{
+                        position: 'absolute',
+                        bottom: '-1px',
+                        left: '25%',
+                        right: '25%',
+                        height: '2.5px',
+                        background: '#ffffff',
+                        borderRadius: '9999px',
+                        boxShadow: '0 0 8px rgba(255, 255, 255, 0.8)'
+                      }}
+                    />
+                  )}
+                </button>
+              )}
+
+              <button
+                onClick={() => onSelectTab('repository')}
+                className={`btn ${currentTab === 'repository' ? 'btn-primary' : 'btn-secondary'}`}
+                style={{
+                  fontSize: '0.82rem',
+                  padding: '8px 18px',
+                  position: 'relative'
+                }}
+              >
+                <Database size={15} />
+                <span>Audit Repository</span>
+                {currentTab === 'repository' && (
+                  <span
+                    style={{
+                      position: 'absolute',
+                      bottom: '-1px',
+                      left: '25%',
+                      right: '25%',
+                      height: '2.5px',
+                      background: '#ffffff',
+                      borderRadius: '9999px',
+                      boxShadow: '0 0 8px rgba(255, 255, 255, 0.8)'
+                    }}
+                  />
+                )}
+              </button>
+            </nav>
+
+            {/* Authenticated Officer Profile & Controls */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              {/* Dark / Light Mode Toggle Button */}
+              {onToggleTheme && (
+                <button
+                  onClick={onToggleTheme}
+                  title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+                  className="btn btn-secondary"
+                  style={{
+                    width: '38px',
+                    height: '38px',
+                    padding: 0,
+                    borderRadius: '50%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}
+                >
+                  {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
+                </button>
+              )}
+
+              {/* User Details Pill */}
+              <div
+                className="desktop-only"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                  padding: '5px 14px',
+                  background: 'rgba(255, 255, 255, 0.04)',
+                  border: '1px solid var(--border)',
+                  borderRadius: '9999px'
+                }}
+              >
+                <div
+                  style={{
+                    width: '30px',
+                    height: '30px',
+                    borderRadius: '50%',
+                    background: user?.role === 'admin'
+                      ? 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)'
+                      : 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
+                    border: '1px solid rgba(255, 255, 255, 0.3)',
+                    boxShadow: '0 0 10px rgba(139, 92, 246, 0.3)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: '#ffffff',
+                    fontSize: '0.78rem',
+                    fontWeight: 800
+                  }}
+                >
+                  {user?.firstName ? user.firstName.charAt(0) : user?.name ? user.name.charAt(0) : 'O'}
+                </div>
+                <div style={{ lineHeight: 1.2 }}>
+                  <div style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--fg)' }}>
+                    {user?.name || 'Officer'}
+                  </div>
+                  <div style={{ fontSize: '0.66rem', color: 'var(--muted-fg)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span
+                      style={{
+                        color: user?.role === 'admin' ? '#f59e0b' : '#a78bfa',
+                        fontWeight: 700,
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.04em'
+                      }}
+                    >
+                      ● {user?.role === 'admin' ? 'Joint Controller' : 'Inspector'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Sign Out Button */}
+              <button
+                onClick={onLogout}
+                title="Sign Out"
+                className="btn btn-secondary"
+                style={{
+                  padding: '7px 14px',
+                  fontSize: '0.78rem',
+                  gap: '6px'
+                }}
+              >
+                <LogOut size={14} />
+                <span className="desktop-only">Sign Out</span>
+              </button>
+            </div>
           </div>
         </div>
       </header>
@@ -312,3 +452,5 @@ export const Navbar: React.FC<NavbarProps> = ({
     </>
   );
 };
+
+export default Navbar;

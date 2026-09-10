@@ -220,6 +220,9 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
           from { transform: rotate(0deg); }
           to { transform: rotate(360deg); }
         }
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
         @keyframes shimmerTiranga {
           0% { background-position: 0% 50%; }
           50% { background-position: 100% 50%; }
@@ -366,54 +369,54 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
           </div>
         </div>
 
-        {/* Main Auth Card with Tricolor Specular Rim */}
-        <div style={{
+        {/* Main Auth Card with Squircle Glassmorphic Spec */}
+        <div className="glass-panel" style={{
           position: 'relative',
-          borderRadius: '16px',
-          border: '1px solid rgba(255, 255, 255, 0.12)',
-          background: 'linear-gradient(180deg, rgba(14, 22, 44, 0.92) 0%, rgba(7, 11, 25, 0.96) 100%)',
-          backdropFilter: 'blur(20px)',
-          WebkitBackdropFilter: 'blur(20px)',
-          boxShadow: '0 24px 64px -12px rgba(0, 0, 0, 0.85), 0 0 40px -10px rgba(255, 103, 31, 0.12), 0 0 40px -10px rgba(19, 136, 8, 0.12)',
+          borderRadius: 'var(--radius-squircle)',
+          border: '1px solid var(--border)',
+          background: 'var(--glass-bg)',
+          backdropFilter: 'blur(28px)',
+          WebkitBackdropFilter: 'blur(28px)',
+          boxShadow: '0 24px 64px -12px rgba(0, 0, 0, 0.75), 0 0 32px rgba(139, 92, 246, 0.12)',
           overflow: 'hidden',
-          padding: '30px 32px'
+          padding: '34px 36px'
         }}>
-          {/* Top Tricolor Strip on Card */}
+          {/* Top Violet Strip on Card */}
           <div style={{
             position: 'absolute',
             top: 0,
             left: 0,
             right: 0,
             height: '3px',
-            background: 'linear-gradient(90deg, #FF671F 0%, #FFFFFF 50%, #138808 100%)',
-            boxShadow: '0 0 10px rgba(255, 103, 31, 0.4)'
+            background: 'linear-gradient(90deg, #8b5cf6 0%, #38bdf8 50%, #ec4899 100%)',
+            boxShadow: '0 0 10px rgba(139, 92, 246, 0.5)'
           }} />
 
           {/* Sign In vs Sign Up Tab Switcher */}
           <div style={{
             display: 'grid',
             gridTemplateColumns: '1fr 1fr',
-            background: 'rgba(5, 8, 19, 0.8)',
+            background: 'rgba(255, 255, 255, 0.04)',
             padding: '4px',
-            borderRadius: '10px',
-            border: '1px solid rgba(255, 255, 255, 0.08)',
-            marginBottom: '22px'
+            borderRadius: '9999px',
+            border: '1px solid var(--border)',
+            marginBottom: '24px'
           }}>
             <button
               type="button"
               onClick={() => { setMode('signin'); setError(null); }}
               style={{
                 padding: '10px',
-                borderRadius: '8px',
+                borderRadius: '9999px',
                 border: 'none',
                 cursor: 'pointer',
                 fontWeight: 700,
                 fontSize: '0.85rem',
                 background: mode === 'signin' 
-                  ? 'linear-gradient(135deg, #FF671F 0%, #ea580c 100%)' 
+                  ? 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)' 
                   : 'transparent',
-                color: mode === 'signin' ? '#ffffff' : 'var(--text-secondary)',
-                boxShadow: mode === 'signin' ? '0 4px 14px rgba(255, 103, 31, 0.45)' : 'none',
+                color: mode === 'signin' ? '#ffffff' : 'var(--muted-fg)',
+                boxShadow: mode === 'signin' ? '0 4px 14px rgba(139, 92, 246, 0.45)' : 'none',
                 transition: 'all 0.2s ease',
                 display: 'flex',
                 alignItems: 'center',
@@ -560,30 +563,107 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                 </div>
               </div>
 
+              {/* Quick Demo Credentials Toolbar */}
+              <div style={{
+                marginBottom: '20px',
+                padding: '10px 12px',
+                borderRadius: '10px',
+                background: 'rgba(255, 255, 255, 0.03)',
+                border: '1px solid rgba(255, 255, 255, 0.08)'
+              }}>
+                <div style={{ fontSize: '0.72rem', color: '#94a3b8', fontWeight: 600, marginBottom: '8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <span>⚡ QUICK DEMO CREDENTIALS:</span>
+                  <span style={{ fontSize: '0.68rem', color: '#38bdf8' }}>Click to auto-fill</span>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSignInIdentifier('inspector@gov.in');
+                      setSignInPassword('Inspector@2026!');
+                      setError(null);
+                    }}
+                    style={{
+                      padding: '7px 10px',
+                      background: 'rgba(56, 189, 248, 0.08)',
+                      border: '1px solid rgba(56, 189, 248, 0.25)',
+                      borderRadius: '6px',
+                      color: '#38bdf8',
+                      fontSize: '0.75rem',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      textAlign: 'center',
+                      transition: 'all 0.15s ease'
+                    }}
+                  >
+                    👮 Inspector
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSignInIdentifier('admin@gov.in');
+                      setSignInPassword('Admin@2026!');
+                      setError(null);
+                    }}
+                    style={{
+                      padding: '7px 10px',
+                      background: 'rgba(168, 85, 247, 0.08)',
+                      border: '1px solid rgba(168, 85, 247, 0.25)',
+                      borderRadius: '6px',
+                      color: '#c084fc',
+                      fontSize: '0.75rem',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      textAlign: 'center',
+                      transition: 'all 0.15s ease'
+                    }}
+                  >
+                    👑 Joint Controller
+                  </button>
+                </div>
+              </div>
+
               <button
                 type="submit"
                 disabled={loading}
                 style={{
                   width: '100%',
-                  padding: '12px',
+                  padding: '13px 20px',
                   fontSize: '0.95rem',
                   fontWeight: 700,
-                  borderRadius: '8px',
-                  border: 'none',
+                  borderRadius: '9999px',
+                  border: '1px solid rgba(255, 255, 255, 0.2)',
                   cursor: loading ? 'not-allowed' : 'pointer',
-                  background: 'linear-gradient(135deg, #FF671F 0%, #f97316 50%, #ea580c 100%)',
+                  background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
                   color: '#ffffff',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   gap: '8px',
-                  boxShadow: '0 8px 24px -4px rgba(255, 103, 31, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.3)',
+                  boxShadow: '0 8px 24px -4px rgba(139, 92, 246, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.3)',
                   transition: 'all 0.2s ease',
-                  letterSpacing: '0.02em'
+                  letterSpacing: '0.01em'
                 }}
               >
-                {loading ? 'Authenticating Officer...' : 'Sign In to Statutory Portal'}
-                <ArrowRight size={16} />
+                {loading ? (
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{
+                      display: 'inline-block',
+                      width: '14px',
+                      height: '14px',
+                      border: '2px solid rgba(255,255,255,0.3)',
+                      borderTopColor: '#ffffff',
+                      borderRadius: '50%',
+                      animation: 'spin 0.8s linear infinite'
+                    }} />
+                    Authenticating Officer...
+                  </span>
+                ) : (
+                  <>
+                    Sign In to Statutory Portal
+                    <ArrowRight size={16} />
+                  </>
+                )}
               </button>
 
               <div style={{ textAlign: 'center', marginTop: '18px', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
@@ -873,26 +953,43 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                 disabled={loading || !strength.isStrong}
                 style={{
                   width: '100%',
-                  padding: '12px',
+                  padding: '13px 20px',
                   fontSize: '0.95rem',
                   fontWeight: 700,
-                  borderRadius: '8px',
-                  border: 'none',
+                  borderRadius: '9999px',
+                  border: '1px solid rgba(255, 255, 255, 0.2)',
                   cursor: (loading || !strength.isStrong) ? 'not-allowed' : 'pointer',
-                  background: 'linear-gradient(135deg, #138808 0%, #10b981 50%, #059669 100%)',
+                  background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
                   color: '#ffffff',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   gap: '8px',
-                  boxShadow: '0 8px 24px -4px rgba(19, 136, 8, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.3)',
+                  boxShadow: '0 8px 24px -4px rgba(139, 92, 246, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.3)',
                   transition: 'all 0.2s ease',
                   opacity: (!strength.isStrong && !loading) ? 0.6 : 1,
-                  letterSpacing: '0.02em'
+                  letterSpacing: '0.01em'
                 }}
               >
-                {loading ? 'Securing & Registering...' : 'Register Official Officer Account'}
-                <ArrowRight size={16} />
+                {loading ? (
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{
+                      display: 'inline-block',
+                      width: '14px',
+                      height: '14px',
+                      border: '2px solid rgba(255,255,255,0.3)',
+                      borderTopColor: '#ffffff',
+                      borderRadius: '50%',
+                      animation: 'spin 0.8s linear infinite'
+                    }} />
+                    Securing &amp; Registering Account...
+                  </span>
+                ) : (
+                  <>
+                    Register Official Officer Account
+                    <ArrowRight size={16} />
+                  </>
+                )}
               </button>
 
               <div style={{ textAlign: 'center', marginTop: '16px', fontSize: '0.8rem', color: 'var(--text-muted)' }}>

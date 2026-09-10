@@ -6,6 +6,7 @@ import {
 import { api } from '../services/api';
 import { DashboardStats, StatutoryRule, User } from '../types';
 import { DeleteConfirmModal } from '../components/DeleteConfirmModal';
+import { MagicCard } from '../components/MagicCard';
 
 interface AdminDashboardProps {
   user: User;
@@ -106,53 +107,60 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onViewRepo
     <div>
       {/* Top Admin Header */}
       <div className="glass-panel" style={{
-        padding: '24px 28px',
-        marginBottom: '24px',
-        background: 'linear-gradient(135deg, rgba(202, 138, 4, 0.25) 0%, rgba(15, 23, 42, 0.9) 100%)',
-        border: '1px solid rgba(234, 179, 8, 0.35)',
+        padding: '28px 36px',
+        marginBottom: '28px',
+        background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.15) 0%, rgba(22, 23, 27, 0.75) 100%)',
+        border: '1px solid var(--border)',
+        borderRadius: 'var(--radius-squircle)',
         display: 'flex',
         justifyContent: 'space-between',
-        alignItems: 'center'
+        alignItems: 'center',
+        flexWrap: 'wrap',
+        gap: '16px'
       }}>
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
             <span style={{
-              background: 'rgba(234, 179, 8, 0.2)',
-              color: '#facc15',
+              background: 'rgba(139, 92, 246, 0.15)',
+              color: '#a78bfa',
               fontSize: '0.72rem',
               fontWeight: 700,
-              padding: '2px 8px',
+              padding: '3px 10px',
               borderRadius: '9999px',
-              border: '1px solid rgba(234, 179, 8, 0.4)'
+              border: '1px solid rgba(139, 92, 246, 0.35)',
+              letterSpacing: '0.04em'
             }}>
               JOINT CONTROLLER / DIRECTORATE HEADQUARTERS
             </span>
           </div>
-          <h1 style={{ fontSize: '1.6rem', fontWeight: 800 }}>
-            Central Enforcement Intelligence &amp; Analytics
+          <h1 style={{ fontSize: '1.85rem', fontWeight: 800, letterSpacing: '-0.025em', color: 'var(--fg)', margin: '4px 0 6px' }}>
+            Central Enforcement <span className="text-gradient-primary">Intelligence &amp; Analytics</span>
           </h1>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
+          <p style={{ color: 'var(--muted-fg)', fontSize: '0.88rem', margin: 0 }}>
             System-wide compliance monitoring, department metrics, and statutory rule configuration.
           </p>
         </div>
 
         {/* Tab switcher inside header */}
-        <div className="tab-list">
+        <div className="tab-list" style={{ borderRadius: '9999px', padding: '5px', background: 'rgba(255, 255, 255, 0.04)', border: '1px solid var(--border)' }}>
           <button
             onClick={() => setActiveTab('analytics')}
             className={`tab-trigger ${activeTab === 'analytics' ? 'active' : ''}`}
+            style={{ borderRadius: '9999px', padding: '8px 18px', fontSize: '0.82rem', fontWeight: 600 }}
           >
             Analytics &amp; Trends
           </button>
           <button
             onClick={() => setActiveTab('users')}
             className={`tab-trigger ${activeTab === 'users' ? 'active' : ''}`}
+            style={{ borderRadius: '9999px', padding: '8px 18px', fontSize: '0.82rem', fontWeight: 600 }}
           >
             Officer Directory &amp; Roles
           </button>
           <button
             onClick={() => setActiveTab('rules')}
             className={`tab-trigger ${activeTab === 'rules' ? 'active' : ''}`}
+            style={{ borderRadius: '9999px', padding: '8px 18px', fontSize: '0.82rem', fontWeight: 600 }}
           >
             Statutory Rules Configurator
           </button>
@@ -161,89 +169,89 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onViewRepo
 
       {activeTab === 'analytics' && (
         <div>
-          {/* Top Admin KPI Counters */}
-          <div className="grid-4" style={{ marginBottom: '28px', gap: '16px' }}>
-            <div 
-              className="glass-panel kpi-card" 
+          {/* Top Admin KPI Counters with MagicCard Mouse Aura */}
+          <div className="grid-4" style={{ marginBottom: '28px', gap: '18px' }}>
+            <MagicCard 
+              className="kpi-card" 
+              gradientColor="rgba(139, 92, 246, 0.16)"
               style={{ 
-                padding: '22px 24px',
-                ['--kpi-accent' as any]: '#3b82f6',
-                ['--kpi-glow' as any]: 'rgba(59, 130, 246, 0.3)',
-                background: 'radial-gradient(circle at 10% 0%, rgba(59, 130, 246, 0.08) 0%, rgba(13, 20, 38, 0.75) 70%)'
+                padding: '24px 26px',
+                ['--kpi-accent' as any]: '#8b5cf6',
+                ['--kpi-glow' as any]: 'rgba(139, 92, 246, 0.3)'
               }}
             >
-              <div style={{ color: 'var(--text-secondary)', fontSize: '0.74rem', fontWeight: 700, letterSpacing: '0.05em' }}>
+              <div style={{ color: 'var(--muted-fg)', fontSize: '0.74rem', fontWeight: 700, letterSpacing: '0.06em' }}>
                 TOTAL COMMODITY SCANS
               </div>
-              <div style={{ fontSize: '2.4rem', fontWeight: 800, margin: '6px 0 2px', color: '#ffffff', fontFamily: 'var(--font-heading)' }}>
-                {stats?.total_scans || 0}
+              <div style={{ fontSize: '2.4rem', fontWeight: 800, margin: '6px 0 2px', color: 'var(--fg)', fontFamily: 'var(--font-heading)' }}>
+                <span className="text-gradient-primary">{stats?.total_scans || 0}</span>
               </div>
-              <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Across all enforcement circles</div>
-            </div>
+              <div style={{ fontSize: '0.74rem', color: 'var(--muted-fg)' }}>Across all enforcement circles</div>
+            </MagicCard>
 
-            <div 
-              className="glass-panel kpi-card" 
+            <MagicCard 
+              className="kpi-card" 
+              gradientColor="rgba(244, 63, 94, 0.16)"
               style={{ 
-                padding: '22px 24px',
+                padding: '24px 26px',
                 ['--kpi-accent' as any]: '#f43f5e',
-                ['--kpi-glow' as any]: 'rgba(244, 63, 94, 0.3)',
-                background: 'radial-gradient(circle at 10% 0%, rgba(244, 63, 94, 0.08) 0%, rgba(13, 20, 38, 0.75) 70%)'
+                ['--kpi-glow' as any]: 'rgba(244, 63, 94, 0.3)'
               }}
             >
-              <div style={{ color: '#f87171', fontSize: '0.74rem', fontWeight: 700, letterSpacing: '0.05em' }}>
+              <div style={{ color: '#f43f5e', fontSize: '0.74rem', fontWeight: 700, letterSpacing: '0.06em' }}>
                 NON-COMPLIANCE RATE
               </div>
               <div style={{ fontSize: '2.4rem', fontWeight: 800, margin: '6px 0 2px', color: '#f43f5e', fontFamily: 'var(--font-heading)' }}>
                 {stats && stats.total_scans > 0 ? Math.round((stats.non_compliant_scans / stats.total_scans) * 100) : 0}%
               </div>
-              <div style={{ fontSize: '0.72rem', color: '#f87171' }}>Requires enforcement intervention</div>
-            </div>
+              <div style={{ fontSize: '0.74rem', color: '#f43f5e' }}>Requires enforcement intervention</div>
+            </MagicCard>
 
-            <div 
-              className="glass-panel kpi-card" 
+            <MagicCard 
+              className="kpi-card" 
+              gradientColor="rgba(245, 158, 11, 0.16)"
               style={{ 
-                padding: '22px 24px',
+                padding: '24px 26px',
                 ['--kpi-accent' as any]: '#f59e0b',
-                ['--kpi-glow' as any]: 'rgba(245, 158, 11, 0.3)',
-                background: 'radial-gradient(circle at 10% 0%, rgba(245, 158, 11, 0.08) 0%, rgba(13, 20, 38, 0.75) 70%)'
+                ['--kpi-glow' as any]: 'rgba(245, 158, 11, 0.3)'
               }}
             >
-              <div style={{ color: '#fbbf24', fontSize: '0.74rem', fontWeight: 700, letterSpacing: '0.05em' }}>
+              <div style={{ color: '#fbbf24', fontSize: '0.74rem', fontWeight: 700, letterSpacing: '0.06em' }}>
                 COMPOUNDING REVENUE
               </div>
               <div style={{ fontSize: '2.4rem', fontWeight: 800, margin: '6px 0 2px', color: '#facc15', fontFamily: 'var(--font-heading)' }}>
                 ₹{stats?.total_penalties_estimated ? stats.total_penalties_estimated.toLocaleString('en-IN') : 0}
               </div>
-              <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Penalties under Section 36</div>
-            </div>
+              <div style={{ fontSize: '0.74rem', color: 'var(--muted-fg)' }}>Penalties under Section 36</div>
+            </MagicCard>
 
-            <div 
-              className="glass-panel kpi-card" 
+            <MagicCard 
+              className="kpi-card" 
+              gradientColor="rgba(56, 189, 248, 0.16)"
               style={{ 
-                padding: '22px 24px',
+                padding: '24px 26px',
                 ['--kpi-accent' as any]: '#38bdf8',
-                ['--kpi-glow' as any]: 'rgba(56, 189, 248, 0.3)',
-                background: 'radial-gradient(circle at 10% 0%, rgba(56, 189, 248, 0.08) 0%, rgba(13, 20, 38, 0.75) 70%)'
+                ['--kpi-glow' as any]: 'rgba(56, 189, 248, 0.3)'
               }}
             >
-              <div style={{ color: '#38bdf8', fontSize: '0.74rem', fontWeight: 700, letterSpacing: '0.05em' }}>
+              <div style={{ color: '#38bdf8', fontSize: '0.74rem', fontWeight: 700, letterSpacing: '0.06em' }}>
                 ACTIVE ENFORCEMENT RULES
               </div>
               <div style={{ fontSize: '2.4rem', fontWeight: 800, margin: '6px 0 2px', color: '#38bdf8', fontFamily: 'var(--font-heading)' }}>
                 {rules.filter(r => r.isActive).length} / {rules.length}
               </div>
-              <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Rules 2011 Engine v2.4</div>
-            </div>
+              <div style={{ fontSize: '0.74rem', color: 'var(--muted-fg)' }}>Rules 2011 Engine v2.4</div>
+            </MagicCard>
           </div>
 
           {/* Rule Breakdown & Category Distribution */}
           <div className="grid-2" style={{ gap: '24px', marginBottom: '28px' }}>
             {/* Rule Violations Frequency */}
-            <div className="glass-panel" style={{ padding: '24px' }}>
-              <h2 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '6px' }}>
+            <div className="glass-panel" style={{ padding: '28px 30px', borderRadius: 'var(--radius-squircle)' }}>
+              <h2 style={{ fontSize: '1.2rem', fontWeight: 700, marginBottom: '6px', color: 'var(--fg)' }}>
                 Violation Frequency by Statutory Rule
               </h2>
-              <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '16px' }}>
+              <p style={{ fontSize: '0.82rem', color: 'var(--muted-fg)', marginBottom: '16px' }}>
                 Most frequently breached provisions in inspected commodities
               </p>
 
@@ -254,14 +262,14 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onViewRepo
                     return (
                       <div key={ruleCode}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem', marginBottom: '4px' }}>
-                          <span style={{ fontWeight: 700, color: '#ffffff' }}>{ruleCode}</span>
-                          <span style={{ color: 'var(--text-secondary)' }}>{count} violation(s) ({pct}%)</span>
+                          <span style={{ fontWeight: 700, color: 'var(--fg)' }}>{ruleCode}</span>
+                          <span style={{ color: 'var(--muted-fg)' }}>{count} violation(s) ({pct}%)</span>
                         </div>
                         <div style={{ width: '100%', height: '8px', background: 'rgba(255,255,255,0.08)', borderRadius: '4px', overflow: 'hidden' }}>
                           <div style={{
                             width: `${pct}%`,
                             height: '100%',
-                            background: pct > 40 ? '#ef4444' : pct > 20 ? '#f59e0b' : '#3b82f6',
+                            background: pct > 40 ? '#ef4444' : pct > 20 ? '#f59e0b' : '#8b5cf6',
                             borderRadius: '4px'
                           }} />
                         </div>
@@ -269,17 +277,17 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onViewRepo
                     );
                   })
                 ) : (
-                  <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>No violation data logged yet.</div>
+                  <div style={{ color: 'var(--muted-fg)', fontSize: '0.85rem' }}>No violation data logged yet.</div>
                 )}
               </div>
             </div>
 
             {/* Category Breakdown */}
-            <div className="glass-panel" style={{ padding: '24px' }}>
-              <h2 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '6px' }}>
+            <div className="glass-panel" style={{ padding: '28px 30px', borderRadius: 'var(--radius-squircle)' }}>
+              <h2 style={{ fontSize: '1.2rem', fontWeight: 700, marginBottom: '6px', color: 'var(--fg)' }}>
                 Category-wise Inspection Coverage
               </h2>
-              <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '16px' }}>
+              <p style={{ fontSize: '0.82rem', color: 'var(--muted-fg)', marginBottom: '16px' }}>
                 Distribution of inspected packaged commodities by market segment
               </p>
 
@@ -289,34 +297,34 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onViewRepo
                     <div
                       key={cat}
                       style={{
-                        background: 'var(--bg-glass-heavy)',
-                        padding: '12px 16px',
-                        borderRadius: '8px',
+                        background: 'var(--card)',
+                        padding: '14px 18px',
+                        borderRadius: 'var(--radius-md)',
                         display: 'flex',
                         justifyContent: 'space-between',
                         alignItems: 'center',
-                        border: '1px solid var(--border-subtle)'
+                        border: '1px solid var(--border)'
                       }}
                     >
-                      <span style={{ fontWeight: 600, fontSize: '0.88rem' }}>{cat}</span>
+                      <span style={{ fontWeight: 600, fontSize: '0.88rem', color: 'var(--fg)' }}>{cat}</span>
                       <span className="badge badge-neutral">{count} Inspections</span>
                     </div>
                   ))
                 ) : (
-                  <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>No categories registered yet.</div>
+                  <div style={{ color: 'var(--muted-fg)', fontSize: '0.85rem' }}>No categories registered yet.</div>
                 )}
               </div>
             </div>
           </div>
 
           {/* Central Scan History Register */}
-          <div className="glass-panel" style={{ padding: '24px', marginBottom: '24px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+          <div className="glass-panel" style={{ padding: '28px 32px', marginBottom: '28px', borderRadius: 'var(--radius-squircle)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px' }}>
               <div>
-                <h2 style={{ fontSize: '1.1rem', fontWeight: 700 }}>
+                <h2 style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--fg)' }}>
                   Recent Statutory Package Inspections
                 </h2>
-                <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                <p style={{ fontSize: '0.82rem', color: 'var(--muted-fg)' }}>
                   Audit log of commodities inspected across all departmental circles
                 </p>
               </div>
@@ -427,10 +435,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onViewRepo
 
       {/* Officer Directory & Role Management Tab */}
       {activeTab === 'users' && (
-        <div className="glass-panel" style={{ padding: '24px' }}>
+        <div className="glass-panel" style={{ padding: '28px 32px', borderRadius: 'var(--radius-squircle)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
             <div>
-              <h2 style={{ fontSize: '1.2rem', fontWeight: 700, marginBottom: '4px' }}>
+              <h2 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '4px', color: 'var(--fg)' }}>
                 Authorized Officer Directory &amp; RBAC Control
               </h2>
               <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
@@ -542,9 +550,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onViewRepo
 
       {/* Statutory Rules Configurator Tab */}
       {activeTab === 'rules' && (
-        <div className="glass-panel" style={{ padding: '24px' }}>
+        <div className="glass-panel" style={{ padding: '28px 32px', borderRadius: 'var(--radius-squircle)' }}>
           <div style={{ marginBottom: '20px' }}>
-            <h2 style={{ fontSize: '1.2rem', fontWeight: 700, marginBottom: '4px' }}>
+            <h2 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '4px', color: 'var(--fg)' }}>
               Statutory Rules Engine Configuration
             </h2>
             <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>

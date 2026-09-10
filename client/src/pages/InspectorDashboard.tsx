@@ -8,6 +8,7 @@ import { api } from '../services/api';
 import { DashboardStats, User } from '../types';
 import { SAMPLE_LABELS, SampleLabel } from '../data/sampleLabels';
 import { DeleteConfirmModal } from '../components/DeleteConfirmModal';
+import { MagicCard } from '../components/MagicCard';
 
 interface InspectorDashboardProps {
   user: User;
@@ -64,43 +65,50 @@ export const InspectorDashboard: React.FC<InspectorDashboardProps> = ({
     <div>
       {/* Top Welcome Banner */}
       <div className="glass-panel" style={{
-        padding: '26px 32px',
+        padding: '28px 36px',
         marginBottom: '32px',
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        background: 'linear-gradient(135deg, rgba(30, 58, 138, 0.4) 0%, rgba(15, 23, 42, 0.8) 100%)',
-        border: '1px solid rgba(59, 130, 246, 0.3)'
+        background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.15) 0%, rgba(22, 23, 27, 0.7) 100%)',
+        border: '1px solid var(--border)',
+        borderRadius: 'var(--radius-squircle)',
+        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.25)'
       }}>
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
             <span style={{
-              background: 'rgba(16, 185, 129, 0.2)',
-              color: '#34d399',
+              background: 'rgba(16, 185, 129, 0.15)',
+              color: '#10b981',
               fontSize: '0.72rem',
               fontWeight: 700,
-              padding: '2px 8px',
+              padding: '3px 10px',
               borderRadius: '9999px',
-              border: '1px solid rgba(16, 185, 129, 0.4)'
+              border: '1px solid rgba(16, 185, 129, 0.35)',
+              letterSpacing: '0.04em',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px'
             }}>
+              <span className="status-dot-ping" />
               OFFICIAL ENFORCEMENT SESSION ACTIVE
             </span>
-            <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>• Circle: Delhi Central</span>
+            <span style={{ fontSize: '0.78rem', color: 'var(--muted-fg)' }}>• Circle: Delhi Central</span>
           </div>
-          <h1 style={{ fontSize: '1.85rem', fontWeight: 800, color: '#ffffff', letterSpacing: '-0.02em', margin: 0 }}>
-            Inspector Portal: {user.name}
+          <h1 style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--fg)', letterSpacing: '-0.03em', margin: 0 }}>
+            Inspector Portal: <span className="text-gradient-primary">{user.name}</span>
           </h1>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '0.82rem', marginTop: '4px', margin: '4px 0 0' }}>
+          <p style={{ color: 'var(--muted-fg)', fontSize: '0.86rem', marginTop: '6px', margin: '6px 0 0' }}>
             {user.designation} • Badge: {user.badgeNumber || 'LM-DEL-2024'}
           </p>
         </div>
 
-        {/* Hide Start New Inspection button strictly for ADMIN users */}
+        {/* Start New Inspection button strictly for INSPECTOR users */}
         {user.role === 'inspector' && (
           <button
             onClick={onNavigateScan}
             className="btn btn-primary"
-            style={{ padding: '12px 24px', fontSize: '0.92rem', fontWeight: 700, gap: '10px' }}
+            style={{ padding: '12px 26px', fontSize: '0.92rem', fontWeight: 700, gap: '10px' }}
           >
             <ScanLine size={18} />
             Start New Inspection
@@ -108,61 +116,61 @@ export const InspectorDashboard: React.FC<InspectorDashboardProps> = ({
         )}
       </div>
 
-      {/* KPI Counters Grid */}
-      <div className="grid-4" style={{ marginBottom: '32px', gap: '16px' }}>
+      {/* KPI Counters Bento Grid with MagicCard Mouse Aura */}
+      <div className="grid-4" style={{ marginBottom: '32px', gap: '18px' }}>
         {/* Total Scans */}
-        <div 
-          className="glass-panel kpi-card" 
-          style={{ 
-            padding: '22px 24px',
-            ['--kpi-accent' as any]: '#3b82f6',
-            ['--kpi-glow' as any]: 'rgba(59, 130, 246, 0.3)',
-            background: 'radial-gradient(circle at 10% 0%, rgba(59, 130, 246, 0.08) 0%, rgba(13, 20, 38, 0.75) 70%)'
+        <MagicCard
+          gradientColor="rgba(139, 92, 246, 0.16)"
+          className="kpi-card"
+          style={{
+            padding: '24px 26px',
+            ['--kpi-accent' as any]: '#8b5cf6',
+            ['--kpi-glow' as any]: 'rgba(139, 92, 246, 0.3)'
           }}
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-            <span style={{ color: 'var(--text-secondary)', fontSize: '0.74rem', fontWeight: 700, letterSpacing: '0.05em' }}>
+            <span style={{ color: 'var(--muted-fg)', fontSize: '0.74rem', fontWeight: 700, letterSpacing: '0.06em' }}>
               TOTAL INSPECTIONS
             </span>
             <div style={{
-              width: '36px',
-              height: '36px',
-              borderRadius: '8px',
-              background: 'rgba(59, 130, 246, 0.12)',
-              border: '1px solid rgba(59, 130, 246, 0.3)',
+              width: '38px',
+              height: '38px',
+              borderRadius: '12px',
+              background: 'rgba(139, 92, 246, 0.12)',
+              border: '1px solid rgba(139, 92, 246, 0.3)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center'
             }}>
-              <Layers size={18} color="#60a5fa" />
+              <Layers size={18} color="#a78bfa" />
             </div>
           </div>
-          <div style={{ fontSize: '2.4rem', fontWeight: 800, margin: '4px 0 2px', color: '#ffffff', lineHeight: 1.1, fontFamily: 'var(--font-heading)' }}>
-            {stats ? stats.total_scans : 2}
+          <div style={{ fontSize: '2.4rem', fontWeight: 800, margin: '4px 0 2px', color: 'var(--fg)', lineHeight: 1.1, fontFamily: 'var(--font-heading)' }}>
+            <span className="text-gradient-primary">{stats ? stats.total_scans : 2}</span>
           </div>
-          <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+          <div style={{ fontSize: '0.74rem', color: 'var(--muted-fg)' }}>
             Packaged commodities analyzed
           </div>
-        </div>
+        </MagicCard>
 
         {/* Compliant Scans */}
-        <div 
-          className="glass-panel kpi-card" 
-          style={{ 
-            padding: '22px 24px',
+        <MagicCard
+          gradientColor="rgba(16, 185, 129, 0.16)"
+          className="kpi-card"
+          style={{
+            padding: '24px 26px',
             ['--kpi-accent' as any]: '#10b981',
-            ['--kpi-glow' as any]: 'rgba(16, 185, 129, 0.3)',
-            background: 'radial-gradient(circle at 10% 0%, rgba(16, 185, 129, 0.08) 0%, rgba(13, 20, 38, 0.75) 70%)'
+            ['--kpi-glow' as any]: 'rgba(16, 185, 129, 0.3)'
           }}
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-            <span style={{ color: '#34d399', fontSize: '0.74rem', fontWeight: 700, letterSpacing: '0.05em' }}>
+            <span style={{ color: '#10b981', fontSize: '0.74rem', fontWeight: 700, letterSpacing: '0.06em' }}>
               COMPLIANT LABELS
             </span>
             <div style={{
-              width: '36px',
-              height: '36px',
-              borderRadius: '8px',
+              width: '38px',
+              height: '38px',
+              borderRadius: '12px',
               background: 'rgba(16, 185, 129, 0.12)',
               border: '1px solid rgba(16, 185, 129, 0.3)',
               display: 'flex',
@@ -175,30 +183,30 @@ export const InspectorDashboard: React.FC<InspectorDashboardProps> = ({
           <div style={{ fontSize: '2.4rem', fontWeight: 800, margin: '4px 0 2px', color: '#10b981', lineHeight: 1.1, fontFamily: 'var(--font-heading)' }}>
             {stats ? stats.compliant_scans : 1}
           </div>
-          <div style={{ fontSize: '0.72rem', color: '#34d399', display: 'flex', alignItems: 'center', gap: '5px' }}>
-            <span style={{ fontSize: '0.8rem' }}>●</span>
+          <div style={{ fontSize: '0.74rem', color: '#10b981', display: 'flex', alignItems: 'center', gap: '5px' }}>
+            <span>●</span>
             <span style={{ fontWeight: 600 }}>{stats ? `${stats.compliance_rate}% statutory pass rate` : '50% pass rate'}</span>
           </div>
-        </div>
+        </MagicCard>
 
         {/* Non-Compliant Scans */}
-        <div 
-          className="glass-panel kpi-card" 
-          style={{ 
-            padding: '22px 24px',
+        <MagicCard
+          gradientColor="rgba(244, 63, 94, 0.16)"
+          className="kpi-card"
+          style={{
+            padding: '24px 26px',
             ['--kpi-accent' as any]: '#f43f5e',
-            ['--kpi-glow' as any]: 'rgba(244, 63, 94, 0.3)',
-            background: 'radial-gradient(circle at 10% 0%, rgba(244, 63, 94, 0.08) 0%, rgba(13, 20, 38, 0.75) 70%)'
+            ['--kpi-glow' as any]: 'rgba(244, 63, 94, 0.3)'
           }}
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-            <span style={{ color: '#f87171', fontSize: '0.74rem', fontWeight: 700, letterSpacing: '0.05em' }}>
+            <span style={{ color: '#f43f5e', fontSize: '0.74rem', fontWeight: 700, letterSpacing: '0.06em' }}>
               VIOLATIONS DETECTED
             </span>
             <div style={{
-              width: '36px',
-              height: '36px',
-              borderRadius: '8px',
+              width: '38px',
+              height: '38px',
+              borderRadius: '12px',
               background: 'rgba(244, 63, 94, 0.12)',
               border: '1px solid rgba(244, 63, 94, 0.3)',
               display: 'flex',
@@ -211,30 +219,30 @@ export const InspectorDashboard: React.FC<InspectorDashboardProps> = ({
           <div style={{ fontSize: '2.4rem', fontWeight: 800, margin: '4px 0 2px', color: '#f43f5e', lineHeight: 1.1, fontFamily: 'var(--font-heading)' }}>
             {stats ? stats.total_violations : 3}
           </div>
-          <div style={{ fontSize: '0.72rem', color: '#f87171', display: 'flex', alignItems: 'center', gap: '5px' }}>
-            <span style={{ fontSize: '0.8rem' }}>●</span>
+          <div style={{ fontSize: '0.74rem', color: '#f43f5e', display: 'flex', alignItems: 'center', gap: '5px' }}>
+            <span>●</span>
             <span>Across {stats ? stats.non_compliant_scans : 1} non-compliant packages</span>
           </div>
-        </div>
+        </MagicCard>
 
         {/* Penalties Estimated */}
-        <div 
-          className="glass-panel kpi-card" 
-          style={{ 
-            padding: '22px 24px',
+        <MagicCard
+          gradientColor="rgba(245, 158, 11, 0.16)"
+          className="kpi-card"
+          style={{
+            padding: '24px 26px',
             ['--kpi-accent' as any]: '#f59e0b',
-            ['--kpi-glow' as any]: 'rgba(245, 158, 11, 0.3)',
-            background: 'radial-gradient(circle at 10% 0%, rgba(245, 158, 11, 0.08) 0%, rgba(13, 20, 38, 0.75) 70%)'
+            ['--kpi-glow' as any]: 'rgba(245, 158, 11, 0.3)'
           }}
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-            <span style={{ color: '#fbbf24', fontSize: '0.74rem', fontWeight: 700, letterSpacing: '0.05em' }}>
+            <span style={{ color: '#fbbf24', fontSize: '0.74rem', fontWeight: 700, letterSpacing: '0.06em' }}>
               COMPOUNDING FINES
             </span>
             <div style={{
-              width: '36px',
-              height: '36px',
-              borderRadius: '8px',
+              width: '38px',
+              height: '38px',
+              borderRadius: '12px',
               background: 'rgba(245, 158, 11, 0.12)',
               border: '1px solid rgba(245, 158, 11, 0.3)',
               display: 'flex',
@@ -247,39 +255,40 @@ export const InspectorDashboard: React.FC<InspectorDashboardProps> = ({
           <div style={{ fontSize: '2.4rem', fontWeight: 800, margin: '4px 0 2px', color: '#facc15', lineHeight: 1.1, fontFamily: 'var(--font-heading)' }}>
             ₹{stats ? stats.total_penalties_estimated.toLocaleString('en-IN') : '75,000'}
           </div>
-          <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+          <div style={{ fontSize: '0.74rem', color: 'var(--muted-fg)' }}>
             Statutory compounding under Sec. 36
           </div>
-        </div>
+        </MagicCard>
       </div>
 
       {/* 1-Click Benchmark Test Suite Launcher */}
-      <div className="glass-panel" style={{ padding: '24px 28px', marginBottom: '32px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px' }}>
+      <div className="glass-panel" style={{ padding: '28px 32px', marginBottom: '32px', borderRadius: 'var(--radius-squircle)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px' }}>
-              <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#ffffff', margin: 0 }}>
+              <h2 style={{ fontSize: '1.35rem', fontWeight: 800, color: 'var(--fg)', letterSpacing: '-0.02em', margin: 0 }}>
                 1-Click Benchmark Test Suite
               </h2>
               <span style={{
                 fontSize: '0.68rem',
                 fontWeight: 700,
-                background: 'rgba(59, 130, 246, 0.2)',
-                color: '#60a5fa',
-                padding: '2px 8px',
+                background: 'rgba(139, 92, 246, 0.15)',
+                color: '#a78bfa',
+                padding: '2px 10px',
                 borderRadius: '9999px',
-                border: '1px solid rgba(59, 130, 246, 0.3)'
+                border: '1px solid rgba(139, 92, 246, 0.35)',
+                letterSpacing: '0.04em'
               }}>
                 Instant Demo
               </span>
             </div>
-            <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', margin: 0 }}>
+            <p style={{ fontSize: '0.82rem', color: 'var(--muted-fg)', margin: 0 }}>
               Pre-calibrated packaging samples to test real-time OCR and statutory compliance rules
             </p>
           </div>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '18px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(290px, 1fr))', gap: '20px' }}>
           {SAMPLE_LABELS.map((sample) => {
             const isCompliant = sample.expectedStatus === 'COMPLIANT';
             const isNonCompliant = sample.expectedStatus === 'NON_COMPLIANT';
@@ -287,20 +296,21 @@ export const InspectorDashboard: React.FC<InspectorDashboardProps> = ({
             return (
               <div
                 key={sample.id}
+                className="glass-panel"
                 style={{
-                  background: 'var(--bg-glass-heavy)',
-                  border: `1px solid ${isCompliant ? 'rgba(16, 185, 129, 0.35)' : isNonCompliant ? 'rgba(239, 68, 68, 0.35)' : 'rgba(245, 158, 11, 0.35)'}`,
-                  borderRadius: '14px',
-                  padding: '18px 20px',
+                  background: 'var(--card)',
+                  border: `1px solid ${isCompliant ? 'rgba(16, 185, 129, 0.35)' : isNonCompliant ? 'rgba(244, 63, 94, 0.35)' : 'rgba(245, 158, 11, 0.35)'}`,
+                  borderRadius: 'var(--radius-lg)',
+                  padding: '20px 22px',
                   display: 'flex',
                   flexDirection: 'column',
                   justifyContent: 'space-between',
-                  transition: 'all 0.2s ease',
+                  transition: 'all 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
                   position: 'relative'
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-2px)';
-                  e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.35)';
+                  e.currentTarget.style.transform = 'translateY(-3px)';
+                  e.currentTarget.style.boxShadow = '0 12px 30px rgba(0,0,0,0.3)';
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.transform = 'none';
@@ -564,13 +574,13 @@ export const InspectorDashboard: React.FC<InspectorDashboardProps> = ({
       )}
 
       {/* Recent Inspections Table */}
-      <div className="glass-panel" style={{ padding: '24px 28px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px' }}>
+      <div className="glass-panel" style={{ padding: '28px 32px', borderRadius: 'var(--radius-squircle)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
           <div>
-            <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#ffffff', margin: 0 }}>
+            <h2 style={{ fontSize: '1.35rem', fontWeight: 800, color: 'var(--fg)', letterSpacing: '-0.02em', margin: 0 }}>
               Recent Commodity Inspections
             </h2>
-            <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginTop: '3px', margin: '3px 0 0' }}>
+            <p style={{ fontSize: '0.82rem', color: 'var(--muted-fg)', marginTop: '3px', margin: '3px 0 0' }}>
               Official verification log with legal status and statutory penalties
             </p>
           </div>

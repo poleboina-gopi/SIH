@@ -1,0 +1,12 @@
+{
+  "name": "legal-metrology-system",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Central Legal Metrology Compliance Enforcement System",
+  "scripts": {
+    "server": "npm --prefix server start",
+    "client": "npm --prefix client run dev",
+    "dev": "npx concurrently -k -n \"SERVER,CLIENT\" -c \"magenta,cyan\" \"npm --prefix server start\" \"npm --prefix client run dev\"",
+    "start": "npx concurrently -k -n \"SERVER,CLIENT\" -c \"magenta,cyan\" \"npm --prefix server start\" \"npm --prefix client run dev\""
+  }
+}

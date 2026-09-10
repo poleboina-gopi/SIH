@@ -411,7 +411,7 @@ export const ScanResultsPage: React.FC<ScanResultsPageProps> = ({
       <div className="grid-2" style={{ gap: '24px', alignItems: 'start' }}>
         
         {/* Left: Interactive Packaging Label Visual & Extracted OCR Text */}
-        <div className="glass-panel" style={{ padding: '20px' }}>
+        <div className="glass-panel" style={{ padding: '26px 28px', borderRadius: 'var(--radius-squircle)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
             <div style={{ display: 'flex', gap: '8px' }}>
               <button
@@ -564,7 +564,7 @@ export const ScanResultsPage: React.FC<ScanResultsPageProps> = ({
         </div>
 
         {/* Right: Extracted Declarations Form with Prominent Missing Field Visuals */}
-        <div className="glass-panel" style={{ padding: '24px' }}>
+        <div className="glass-panel" style={{ padding: '28px 30px', borderRadius: 'var(--radius-squircle)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
             <span style={{ fontSize: '0.82rem', fontWeight: 800, letterSpacing: '0.05em', color: 'var(--text-secondary)' }}>
               EXTRACTED STATUTORY DECLARATIONS

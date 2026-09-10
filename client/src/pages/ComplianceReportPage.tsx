@@ -246,8 +246,9 @@ export const ComplianceReportPage: React.FC<ComplianceReportPageProps> = ({
       {/* Official Legal Report Document Container */}
       <div className="glass-panel" style={{
         padding: '40px',
+        borderRadius: 'var(--radius-squircle)',
         border: isNonCompliant ? '2px solid rgba(244, 63, 94, 0.4)' : '2px solid rgba(16, 185, 129, 0.4)',
-        background: 'var(--bg-surface)'
+        background: 'var(--card)'
       }}>
         {/* Government Letterhead Header */}
         <div style={{
