@@ -149,7 +149,11 @@ router.post('/upload-and-validate', authenticateToken, requireInspector, upload.
     const extractedText = panelTexts.join('\n\n') || req.body.raw_text || '';
 
     // 3. Parse text into the 14 FSSAI statutory declarations
-    const parsed = parsePackagingText(extractedText);
+    const parsed = parsePackagingText(extractedText, {
+      product_name: req.body.product_name,
+      brand: req.body.brand,
+      category: req.body.category
+    });
 
     // 4. Evaluate compliance against ONLY the 14 rules
     const allRules = await db.getRules();
@@ -249,7 +253,11 @@ router.post('/process-ocr', authenticateToken, requireInspector, (req, res) => {
     return res.status(400).json({ error: "raw_text string is required" });
   }
 
-  const parsedFields = parsePackagingText(raw_text);
+  const parsedFields = parsePackagingText(raw_text, {
+    product_name,
+    brand,
+    category
+  });
 
   res.json({
     success: true,

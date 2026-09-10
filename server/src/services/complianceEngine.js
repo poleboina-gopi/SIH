@@ -16,15 +16,21 @@ export function evaluateCompliance(parsedFields = {}, activeRules = FOOD_SAFETY_
   // -------------------------------------------------------------------------
   const rule1 = rulesMap.get("RULE_FSSAI_01") || FOOD_SAFETY_RULES[0];
   if (rule1?.isActive !== false) {
-    const rawName = typeof parsedFields?.commodity_name === 'string' 
+    let rawName = typeof parsedFields?.commodity_name === 'string' 
       ? parsedFields.commodity_name.trim() 
-      : (parsedFields?.commodity_name?.name || '');
+      : (parsedFields?.commodity_name?.name || parsedFields?.product_name || '');
+
+    if ((!rawName || rawName.toLowerCase() === 'packaged food product') && parsedFields?.product_name) {
+      rawName = parsedFields.product_name.trim();
+    }
+
     const isMissing = !rawName || rawName.toLowerCase() === 'packaged food product' || rawName.length < 2;
 
     if (isMissing) {
       const v = {
-        rule_code: "FSSAI Reg 5(1)",
+        id: "RULE_FSSAI_01",
         rule_id: "RULE_FSSAI_01",
+        rule_code: "FSSAI Reg 5(1)",
         title: "Name of the Food/Product",
         violation_type: "MISSING_FOOD_NAME",
         severity: "CRITICAL",
@@ -39,6 +45,7 @@ export function evaluateCompliance(parsedFields = {}, activeRules = FOOD_SAFETY_
     } else {
       matrix.push({
         id: "RULE_FSSAI_01",
+        rule_id: "RULE_FSSAI_01",
         rule_code: "FSSAI Reg 5(1)",
         title: "Name of the Food/Product",
         status: "PASS",
@@ -61,8 +68,9 @@ export function evaluateCompliance(parsedFields = {}, activeRules = FOOD_SAFETY_
 
     if (isMissing) {
       const v = {
-        rule_code: "FSSAI Reg 5(2)",
+        id: "RULE_FSSAI_02",
         rule_id: "RULE_FSSAI_02",
+        rule_code: "FSSAI Reg 5(2)",
         title: "List of Ingredients",
         violation_type: "MISSING_INGREDIENTS_LIST",
         severity: "CRITICAL",
@@ -77,6 +85,7 @@ export function evaluateCompliance(parsedFields = {}, activeRules = FOOD_SAFETY_
     } else {
       matrix.push({
         id: "RULE_FSSAI_02",
+        rule_id: "RULE_FSSAI_02",
         rule_code: "FSSAI Reg 5(2)",
         title: "List of Ingredients",
         status: "PASS",
@@ -99,8 +108,9 @@ export function evaluateCompliance(parsedFields = {}, activeRules = FOOD_SAFETY_
 
     if (isMissing) {
       const v = {
-        rule_code: "FSSAI Reg 5(3)",
+        id: "RULE_FSSAI_03",
         rule_id: "RULE_FSSAI_03",
+        rule_code: "FSSAI Reg 5(3)",
         title: "Nutritional Information",
         violation_type: "MISSING_NUTRITIONAL_INFO",
         severity: "CRITICAL",
@@ -122,6 +132,7 @@ export function evaluateCompliance(parsedFields = {}, activeRules = FOOD_SAFETY_
 
       matrix.push({
         id: "RULE_FSSAI_03",
+        rule_id: "RULE_FSSAI_03",
         rule_code: "FSSAI Reg 5(3)",
         title: "Nutritional Information",
         status: "PASS",
@@ -146,8 +157,9 @@ export function evaluateCompliance(parsedFields = {}, activeRules = FOOD_SAFETY_
 
     if (!nq || (!nqRaw && (typeof nq === 'object' && !nq.value))) {
       const v = {
-        rule_code: "FSSAI Reg 5(4)",
+        id: "RULE_FSSAI_04",
         rule_id: "RULE_FSSAI_04",
+        rule_code: "FSSAI Reg 5(4)",
         title: "Net Quantity",
         violation_type: "MISSING_NET_QUANTITY",
         severity: "CRITICAL",
@@ -162,8 +174,9 @@ export function evaluateCompliance(parsedFields = {}, activeRules = FOOD_SAFETY_
     } else {
       if (isStandard === false) {
         const v = {
-          rule_code: "FSSAI Reg 5(4)",
+          id: "RULE_FSSAI_04",
           rule_id: "RULE_FSSAI_04",
+          rule_code: "FSSAI Reg 5(4)",
           title: "Net Quantity",
           violation_type: "ILLEGAL_NET_QUANTITY_UNIT",
           severity: "CRITICAL",
@@ -178,6 +191,7 @@ export function evaluateCompliance(parsedFields = {}, activeRules = FOOD_SAFETY_
       } else {
         matrix.push({
           id: "RULE_FSSAI_04",
+          rule_id: "RULE_FSSAI_04",
           rule_code: "FSSAI Reg 5(4)",
           title: "Net Quantity",
           status: "PASS",
@@ -201,8 +215,9 @@ export function evaluateCompliance(parsedFields = {}, activeRules = FOOD_SAFETY_
 
     if (!isDeclared) {
       const v = {
-        rule_code: "FSSAI Reg 5(5)",
+        id: "RULE_FSSAI_05",
         rule_id: "RULE_FSSAI_05",
+        rule_code: "FSSAI Reg 5(5)",
         title: "Vegetarian / Non-Vegetarian Symbol",
         violation_type: "MISSING_VEG_NONVEG_LOGO",
         severity: "CRITICAL",
@@ -218,6 +233,7 @@ export function evaluateCompliance(parsedFields = {}, activeRules = FOOD_SAFETY_
       const typeLabel = veg.type === 'NON_VEG' ? 'Non-Vegetarian (Brown Triangle)' : 'Vegetarian (Green Circle)';
       matrix.push({
         id: "RULE_FSSAI_05",
+        rule_id: "RULE_FSSAI_05",
         rule_code: "FSSAI Reg 5(5)",
         title: "Vegetarian / Non-Vegetarian Symbol",
         status: "PASS",
@@ -239,8 +255,9 @@ export function evaluateCompliance(parsedFields = {}, activeRules = FOOD_SAFETY_
 
     if (!lic || (!lic.license_number && !lic.raw)) {
       const v = {
-        rule_code: "FSSAI Reg 5(6)",
+        id: "RULE_FSSAI_06",
         rule_id: "RULE_FSSAI_06",
+        rule_code: "FSSAI Reg 5(6)",
         title: "FSSAI Logo and Licence Number",
         violation_type: "MISSING_FSSAI_LICENSE",
         severity: "CRITICAL",
@@ -254,8 +271,9 @@ export function evaluateCompliance(parsedFields = {}, activeRules = FOOD_SAFETY_
       matrix.push({ ...v, status: "FAIL", extracted_value: "Not detected on package" });
     } else if (lic.license_number && !lic.is_valid_14_digit) {
       const v = {
-        rule_code: "FSSAI Reg 5(6)",
+        id: "RULE_FSSAI_06",
         rule_id: "RULE_FSSAI_06",
+        rule_code: "FSSAI Reg 5(6)",
         title: "FSSAI Logo and Licence Number",
         violation_type: "INVALID_FSSAI_LICENSE_NUMBER",
         severity: "CRITICAL",
@@ -270,6 +288,7 @@ export function evaluateCompliance(parsedFields = {}, activeRules = FOOD_SAFETY_
     } else {
       matrix.push({
         id: "RULE_FSSAI_06",
+        rule_id: "RULE_FSSAI_06",
         rule_code: "FSSAI Reg 5(6)",
         title: "FSSAI Logo and Licence Number",
         status: "PASS",
@@ -292,8 +311,9 @@ export function evaluateCompliance(parsedFields = {}, activeRules = FOOD_SAFETY_
 
     if (!md || !dateStr) {
       const v = {
-        rule_code: "FSSAI Reg 5(7)",
+        id: "RULE_FSSAI_07",
         rule_id: "RULE_FSSAI_07",
+        rule_code: "FSSAI Reg 5(7)",
         title: "Date of Manufacture/Packing",
         violation_type: "MISSING_MFG_DATE",
         severity: "CRITICAL",
@@ -307,8 +327,9 @@ export function evaluateCompliance(parsedFields = {}, activeRules = FOOD_SAFETY_
       matrix.push({ ...v, status: "FAIL", extracted_value: "Not detected on package" });
     } else if (typeof md === 'object' && md.is_compliant === false) {
       const v = {
-        rule_code: "FSSAI Reg 5(7)",
+        id: "RULE_FSSAI_07",
         rule_id: "RULE_FSSAI_07",
+        rule_code: "FSSAI Reg 5(7)",
         title: "Date of Manufacture/Packing",
         violation_type: "INVALID_MFG_DATE_FORMAT",
         severity: "MAJOR",
@@ -323,6 +344,7 @@ export function evaluateCompliance(parsedFields = {}, activeRules = FOOD_SAFETY_
     } else {
       matrix.push({
         id: "RULE_FSSAI_07",
+        rule_id: "RULE_FSSAI_07",
         rule_code: "FSSAI Reg 5(7)",
         title: "Date of Manufacture/Packing",
         status: "PASS",
@@ -345,8 +367,9 @@ export function evaluateCompliance(parsedFields = {}, activeRules = FOOD_SAFETY_
 
     if (!exp || !expVal) {
       const v = {
-        rule_code: "FSSAI Reg 5(8)",
+        id: "RULE_FSSAI_08",
         rule_id: "RULE_FSSAI_08",
+        rule_code: "FSSAI Reg 5(8)",
         title: "Expiry / Use-by or Best-Before Date",
         violation_type: "MISSING_EXPIRY_DATE",
         severity: "CRITICAL",
@@ -361,6 +384,7 @@ export function evaluateCompliance(parsedFields = {}, activeRules = FOOD_SAFETY_
     } else {
       matrix.push({
         id: "RULE_FSSAI_08",
+        rule_id: "RULE_FSSAI_08",
         rule_code: "FSSAI Reg 5(8)",
         title: "Expiry / Use-by or Best-Before Date",
         status: "PASS",
@@ -383,8 +407,9 @@ export function evaluateCompliance(parsedFields = {}, activeRules = FOOD_SAFETY_
 
     if (!batch || !batchVal) {
       const v = {
-        rule_code: "FSSAI Reg 5(9)",
+        id: "RULE_FSSAI_09",
         rule_id: "RULE_FSSAI_09",
+        rule_code: "FSSAI Reg 5(9)",
         title: "Batch/Lot/Code Number",
         violation_type: "MISSING_BATCH_NUMBER",
         severity: "MAJOR",
@@ -399,6 +424,7 @@ export function evaluateCompliance(parsedFields = {}, activeRules = FOOD_SAFETY_
     } else {
       matrix.push({
         id: "RULE_FSSAI_09",
+        rule_id: "RULE_FSSAI_09",
         rule_code: "FSSAI Reg 5(9)",
         title: "Batch/Lot/Code Number",
         status: "PASS",
@@ -425,13 +451,14 @@ export function evaluateCompliance(parsedFields = {}, activeRules = FOOD_SAFETY_
       ? (mfg.address || mfgRaw || '') 
       : (typeof mfg === 'string' ? mfg : '');
     const hasPincode = typeof mfg === 'object' && mfg !== null
-      ? Boolean(mfg.has_pincode || /\b\d{6}\b/.test(mfgAddress))
-      : /\b\d{6}\b/.test(mfgAddress);
+      ? Boolean(mfg.has_pincode || /\b\d{3}\s?\d{3}\b/.test(mfgAddress))
+      : /\b\d{3}\s?\d{3}\b/.test(mfgAddress);
 
-    if (!mfg || !mfgName) {
+    if (!mfg || !mfgName || mfgName.length < 3) {
       const v = {
-        rule_code: "FSSAI Reg 5(10)",
+        id: "RULE_FSSAI_10",
         rule_id: "RULE_FSSAI_10",
+        rule_code: "FSSAI Reg 5(10)",
         title: "Manufacturer/Packer/Importer Details",
         violation_type: "MISSING_MANUFACTURER_DETAILS",
         severity: "CRITICAL",
@@ -445,8 +472,9 @@ export function evaluateCompliance(parsedFields = {}, activeRules = FOOD_SAFETY_
       matrix.push({ ...v, status: "FAIL", extracted_value: "Not detected on package" });
     } else if (!hasPincode && mfgAddress.length < 25) {
       const v = {
-        rule_code: "FSSAI Reg 5(10)",
+        id: "RULE_FSSAI_10",
         rule_id: "RULE_FSSAI_10",
+        rule_code: "FSSAI Reg 5(10)",
         title: "Manufacturer/Packer/Importer Details",
         violation_type: "INCOMPLETE_MANUFACTURER_ADDRESS",
         severity: "MAJOR",
@@ -461,6 +489,7 @@ export function evaluateCompliance(parsedFields = {}, activeRules = FOOD_SAFETY_
     } else {
       matrix.push({
         id: "RULE_FSSAI_10",
+        rule_id: "RULE_FSSAI_10",
         rule_code: "FSSAI Reg 5(10)",
         title: "Manufacturer/Packer/Importer Details",
         status: "PASS",
@@ -481,11 +510,13 @@ export function evaluateCompliance(parsedFields = {}, activeRules = FOOD_SAFETY_
     const cc = parsedFields?.consumer_care;
     let ccPhone = typeof cc === 'object' && cc !== null ? (cc.phone || '') : '';
     let ccEmail = typeof cc === 'object' && cc !== null ? (cc.email || '') : '';
+    let ccAddress = typeof cc === 'object' && cc !== null ? (cc.address || '') : '';
 
-    if (!cc || (!ccPhone && !ccEmail && typeof cc === 'object')) {
+    if (!cc || (!ccPhone && !ccEmail && !ccAddress && typeof cc === 'object')) {
       const v = {
-        rule_code: "FSSAI Reg 5(11)",
+        id: "RULE_FSSAI_11",
         rule_id: "RULE_FSSAI_11",
+        rule_code: "FSSAI Reg 5(11)",
         title: "Customer Care/Contact Information",
         violation_type: "MISSING_CUSTOMER_CARE",
         severity: "MAJOR",
@@ -498,9 +529,10 @@ export function evaluateCompliance(parsedFields = {}, activeRules = FOOD_SAFETY_
       violations.push(v);
       matrix.push({ ...v, status: "FAIL", extracted_value: "Not detected on package" });
     } else {
-      const parts = [ccPhone && `Tel: ${ccPhone}`, ccEmail && `Email: ${ccEmail}`].filter(Boolean).join(', ');
+      const parts = [ccPhone && `Tel: ${ccPhone}`, ccEmail && `Email: ${ccEmail}`, ccAddress && `Address: ${ccAddress}`].filter(Boolean).join(', ');
       matrix.push({
         id: "RULE_FSSAI_11",
+        rule_id: "RULE_FSSAI_11",
         rule_code: "FSSAI Reg 5(11)",
         title: "Customer Care/Contact Information",
         status: "PASS",
@@ -522,13 +554,15 @@ export function evaluateCompliance(parsedFields = {}, activeRules = FOOD_SAFETY_
     const isDeclared = allergen && (allergen.is_declared || allergen.raw);
 
     // If ingredients mention allergens (like milk, wheat, soy, nuts) but no explicit allergen advisory statement exists
-    const rawAll = JSON.stringify(parsedFields).toLowerCase();
-    const containsCommonAllergen = /milk|wheat|gluten|nuts|peanuts|soy|egg|fish|crustacean/.test(rawAll);
+    const ingRaw = (parsedFields?.ingredients?.raw || (parsedFields?.ingredients?.items ? parsedFields.ingredients.items.join(' ') : '')).toLowerCase();
+    const containsCommonAllergen = /milk|wheat|gluten|nuts|peanuts|soy|soya|egg|fish|crustacean|mustard|sesame/.test(ingRaw);
+    const hasInlineAllergenMention = /contains\s*(?:milk|wheat|gluten|soy|nuts|egg|fish|mustard)/i.test(ingRaw) || /allergy|allergen/i.test(JSON.stringify(parsedFields?.allergen_declaration || ''));
 
-    if (containsCommonAllergen && !isDeclared) {
+    if (containsCommonAllergen && !isDeclared && !hasInlineAllergenMention) {
       const v = {
-        rule_code: "FSSAI Reg 5(12)",
+        id: "RULE_FSSAI_12",
         rule_id: "RULE_FSSAI_12",
+        rule_code: "FSSAI Reg 5(12)",
         title: "Allergen Declarations, Where Applicable",
         violation_type: "MISSING_ALLERGEN_DECLARATION",
         severity: "MAJOR",
@@ -543,12 +577,13 @@ export function evaluateCompliance(parsedFields = {}, activeRules = FOOD_SAFETY_
     } else {
       matrix.push({
         id: "RULE_FSSAI_12",
+        rule_id: "RULE_FSSAI_12",
         rule_code: "FSSAI Reg 5(12)",
         title: "Allergen Declarations, Where Applicable",
         status: "PASS",
         severity: "MAJOR",
         statutory_provision: "Regulation 5(12) of FSS Regulations, 2020",
-        extracted_value: isDeclared ? (allergen.raw || allergen.statement || "Allergen Advisory Declared") : "No priority allergens detected",
+        extracted_value: isDeclared ? (allergen.raw || allergen.statement || "Allergen Advisory Declared") : (hasInlineAllergenMention ? "Allergen declared in ingredients" : "No priority allergens detected"),
         defect: null,
         suggested_remedy: "Verified compliant"
       });
@@ -565,8 +600,9 @@ export function evaluateCompliance(parsedFields = {}, activeRules = FOOD_SAFETY_
 
     if (!isDeclared) {
       const v = {
-        rule_code: "FSSAI Reg 5(13)",
+        id: "RULE_FSSAI_13",
         rule_id: "RULE_FSSAI_13",
+        rule_code: "FSSAI Reg 5(13)",
         title: "Storage/Use Instructions, Where Required",
         violation_type: "MISSING_STORAGE_INSTRUCTIONS",
         severity: "MAJOR",
@@ -581,6 +617,7 @@ export function evaluateCompliance(parsedFields = {}, activeRules = FOOD_SAFETY_
     } else {
       matrix.push({
         id: "RULE_FSSAI_13",
+        rule_id: "RULE_FSSAI_13",
         rule_code: "FSSAI Reg 5(13)",
         title: "Storage/Use Instructions, Where Required",
         status: "PASS",
@@ -600,12 +637,19 @@ export function evaluateCompliance(parsedFields = {}, activeRules = FOOD_SAFETY_
   if (rule14?.isActive !== false) {
     const origin = parsedFields?.country_of_origin;
     const originCountry = typeof origin === 'string' ? origin : (origin?.country || origin?.raw || '');
-    const isImported = origin?.is_imported || /imported|switzerland|germany|usa|china|japan|uk|italy|france|foreign/i.test(JSON.stringify(parsedFields));
+    
+    // Explicitly check if imported:
+    const isExplicitlyImported = Boolean(
+      origin?.is_imported === true || 
+      (parsedFields?.manufacturer?.address && /imported\s*(?:&|and)?\s*(?:distributed|packed)?\s*by/i.test(parsedFields.manufacturer.address)) ||
+      (parsedFields?.commodity_name && /imported/i.test(parsedFields.commodity_name))
+    );
 
-    if (isImported && (!originCountry || originCountry.toLowerCase() === 'unspecified')) {
+    if (isExplicitlyImported && (!originCountry || originCountry.toLowerCase() === 'unspecified' || /imported/i.test(originCountry))) {
       const v = {
-        rule_code: "FSSAI Reg 5(14)",
+        id: "RULE_FSSAI_14",
         rule_id: "RULE_FSSAI_14",
+        rule_code: "FSSAI Reg 5(14)",
         title: "Country of Origin, for Imported Food",
         violation_type: "MISSING_COUNTRY_OF_ORIGIN",
         severity: "CRITICAL",
@@ -620,6 +664,7 @@ export function evaluateCompliance(parsedFields = {}, activeRules = FOOD_SAFETY_
     } else {
       matrix.push({
         id: "RULE_FSSAI_14",
+        rule_id: "RULE_FSSAI_14",
         rule_code: "FSSAI Reg 5(14)",
         title: "Country of Origin, for Imported Food",
         status: "PASS",
@@ -641,10 +686,10 @@ export function evaluateCompliance(parsedFields = {}, activeRules = FOOD_SAFETY_
 
   let score = Math.round((passedRules / totalRules) * 100);
   
-  // Severe deduction for critical failures
+  // Deduction for critical failures
   const criticalFails = violations.filter(v => v.severity === 'CRITICAL').length;
   if (criticalFails > 0) {
-    score = Math.min(score, Math.max(0, 100 - (criticalFails * 20 + failedRules * 5)));
+    score = Math.min(score, Math.max(0, 100 - (criticalFails * 15 + failedRules * 5)));
   }
 
   let complianceStatus = "COMPLIANT";

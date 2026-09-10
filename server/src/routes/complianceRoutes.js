@@ -28,7 +28,14 @@ router.post('/validate', authenticateToken, requireInspector, async (req, res) =
       return res.status(400).json({ error: "raw_text or parsed_fields is required" });
     }
 
-    const parsed = clientParsedFields || parsePackagingText(raw_text);
+    const parsed = clientParsedFields || parsePackagingText(raw_text, {
+      product_name,
+      brand,
+      category
+    });
+    if (product_name && !parsed.commodity_name) {
+      parsed.commodity_name = product_name;
+    }
     const allRules = await db.getRules();
     const activeRules = allRules.filter(r => r.isActive !== false);
 
