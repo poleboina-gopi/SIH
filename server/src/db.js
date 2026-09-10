@@ -213,6 +213,12 @@ class Database {
       if (fs.existsSync(DB_FILE)) {
         const raw = fs.readFileSync(DB_FILE, 'utf-8');
         this.data = JSON.parse(raw);
+        // Ensure database rules strictly match the 14 FSSAI Food Safety Rules
+        if (!this.data.rules || !this.data.rules.some(r => r.id === 'RULE_FSSAI_01') || this.data.rules.length !== 14) {
+          console.log("🔄 Updating database rules to the 14 mandatory FSSAI food packaging rules...");
+          this.data.rules = JSON.parse(JSON.stringify(STATUTORY_RULES));
+          this.saveLocal();
+        }
       } else {
         this.data = JSON.parse(JSON.stringify(DEFAULT_DB));
         this.saveLocal();

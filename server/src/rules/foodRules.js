@@ -1,0 +1,212 @@
+/**
+ * Food Safety and Standards (Labelling and Display) Regulations, 2020 (FSSAI)
+ * Mandatory Pre-packaged Food Product Packaging & Labelling Rules Specification.
+ * Enacted under Food Safety and Standards Act, 2006 (Act No. 34 of 2006), India.
+ */
+
+export const FOOD_SAFETY_RULES = [
+  {
+    id: "RULE_FSSAI_01",
+    ruleCode: "FSSAI Reg 5(1)",
+    title: "Name of the Food/Product",
+    category: "Product Identification",
+    description: "Every package of food shall carry the name of the food indicating the true nature of the food. Trade name or description shall not mislead consumers.",
+    severity: "CRITICAL",
+    penaltySection: "Section 52 & 53 of Food Safety and Standards Act, 2006 (Misbranded Food)",
+    fineRange: "Penalty up to ₹3,00,000 for misbranded food",
+    field: "commodity_name",
+    isActive: true
+  },
+  {
+    id: "RULE_FSSAI_02",
+    ruleCode: "FSSAI Reg 5(2)",
+    title: "List of Ingredients",
+    category: "Composition & Ingredients",
+    description: "Every package of food shall declare the list of ingredients preceded by the title 'Ingredients:' in descending order of incoming weight or volume at the time of manufacture.",
+    severity: "CRITICAL",
+    penaltySection: "Section 52 of Food Safety and Standards Act, 2006",
+    fineRange: "Penalty up to ₹3,00,000",
+    field: "ingredients",
+    isActive: true
+  },
+  {
+    id: "RULE_FSSAI_03",
+    ruleCode: "FSSAI Reg 5(3)",
+    title: "Nutritional Information",
+    category: "Nutritional Declarations",
+    description: "Every food package shall declare nutritional information per 100g or 100ml or per single consumption pack: Energy (kcal), Protein (g), Carbohydrate (g), Total Sugars (g), Added Sugars (g), Total Fat (g), Saturated Fat (g), Trans Fat (g), and Sodium (mg).",
+    severity: "CRITICAL",
+    penaltySection: "Section 52 of Food Safety and Standards Act, 2006",
+    fineRange: "Penalty up to ₹3,00,000",
+    field: "nutritional_info",
+    isActive: true
+  },
+  {
+    id: "RULE_FSSAI_04",
+    ruleCode: "FSSAI Reg 5(4)",
+    title: "Net Quantity",
+    category: "Net Quantity",
+    description: "Net quantity shall be declared on the package in standard metric units of weight, measure or number (g, kg, ml, l). Non-standard units (e.g., 'gms', 'gm', 'kilos', 'mls') are strictly prohibited.",
+    severity: "CRITICAL",
+    penaltySection: "Section 52 of FSS Act, 2006 read with Legal Metrology Act, 2009",
+    fineRange: "Penalty up to ₹25,000 to ₹50,000",
+    field: "net_quantity",
+    isActive: true
+  },
+  {
+    id: "RULE_FSSAI_05",
+    ruleCode: "FSSAI Reg 5(5)",
+    title: "Vegetarian / Non-Vegetarian Symbol",
+    category: "Veg / Non-Veg Logo",
+    description: "Every package of food shall bear the appropriate logo or text declaration: a green filled circle inside a green square outline for Vegetarian food, or a brown filled triangle inside a brown square outline for Non-Vegetarian food.",
+    severity: "CRITICAL",
+    penaltySection: "Section 52 & 58 of Food Safety and Standards Act, 2006",
+    fineRange: "Penalty up to ₹2,00,000",
+    field: "veg_non_veg",
+    isActive: true
+  },
+  {
+    id: "RULE_FSSAI_06",
+    ruleCode: "FSSAI Reg 5(6)",
+    title: "FSSAI Logo and Licence Number",
+    category: "Regulatory Licence",
+    description: "Every pre-packaged food label shall display the FSSAI logo and valid 14-digit licence number with the prefix 'Lic. No.' prominently on the principal display panel.",
+    severity: "CRITICAL",
+    penaltySection: "Section 63 of Food Safety and Standards Act, 2006",
+    fineRange: "Imprisonment up to 6 months and fine up to ₹5,00,000 for manufacturing without valid licence",
+    field: "fssai_license",
+    isActive: true
+  },
+  {
+    id: "RULE_FSSAI_07",
+    ruleCode: "FSSAI Reg 5(7)",
+    title: "Date of Manufacture/Packing",
+    category: "Date Information",
+    description: "Every package of food shall declare the date, month, and year in which the food is manufactured or packed (Format: DD/MM/YYYY, MM/YYYY, or Month YYYY).",
+    severity: "CRITICAL",
+    penaltySection: "Section 52 of Food Safety and Standards Act, 2006",
+    fineRange: "Penalty up to ₹3,00,000",
+    field: "mfg_date",
+    isActive: true
+  },
+  {
+    id: "RULE_FSSAI_08",
+    ruleCode: "FSSAI Reg 5(8)",
+    title: "Expiry / Use-by or Best-Before Date",
+    category: "Shelf Life & Expiry",
+    description: "Every package shall declare the 'Best Before' date or 'Expiry Date' / 'Use by' date clearly (e.g., 'Best Before [Month/Year]' or 'Best before XX months from date of manufacture/packaging'). Selling expired food is illegal.",
+    severity: "CRITICAL",
+    penaltySection: "Section 59 of Food Safety and Standards Act, 2006 (Unsafe Food)",
+    fineRange: "Penalty up to ₹5,00,000 and imprisonment up to 6 years if unsafe",
+    field: "expiry_date",
+    isActive: true
+  },
+  {
+    id: "RULE_FSSAI_09",
+    ruleCode: "FSSAI Reg 5(9)",
+    title: "Batch/Lot/Code Number",
+    category: "Traceability",
+    description: "Every package of food shall bear a batch number, lot number, or code number by which the food can be identified in trade and traced back in production.",
+    severity: "MAJOR",
+    penaltySection: "Section 52 of Food Safety and Standards Act, 2006",
+    fineRange: "Penalty up to ₹2,00,000",
+    field: "batch_number",
+    isActive: true
+  },
+  {
+    id: "RULE_FSSAI_10",
+    ruleCode: "FSSAI Reg 5(10)",
+    title: "Manufacturer/Packer/Importer Details",
+    category: "Manufacturer Information",
+    description: "Every package shall carry the complete name and physical premises address of the manufacturer. Where the manufacturer is not the packer or brand owner, name and address of manufacturer, packer, marketer or importer shall be declared.",
+    severity: "CRITICAL",
+    penaltySection: "Section 52 of Food Safety and Standards Act, 2006",
+    fineRange: "Penalty up to ₹3,00,000",
+    field: "manufacturer",
+    isActive: true
+  },
+  {
+    id: "RULE_FSSAI_11",
+    ruleCode: "FSSAI Reg 5(11)",
+    title: "Customer Care/Contact Information",
+    category: "Consumer Redressal",
+    description: "The label shall declare the consumer care details including contact telephone number/toll-free helpline and valid email address for customer complaints and feedback.",
+    severity: "MAJOR",
+    penaltySection: "Section 52 of Food Safety and Standards Act, 2006",
+    fineRange: "Penalty up to ₹1,00,000",
+    field: "consumer_care",
+    isActive: true
+  },
+  {
+    id: "RULE_FSSAI_12",
+    ruleCode: "FSSAI Reg 5(12)",
+    title: "Allergen Declarations, Where Applicable",
+    category: "Allergen Safety",
+    description: "Foods containing allergens (cereals containing gluten, crustaceans, milk, nuts, peanuts, soybeans, egg, fish, sulphites) shall clearly declare 'Contains: [Allergen]' or 'Allergen Information'. Where no allergens exist, clear advisory is declared.",
+    severity: "MAJOR",
+    penaltySection: "Section 52 & 59 of Food Safety and Standards Act, 2006",
+    fineRange: "Penalty up to ₹3,00,000",
+    field: "allergen_declaration",
+    isActive: true
+  },
+  {
+    id: "RULE_FSSAI_13",
+    ruleCode: "FSSAI Reg 5(13)",
+    title: "Storage/Use Instructions, Where Required",
+    category: "Storage & Handling",
+    description: "Relevant storage conditions shall be declared on the label (e.g., 'Store in a cool and dry place', 'Refrigerate after opening') and instructions for use/preparation where necessary for safety.",
+    severity: "MAJOR",
+    penaltySection: "Section 52 of Food Safety and Standards Act, 2006",
+    fineRange: "Penalty up to ₹1,00,000",
+    field: "storage_instructions",
+    isActive: true
+  },
+  {
+    id: "RULE_FSSAI_14",
+    ruleCode: "FSSAI Reg 5(14)",
+    title: "Country of Origin, for Imported Food",
+    category: "Origin Details",
+    description: "The country of origin of the food shall be declared on the label of food imported into India ('Country of Origin: [Country]' or 'Product of / Made in [Country]').",
+    severity: "MAJOR",
+    penaltySection: "Section 52 of Food Safety and Standards Act, 2006 read with Customs Regulations",
+    fineRange: "Penalty up to ₹3,00,000 and confiscation of imported consignments",
+    field: "country_of_origin",
+    isActive: true
+  }
+];
+
+export const VALID_STANDARDIZED_UNITS = [
+  "g", "kg", "mg",
+  "ml", "l", "cl",
+  "u", "N", "pieces", "units"
+];
+
+export const ILLEGAL_UNIT_SYMBOLS = [
+  { pattern: /\b(?:gms|gm|g\.)\b/i, replacement: "g", reason: "Standard symbol for gram is 'g' (no 's', no period)" },
+  { pattern: /\b(?:kgs|kilos|kg\.)\b/i, replacement: "kg", reason: "Standard symbol for kilogram is 'kg'" },
+  { pattern: /\b(?:ml\.|mls)\b/i, replacement: "ml", reason: "Standard symbol for millilitre is 'ml'" },
+  { pattern: /\b(?:ltrs|ltr|litres|liters)\b/i, replacement: "l", reason: "Standard symbol for litre is 'l'" }
+];
+
+export const STATUTORY_PENALTIES = {
+  misbranded: {
+    fine: "Up to ₹3,00,000",
+    noticePeriodDays: 14,
+    provision: "Section 52, Food Safety and Standards Act, 2006"
+  },
+  misleading: {
+    fine: "Up to ₹10,00,000",
+    noticePeriodDays: 14,
+    provision: "Section 53, Food Safety and Standards Act, 2006"
+  },
+  unlicensed: {
+    fine: "Up to ₹5,00,000 and imprisonment up to 6 months",
+    noticePeriodDays: 7,
+    provision: "Section 63, Food Safety and Standards Act, 2006"
+  },
+  unsafe: {
+    fine: "Up to ₹5,00,000 and imprisonment up to 6 years",
+    noticePeriodDays: 3,
+    provision: "Section 59, Food Safety and Standards Act, 2006"
+  }
+};

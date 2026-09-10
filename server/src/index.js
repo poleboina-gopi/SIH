@@ -36,9 +36,10 @@ app.use('/uploads', express.static(UPLOADS_DIR));
 app.get('/api/health', (req, res) => {
   res.json({
     status: "HEALTHY",
-    system: "Legal Metrology Compliance System API",
-    regulatoryFramework: "Legal Metrology (Packaged Commodities) Rules, 2011",
+    system: "FSSAI Food Product Packaging Compliance Engine",
+    regulatoryFramework: "Food Safety and Standards (Labelling and Display) Regulations, 2020 (14 Mandatory Declarations)",
     database: db.isMongo ? "MongoDB Atlas" : "Local File Store (JSON)",
+    activeRulesCount: 14,
     timestamp: new Date().toISOString()
   });
 });
@@ -62,7 +63,7 @@ app.use((err, req, res, next) => {
 async function startServer() {
   await db.connect();
   app.listen(PORT, () => {
-    console.log(`⚖️ Legal Metrology Compliance Server listening on port ${PORT}`);
+    console.log(`🥗 FSSAI Food Product Packaging Compliance Server listening on port ${PORT}`);
   });
 }
 

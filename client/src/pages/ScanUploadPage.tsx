@@ -291,11 +291,11 @@ export const ScanUploadPage: React.FC<ScanUploadPageProps> = ({
         await new Promise(r => setTimeout(r, 350));
         setOcrProgress(70);
         setActiveStage(3);
-        setStatusMessage("Extracting statutory declarations under Rules 6 & 7...");
+        setStatusMessage("Extracting 14 mandatory FSSAI food packaging declarations...");
         await new Promise(r => setTimeout(r, 300));
         setOcrProgress(95);
         setActiveStage(4);
-        setStatusMessage("Evaluating compliance clauses...");
+        setStatusMessage("Evaluating FSSAI Section 32 compliance matrix...");
 
         const parsedRes = await api.processOcr({
           raw_text: selectedSample.rawText,
@@ -361,7 +361,7 @@ export const ScanUploadPage: React.FC<ScanUploadPageProps> = ({
           // Generate bounding box candidates from real recognized lines/words
           if (ret.data && (ret.data as any).lines) {
             const lines = (ret.data as any).lines;
-            lines.slice(0, 10).forEach((line: any, idx: number) => {
+            lines.slice(0, 12).forEach((line: any, idx: number) => {
               const bbox = line.bbox;
               if (bbox && line.text && line.text.trim().length > 3) {
                 const textLower = line.text.toLowerCase();
@@ -369,10 +369,34 @@ export const ScanUploadPage: React.FC<ScanUploadPageProps> = ({
                 let label = `${side.toUpperCase()} Declaration`;
                 let status: 'valid' | 'invalid' | 'warning' = 'valid';
 
-                if (/mrp|price|₹|rs/i.test(textLower)) {
-                  field = 'mrp';
-                  label = 'MRP Declaration';
-                  status = /taxes/i.test(textLower) ? 'valid' : 'invalid';
+                if (/fssai|lic|licence/i.test(textLower)) {
+                  field = 'fssai_license';
+                  label = 'FSSAI Licence No.';
+                  status = /\b\d{14}\b/.test(textLower) ? 'valid' : 'invalid';
+                } else if (/ingredient/i.test(textLower)) {
+                  field = 'ingredients';
+                  label = 'Ingredients List';
+                } else if (/nutrition|energy|protein|fat/i.test(textLower)) {
+                  field = 'nutritional_info';
+                  label = 'Nutritional Info';
+                } else if (/veg|vegetarian/i.test(textLower)) {
+                  field = 'veg_non_veg';
+                  label = 'Veg / Non-Veg Mark';
+                } else if (/expiry|best before|use by/i.test(textLower)) {
+                  field = 'expiry_date';
+                  label = 'Expiry / Best-Before';
+                } else if (/batch|lot/i.test(textLower)) {
+                  field = 'batch_number';
+                  label = 'Batch / Lot Code';
+                } else if (/allergen/i.test(textLower)) {
+                  field = 'allergen_declaration';
+                  label = 'Allergen Warning';
+                } else if (/store|cool|dry/i.test(textLower)) {
+                  field = 'storage_instructions';
+                  label = 'Storage Instructions';
+                } else if (/origin|product of|imported/i.test(textLower)) {
+                  field = 'country_of_origin';
+                  label = 'Country of Origin';
                 } else if (/net|qty|g|kg|ml/i.test(textLower)) {
                   field = 'net_quantity';
                   label = 'Net Quantity';
@@ -385,7 +409,7 @@ export const ScanUploadPage: React.FC<ScanUploadPageProps> = ({
                   label = 'Manufacturer';
                 } else if (/care|call|email|helpline/i.test(textLower)) {
                   field = 'consumer_care';
-                  label = 'Consumer Care';
+                  label = 'Customer Care';
                 }
 
                 // Normalize coordinates to 600x420 coordinate space for overlay
@@ -416,7 +440,7 @@ export const ScanUploadPage: React.FC<ScanUploadPageProps> = ({
 
         setActiveStage(4);
         setOcrProgress(92);
-        setStatusMessage(`Parsing statutory declarations from ${targetSides.length} panel(s) through Legal Metrology NLP...`);
+        setStatusMessage(`Parsing statutory declarations from ${targetSides.length} panel(s) through FSSAI Food Packaging NLP...`);
 
         const primaryImageUrl = sideImages.front.previewUrl || sideImages.back.previewUrl || sideImages.side.previewUrl || previewUrl || '';
 
@@ -516,7 +540,7 @@ export const ScanUploadPage: React.FC<ScanUploadPageProps> = ({
             Tesseract Neural OCR
           </span>
           <span style={{ fontSize: '0.74rem', color: 'var(--muted-fg)' }}>
-            Statutory Packaging Audit • Rules, 2011
+            14 Mandatory Declarations • FSS (Labelling &amp; Display) Regulations, 2020
           </span>
         </div>
         <h1 style={{ fontSize: '1.85rem', fontWeight: 800, margin: 0, letterSpacing: '-0.025em', color: 'var(--fg)' }}>
@@ -1053,20 +1077,20 @@ export const ScanUploadPage: React.FC<ScanUploadPageProps> = ({
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', color: sideImages.front.previewUrl ? '#93c5fd' : 'var(--text-muted)' }}>
                   <span>Front Panel (Principal Display):</span>
-                  <span style={{ fontWeight: 600 }}>{sideImages.front.previewUrl ? '✓ Ready (Net Qty, Brand)' : '— Not uploaded'}</span>
+                  <span style={{ fontWeight: 600 }}>{sideImages.front.previewUrl ? '✓ Ready (Product Name, Net Qty, Veg/Non-Veg)' : '— Not uploaded'}</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', color: sideImages.back.previewUrl ? '#86efac' : 'var(--text-muted)' }}>
                   <span>Back Panel (Statutory Info):</span>
-                  <span style={{ fontWeight: 600 }}>{sideImages.back.previewUrl ? '✓ Ready (MRP, Mfg Date)' : '— Not uploaded'}</span>
+                  <span style={{ fontWeight: 600 }}>{sideImages.back.previewUrl ? '✓ Ready (Ingredients, Nutrition, FSSAI Lic, Expiry, Batch)' : '— Not uploaded'}</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', color: sideImages.side.previewUrl ? '#c4b5fd' : 'var(--text-muted)' }}>
                   <span>Side Panel (Helpline & Origin):</span>
-                  <span style={{ fontWeight: 600 }}>{sideImages.side.previewUrl ? '✓ Ready (Helpline, Origin)' : '— Not uploaded'}</span>
+                  <span style={{ fontWeight: 600 }}>{sideImages.side.previewUrl ? '✓ Ready (Mfr Details, Customer Care, Allergens, Storage, Origin)' : '— Not uploaded'}</span>
                 </div>
               </div>
             </div>
 
-            {/* Statutory Legal Rules Accordion (Click for Details) */}
+            {/* Statutory FSSAI Rules Accordion (Click for Details) */}
             <div style={{
               background: 'rgba(15, 23, 42, 0.65)',
               border: '1px solid var(--border-subtle)',
@@ -1091,11 +1115,11 @@ export const ScanUploadPage: React.FC<ScanUploadPageProps> = ({
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 700 }}>
                   <Info size={14} color="#60a5fa" />
-                  <span>Statutory Rule Engine (Rules, 2011)</span>
+                  <span>Mandatory FSSAI Rules Engine</span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <span className="badge badge-compliant" style={{ fontSize: '0.65rem' }}>
-                    6 Clauses
+                    14 Rules
                   </span>
                   <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
                     {showRulesDetail ? '▲' : '▼'}
@@ -1114,12 +1138,20 @@ export const ScanUploadPage: React.FC<ScanUploadPageProps> = ({
                   color: 'var(--text-secondary)',
                   fontSize: '0.74rem'
                 }}>
-                  <div>• Rule 6(1)(a): Mfr Address</div>
-                  <div>• Rule 6(1)(b): Commodity Name</div>
-                  <div>• Rule 6(1)(c): Net Quantity</div>
-                  <div>• Rule 6(1)(d): Month &amp; Year of Mfg</div>
-                  <div>• Rule 6(1)(e): MRP with Taxes</div>
-                  <div>• Rule 6(1)(n): Consumer Helpline</div>
+                  <div>• 1. Name of Food/Product (Reg 5(1))</div>
+                  <div>• 2. List of Ingredients (Reg 5(2))</div>
+                  <div>• 3. Nutritional Information (Reg 5(3))</div>
+                  <div>• 4. Net Quantity (Reg 5(4))</div>
+                  <div>• 5. Veg / Non-Veg Symbol (Reg 5(5))</div>
+                  <div>• 6. FSSAI Logo &amp; 14-Digit Lic (Reg 5(6))</div>
+                  <div>• 7. Date of Mfg / Pkg (Reg 5(7))</div>
+                  <div>• 8. Expiry / Best-Before Date (Reg 5(8))</div>
+                  <div>• 9. Batch / Lot / Code No. (Reg 5(9))</div>
+                  <div>• 10. Manufacturer / Packer Details (Reg 5(10))</div>
+                  <div>• 11. Customer Care / Helpline (Reg 5(11))</div>
+                  <div>• 12. Allergen Declarations (Reg 5(12))</div>
+                  <div>• 13. Storage / Use Instructions (Reg 5(13))</div>
+                  <div>• 14. Country of Origin (Reg 5(14))</div>
                 </div>
               )}
             </div>

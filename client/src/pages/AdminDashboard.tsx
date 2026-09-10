@@ -556,7 +556,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ user, onViewRepo
               Statutory Rules Engine Configuration
             </h2>
             <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
-              Enable, disable, or adjust severity levels for automated Legal Metrology (Packaged Commodities) Rules, 2011 checks.
+              Enable, disable, or adjust severity levels for mandatory FSSAI (Labelling and Display) Regulations, 2020 &amp; FSS Act, 2006 checks.
             </p>
           </div>
 

@@ -3,8 +3,10 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
+import { createWorker } from 'tesseract.js';
 import { db } from '../db.js';
 import { parsePackagingText } from '../services/parserService.js';
+import { evaluateCompliance } from '../services/complianceEngine.js';
 import { authenticateToken, requireInspector } from '../middleware/auth.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -37,7 +39,23 @@ const upload = multer({
 
 const router = express.Router();
 
-// POST /api/upload-image (Secured: Sworn Inspectors Only)
+/**
+ * Helper to run server-side OCR on an image file using tesseract.js
+ */
+async function performServerOcr(imageFilePath) {
+  let worker = null;
+  try {
+    worker = await createWorker('eng');
+    const ret = await worker.recognize(imageFilePath);
+    return (ret.data.text || '').trim();
+  } finally {
+    if (worker) {
+      await worker.terminate();
+    }
+  }
+}
+
+// POST /api/upload-image (Upload product image only)
 router.post('/upload-image', authenticateToken, requireInspector, upload.single('image'), (req, res) => {
   if (!req.file) {
     return res.status(400).json({ error: "No image file provided" });
@@ -52,7 +70,120 @@ router.post('/upload-image', authenticateToken, requireInspector, upload.single(
   });
 });
 
-// POST /api/process-ocr (Secured: Sworn Inspectors Only)
+/**
+ * POST /api/upload-and-validate
+ * Uploads a product packaging image, performs Server-Side OCR via Tesseract,
+ * parses all 14 mandatory FSSAI food packaging declarations, validates against
+ * EXCLUSIVELY the 14 food safety rules, and generates an official report.
+ */
+router.post('/upload-and-validate', authenticateToken, requireInspector, upload.single('image'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: "No product image file provided for OCR and validation" });
+    }
+
+    const imageFilePath = path.join(UPLOADS_DIR, req.file.filename);
+    const imageUrl = `/uploads/${req.file.filename}`;
+    const assignedInspectorId = req.user?.id || "usr_inspector_01";
+    const assignedInspectorName = req.user?.name || "Food Safety Officer (FSO)";
+
+    // 1. Perform Server-Side OCR
+    console.log(`🔍 Running Server-Side OCR on ${req.file.filename}...`);
+    const extractedText = await performServerOcr(imageFilePath);
+
+    // 2. Parse text into the 14 FSSAI statutory declarations
+    const parsed = parsePackagingText(extractedText);
+
+    // 3. Evaluate compliance against ONLY the 14 rules
+    const allRules = await db.getRules();
+    const activeRules = allRules.filter(r => r.isActive !== false);
+    const evaluation = evaluateCompliance(parsed, activeRules);
+
+    // 4. Save Product
+    const productId = `prod_${Date.now()}`;
+    const product = {
+      id: productId,
+      product_name: req.body.product_name || parsed.commodity_name || "Pre-packaged Food",
+      brand: req.body.brand || parsed.manufacturer?.name || "Packer / Brand",
+      category: req.body.category || "Food & Beverages",
+      image_url: imageUrl,
+      uploaded_by: assignedInspectorId,
+      created_at: new Date().toISOString()
+    };
+    const savedProduct = await db.addProduct(product);
+
+    // 5. Save Scan
+    const scanId = `scan_${Date.now()}`;
+    const scan = {
+      id: scanId,
+      product_id: productId,
+      extracted_text: extractedText,
+      parsed_fields: parsed,
+      compliance_status: evaluation.compliance_status,
+      compliance_score: evaluation.compliance_score,
+      inspector_id: assignedInspectorId,
+      created_at: new Date().toISOString()
+    };
+    const savedScan = await db.addScan(scan);
+
+    // 6. Save Violations
+    const savedViolations = [];
+    for (const v of evaluation.violations) {
+      const violationRecord = {
+        id: `viol_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
+        scan_id: scanId,
+        rule_code: v.rule_code,
+        violation_type: v.violation_type,
+        severity: v.severity,
+        description: v.description,
+        statutory_provision: v.statutory_provision,
+        suggested_action: v.suggested_action,
+        penalty_fine: v.penalty_fine || "₹1,00,000",
+        field: v.field,
+        created_at: new Date().toISOString()
+      };
+      const sv = await db.addViolation(violationRecord);
+      savedViolations.push(sv);
+    }
+
+    // 7. Save Report
+    const reportId = `rep_${Date.now()}`;
+    const reportNumber = `FSSAI/REP/${new Date().getFullYear()}/${Math.floor(1000 + Math.random() * 9000)}`;
+    const report = {
+      id: reportId,
+      scan_id: scanId,
+      report_number: reportNumber,
+      status: evaluation.compliance_status,
+      score: evaluation.compliance_score,
+      inspector_id: assignedInspectorId,
+      inspector_name: assignedInspectorName,
+      statutory_notice: evaluation.statutory_notice,
+      rule_checks_matrix: evaluation.rule_checks_matrix,
+      rule_checks_summary: evaluation.rule_checks_summary,
+      generated_at: new Date().toISOString()
+    };
+    const savedReport = await db.addReport(report);
+
+    res.json({
+      success: true,
+      message: "OCR and FSSAI 14-point compliance validation completed successfully",
+      report_id: reportId,
+      ocr_extracted_text: extractedText,
+      parsed_declarations: parsed,
+      rule_checks_matrix: evaluation.rule_checks_matrix,
+      evaluation,
+      report: savedReport,
+      scan: savedScan,
+      product: savedProduct,
+      violations: savedViolations
+    });
+  } catch (err) {
+    console.error("Server upload and validation error:", err);
+    res.status(500).json({ error: err.message || "Failed to process image OCR and validate rules" });
+  }
+});
+
+// POST /api/process-ocr (Parse raw OCR text into the 14 statutory fields)
 router.post('/process-ocr', authenticateToken, requireInspector, (req, res) => {
   const { raw_text, image_url, product_name, brand, category } = req.body;
 
@@ -69,7 +200,7 @@ router.post('/process-ocr', authenticateToken, requireInspector, (req, res) => {
     product_metadata: {
       product_name: product_name || parsedFields.commodity_name,
       brand: brand || parsedFields.manufacturer?.name || "Unknown Brand",
-      category: category || "General FMCG",
+      category: category || "Food & Beverages",
       image_url: image_url || null
     }
   });
@@ -124,21 +255,17 @@ router.delete('/scan/:id', authenticateToken, async (req, res) => {
       return res.status(404).json({ error: "Inspection scan record not found" });
     }
 
-    // Security Check:
-    // Only ADMIN or the specific INSPECTOR who performed the inspection can delete it
     const isOwnerInspector = req.user.role === 'inspector' && (scan.inspector_id === req.user.id);
     const isAdmin = req.user.role === 'admin';
 
     if (!isAdmin && !isOwnerInspector) {
       return res.status(403).json({ 
-        error: "Access Denied: Only the creator Inspector or a Joint Controller (Admin) can delete this inspection record." 
+        error: "Access Denied: Only the creator Inspector or Admin can delete this inspection record." 
       });
     }
 
-    // Delete DB records
     const deleted = await db.deleteScan(scanId);
 
-    // Delete physical uploaded image file if local and not a seed sample asset
     if (deleted?.product?.image_url) {
       const imgUrl = deleted.product.image_url;
       const isDefaultSample = imgUrl.includes('sample') || imgUrl.includes('butter') || imgUrl.includes('detergent') || imgUrl.includes('imported');

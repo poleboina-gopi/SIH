@@ -7,7 +7,7 @@ import { generateCompliancePdf } from '../services/pdfService.js';
 
 const router = express.Router();
 
-// POST /api/validate (Secured: Sworn Inspectors Only)
+// POST /api/validate (Secured: Sworn Inspectors & Food Safety Officers)
 router.post('/validate', authenticateToken, requireInspector, async (req, res) => {
   try {
     const {
@@ -22,7 +22,7 @@ router.post('/validate', authenticateToken, requireInspector, async (req, res) =
     } = req.body;
 
     const assignedInspectorId = req.user?.id || inspector_id || "usr_inspector_01";
-    const assignedInspectorName = req.user?.name || inspector_name || "Legal Metrology Officer";
+    const assignedInspectorName = req.user?.name || inspector_name || "Food Safety Officer";
 
     if (!raw_text && !clientParsedFields) {
       return res.status(400).json({ error: "raw_text or parsed_fields is required" });
@@ -32,14 +32,15 @@ router.post('/validate', authenticateToken, requireInspector, async (req, res) =
     const allRules = await db.getRules();
     const activeRules = allRules.filter(r => r.isActive !== false);
 
+    // Validate EXCLUSIVELY against the 14 rules
     const evaluation = evaluateCompliance(parsed, activeRules);
 
     const productId = `prod_${Date.now()}`;
     const product = {
       id: productId,
-      product_name: product_name || parsed.commodity_name || "Inspected Commodity",
-      brand: brand || parsed.manufacturer?.name || "Unbranded / Local",
-      category: category || "Packaged Commodity",
+      product_name: product_name || parsed.commodity_name || "Pre-packaged Food Commodity",
+      brand: brand || parsed.manufacturer?.name || "Unbranded / Brand Owner",
+      category: category || "Food & Beverages",
       image_url: image_url || "/uploads/sample_placeholder.png",
       uploaded_by: assignedInspectorId,
       created_at: new Date().toISOString()
@@ -68,9 +69,9 @@ router.post('/validate', authenticateToken, requireInspector, async (req, res) =
         violation_type: v.violation_type,
         severity: v.severity,
         description: v.description,
-        statutory_provision: v.statutory_provision || "Rule 6 of Legal Metrology (PC) Rules, 2011",
-        suggested_action: v.suggested_action || v.statutory_remedy || "Rectify declaration",
-        penalty_fine: v.penalty_fine || "₹25,000",
+        statutory_provision: v.statutory_provision || "FSS (Labelling and Display) Regulations, 2020",
+        suggested_action: v.suggested_action || "Rectify food labeling declaration",
+        penalty_fine: v.penalty_fine || "₹1,00,000",
         field: v.field,
         created_at: new Date().toISOString()
       };
@@ -79,7 +80,7 @@ router.post('/validate', authenticateToken, requireInspector, async (req, res) =
     }
 
     const reportId = `rep_${Date.now()}`;
-    const reportNumber = `CLM/DEL/${new Date().getFullYear()}/${Math.floor(1000 + Math.random() * 9000)}`;
+    const reportNumber = `FSSAI/REP/${new Date().getFullYear()}/${Math.floor(1000 + Math.random() * 9000)}`;
     const report = {
       id: reportId,
       scan_id: scanId,
@@ -88,7 +89,9 @@ router.post('/validate', authenticateToken, requireInspector, async (req, res) =
       score: evaluation.compliance_score,
       inspector_id: assignedInspectorId,
       inspector_name: assignedInspectorName,
-      statutory_notice: evaluation.compliance_status === "NON_COMPLIANT" ? (evaluation.statutory_notice || evaluation.show_cause_notice) : null,
+      statutory_notice: evaluation.compliance_status === "NON_COMPLIANT" ? evaluation.statutory_notice : null,
+      rule_checks_matrix: evaluation.rule_checks_matrix,
+      rule_checks_summary: evaluation.rule_checks_summary,
       generated_at: new Date().toISOString()
     };
     const savedReport = await db.addReport(report);
@@ -100,6 +103,7 @@ router.post('/validate', authenticateToken, requireInspector, async (req, res) =
       scan: savedScan,
       product: savedProduct,
       violations: savedViolations,
+      rule_checks_matrix: evaluation.rule_checks_matrix,
       evaluation
     });
   } catch (err) {
@@ -120,8 +124,18 @@ router.get('/report/:id', authenticateToken, async (req, res) => {
     const product = scan ? await db.getProductById(scan.product_id) : null;
     const violations = scan ? await db.getViolationsByScanId(scan.id) : [];
 
+    // If report didn't persist rule_checks_matrix, evaluate on-the-fly for complete breakdown
+    let matrix = report.rule_checks_matrix;
+    if (!matrix && scan?.parsed_fields) {
+      const evalResult = evaluateCompliance(scan.parsed_fields);
+      matrix = evalResult.rule_checks_matrix;
+    }
+
     res.json({
-      report,
+      report: {
+        ...report,
+        rule_checks_matrix: matrix
+      },
       scan,
       product,
       violations
@@ -131,8 +145,8 @@ router.get('/report/:id', authenticateToken, async (req, res) => {
   }
 });
 
-// GET /api/report/:id/pdf (Downloadable Official Legal Metrology Certificate PDF)
-router.get('/report/:id/pdf', authenticateToken, async (req, res) => {
+// GET /api/report/:id/pdf and /api/reports/:id/pdf (Downloadable Official FSSAI Compliance Certificate PDF)
+router.get(['/report/:id/pdf', '/reports/:id/pdf'], authenticateToken, async (req, res) => {
   try {
     const report = await db.getReportById(req.params.id);
     if (!report) {
@@ -143,11 +157,17 @@ router.get('/report/:id/pdf', authenticateToken, async (req, res) => {
     const product = scan ? await db.getProductById(scan.product_id) : null;
     const violations = scan ? await db.getViolationsByScanId(scan.id) : [];
 
+    let matrix = report.rule_checks_matrix;
+    if (!matrix && scan?.parsed_fields) {
+      const evalResult = evaluateCompliance(scan.parsed_fields);
+      matrix = evalResult.rule_checks_matrix;
+    }
+
     const safeNumber = (report.report_number || report.id).replace(/[^a-zA-Z0-9_-]/g, '_');
     res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `attachment; filename="Legal_Metrology_Report_${safeNumber}.pdf"`);
+    res.setHeader('Content-Disposition', `attachment; filename="FSSAI_Compliance_Certificate_${safeNumber}.pdf"`);
 
-    generateCompliancePdf({ report, scan, product, violations }, res);
+    generateCompliancePdf({ report: { ...report, rule_checks_matrix: matrix }, scan, product, violations }, res);
   } catch (err) {
     console.error("PDF generation error:", err);
     res.status(500).json({ error: err.message || "Failed to generate PDF report" });
@@ -170,7 +190,7 @@ router.get('/reports', authenticateToken, async (req, res) => {
       const violations = scan ? await db.getViolationsByScanId(scan.id) : [];
       return {
         ...r,
-        product_name: product?.product_name || "Unknown Commodity",
+        product_name: product?.product_name || "Unknown Product",
         brand: product?.brand || "Unknown Brand",
         image_url: product?.image_url || null,
         violations_count: violations.length
@@ -194,6 +214,12 @@ router.get('/export/:id/:format', authenticateToken, async (req, res) => {
     const product = scan ? await db.getProductById(scan.product_id) : null;
     const violations = scan ? await db.getViolationsByScanId(scan.id) : [];
 
+    let matrix = report.rule_checks_matrix;
+    if (!matrix && scan?.parsed_fields) {
+      const evalResult = evaluateCompliance(scan.parsed_fields);
+      matrix = evalResult.rule_checks_matrix;
+    }
+
     const fullData = {
       report_number: report.report_number,
       generated_at: report.generated_at,
@@ -204,22 +230,22 @@ router.get('/export/:id/:format', authenticateToken, async (req, res) => {
       brand: product?.brand,
       declarations_extracted: scan?.parsed_fields,
       violations,
+      rule_checks_matrix: matrix,
       statutory_notice: report.statutory_notice
     };
 
     if (format === 'csv') {
-      const headers = ["Report_Number", "Date", "Status", "Product", "Brand", "Violations_Count", "Rule_Violations", "Penalty_Fine"];
-      const row = [
-        report.report_number,
-        report.generated_at,
-        report.status,
-        `"${product?.product_name || ''}"`,
-        `"${product?.brand || ''}"`,
-        violations.length,
-        `"${violations.map(v => v.rule_code).join('; ')}"`,
-        `"${report.statutory_notice ? report.statutory_notice.compoundingFeeProposed : '₹0'}"`
-      ];
-      const csvContent = `${headers.join(',')}\n${row.join(',')}`;
+      const headers = ["Rule_Code", "Rule_Title", "Status", "Severity", "Extracted_Value", "Statutory_Provision"];
+      const rows = (matrix || []).map(m => [
+        `"${m.rule_code}"`,
+        `"${m.title}"`,
+        `"${m.status}"`,
+        `"${m.severity}"`,
+        `"${(m.extracted_value || '').replace(/"/g, '""')}"`,
+        `"${m.statutory_provision || ''}"`
+      ].join(','));
+
+      const csvContent = `${headers.join(',')}\n${rows.join('\n')}`;
 
       res.setHeader('Content-Type', 'text/csv');
       res.setHeader('Content-Disposition', `attachment; filename="${report.report_number}.csv"`);

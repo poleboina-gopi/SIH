@@ -161,23 +161,30 @@ export const SAMPLE_LABELS: SampleLabel[] = [
     brand: "GCMMF Ltd. (Amul)",
     category: "Dairy & Food",
     expectedStatus: "COMPLIANT",
-    description: "Benchmark 100% legally compliant packaged commodity with standard metric symbol 'g', complete tax clause, full postal and digital consumer care details.",
+    description: "Benchmark 100% legally compliant packaged food product with all 14 FSSAI mandatory declarations including 14-digit licence, nutritional panel, veg logo, and allergens.",
     keyIssues: [
-      { type: 'compliant', text: "Standard metric unit 'g' declared (Rule 12)" },
-      { type: 'compliant', text: "Mandatory tax clause & consumer care present" }
+      { type: 'compliant', text: "All 14 FSSAI mandatory declarations verified" },
+      { type: 'compliant', text: "Valid 14-digit FSSAI licence No. 10012021000071" }
     ],
     svgDataUrl: createSvgDataUrl(butterSvg),
-    rawText: `AMUL PASTEURISED BUTTER
+    rawText: `AMUL PASTEURISED TABLE BUTTER
 Generic Name: Table Butter
+100% VEGETARIAN
+Ingredients: Butter, Common Salt, Permitted Natural Colour (Annatto).
+Allergen Information: Contains Milk.
+Nutritional Information per 100g (Approx.): Energy 722 kcal, Total Fat 80.0 g, Saturated Fat 51.0 g, Trans Fat 0.0 g, Carbohydrate 0.0 g, Protein 0.6 g, Sodium 836 mg.
 Net Qty: 100 g
+fssai Lic. No. 10012021000071
+Date of Pkd: 15/08/2024
+Best Before: 12 months from packing
+Batch No: AM-2408B
 MANUFACTURED & PACKED BY:
 Gujarat Cooperative Milk Marketing Federation Ltd.
 Amul Dairy Road, Anand - 388001, Gujarat, India.
+Customer Care: 1800-258-3333 | customercare@amul.coop | PO Box 10, Anand - 388001
+Storage Instructions: Store under refrigeration at 4°C or below.
 Country of Origin: India
-MRP Rs. 58.00 (inclusive of all taxes)
-USP: ₹ 0.58 / g
-Pkd: 08/2024
-Customer Care: 1800-258-3333 | customercare@amul.coop | PO Box 10, Anand - 388001`,
+MRP Rs. 58.00 (inclusive of all taxes)`,
     boundingBoxes: [
       { field: "commodity_name", label: "Rule 6(1)(b) Generic Name", x: 20, y: 20, width: 560, height: 70, status: "valid" },
       { field: "net_quantity", label: "Rule 6(1)(c) Net Qty: 100 g", x: 400, y: 105, width: 160, height: 45, status: "valid" },
@@ -221,10 +228,10 @@ Customer Care Phone: 011-26987455`,
     brand: "Alpina Chocolatier AG",
     category: "Confectionery (Imported)",
     expectedStatus: "NON_COMPLIANT",
-    description: "Imported goods compliance defect: Missing Country of Origin declaration (Rule 6(1)(m)) and incomplete Indian importer registration address (Rule 6(1)(a)).",
+    description: "Imported food defect: Missing Country of Origin declaration (Reg 5(14)), missing 14-digit FSSAI licence (Reg 5(6)), and missing ingredients list (Reg 5(2)).",
     keyIssues: [
-      { type: 'violation', text: "Missing Country of Origin (Rule 6(1)(m))" },
-      { type: 'violation', text: "Incomplete importer address PIN (Rule 6(1)(a))" }
+      { type: 'violation', text: "Missing Country of Origin (FSSAI Reg 5(14))" },
+      { type: 'violation', text: "Missing FSSAI 14-Digit Licence (FSSAI Reg 5(6))" }
     ],
     svgDataUrl: createSvgDataUrl(trufflesSvg),
     rawText: `ALPINA SWISS DARK TRUFFLES
@@ -234,10 +241,10 @@ MRP Rs. 490.00 (incl. of all taxes)
 Imported & Distributed by: Euro Gourmet Brands, Mumbai
 Mfg: 06/2024`,
     boundingBoxes: [
-      { field: "commodity_name", label: "Rule 6(1)(b) Generic Name", x: 40, y: 40, width: 520, height: 55, status: "valid" },
-      { field: "net_quantity", label: "Rule 6(1)(c) Net Qty: 150 g", x: 40, y: 115, width: 240, height: 60, status: "valid" },
-      { field: "mrp", label: "Rule 6(1)(e) MRP & Taxes", x: 320, y: 115, width: 240, height: 60, status: "valid" },
-      { field: "country_of_origin", label: "Rule 6(1)(m) Country of Origin (OMITTED)", x: 40, y: 195, width: 520, height: 120, status: "invalid" }
+      { field: "commodity_name", label: "FSSAI Reg 5(1) Food Name", x: 40, y: 40, width: 520, height: 55, status: "valid" },
+      { field: "net_quantity", label: "FSSAI Reg 5(4) Net Qty: 150 g", x: 40, y: 115, width: 240, height: 60, status: "valid" },
+      { field: "fssai_license", label: "FSSAI Reg 5(6) Licence (OMITTED)", x: 320, y: 115, width: 240, height: 60, status: "invalid" },
+      { field: "country_of_origin", label: "FSSAI Reg 5(14) Country of Origin (OMITTED)", x: 40, y: 195, width: 520, height: 120, status: "invalid" }
     ]
   },
   {

@@ -140,70 +140,97 @@ export const ScanResultsPage: React.FC<ScanResultsPageProps> = ({
     setTimeout(() => setCopied(false), 2000);
   };
 
-  // Dynamic checks for missing and defective fields
+  // Dynamic checks for missing and defective fields according to the 14 FSSAI Rules
   const defects = useMemo(() => {
     const list: { type: 'missing' | 'defect'; field: string; message: string; rule: string }[] = [];
 
-    // 1. Manufacturer
+    // 1. Name of Food/Product (FSSAI Reg 5(1))
+    const cName = typeof fields.commodity_name === 'string' ? fields.commodity_name.trim() : (fields.commodity_name as any)?.name || '';
+    if (!cName || cName.toLowerCase() === 'packaged food product') {
+      list.push({ type: 'missing', field: 'commodity_name', message: 'Name of the food/product omitted', rule: 'FSSAI Reg 5(1)' });
+    }
+
+    // 2. List of Ingredients (FSSAI Reg 5(2))
+    const ing = fields.ingredients;
+    if (!ing || (!ing.raw && (!ing.items || ing.items.length === 0))) {
+      list.push({ type: 'missing', field: 'ingredients', message: 'List of ingredients missing (Mandatory)', rule: 'FSSAI Reg 5(2)' });
+    }
+
+    // 3. Nutritional Information (FSSAI Reg 5(3))
+    const nutri = fields.nutritional_info;
+    if (!nutri || !nutri.is_declared) {
+      list.push({ type: 'missing', field: 'nutritional_info', message: 'Nutritional information per 100g/serving missing', rule: 'FSSAI Reg 5(3)' });
+    }
+
+    // 4. Net Quantity (FSSAI Reg 5(4))
+    const nq = fields.net_quantity as any;
+    const nqRaw = typeof nq === 'object' && nq !== null ? (nq.raw || (nq.value ? `${nq.value} ${nq.unit || ''}` : '')) : (typeof nq === 'string' ? nq : '');
+    if (!nq || !nqRaw.trim()) {
+      list.push({ type: 'missing', field: 'net_quantity', message: 'Net quantity declaration missing', rule: 'FSSAI Reg 5(4)' });
+    } else if (typeof nq === 'object' && nq !== null && nq.is_standard === false) {
+      list.push({ type: 'defect', field: 'net_quantity', message: `Illegal non-standard unit '${nq.unit || nqRaw}' (Must use g, kg, ml, l)`, rule: 'FSSAI Reg 5(4)' });
+    }
+
+    // 5. Vegetarian / Non-Vegetarian Symbol (FSSAI Reg 5(5))
+    const veg = fields.veg_non_veg;
+    if (!veg || (!veg.is_declared && !veg.type && !veg.raw)) {
+      list.push({ type: 'missing', field: 'veg_non_veg', message: 'Vegetarian / Non-Vegetarian symbol or declaration missing', rule: 'FSSAI Reg 5(5)' });
+    }
+
+    // 6. FSSAI Logo and Licence Number (FSSAI Reg 5(6))
+    const fssai = fields.fssai_license;
+    if (!fssai || (!fssai.license_number && !fssai.raw)) {
+      list.push({ type: 'missing', field: 'fssai_license', message: 'FSSAI logo & 14-digit licence number missing', rule: 'FSSAI Reg 5(6)' });
+    } else if (fssai.license_number && !fssai.is_valid_14_digit) {
+      list.push({ type: 'defect', field: 'fssai_license', message: `FSSAI licence number '${fssai.license_number}' must be exactly 14 digits`, rule: 'FSSAI Reg 5(6)' });
+    }
+
+    // 7. Date of Manufacture/Packing (FSSAI Reg 5(7))
+    const md = fields.mfg_date as any;
+    const mdDate = typeof md === 'object' && md !== null ? (md.date || md.raw || '') : (typeof md === 'string' ? md : '');
+    if (!md || !mdDate.trim()) {
+      list.push({ type: 'missing', field: 'mfg_date', message: 'Date of manufacture/packing missing', rule: 'FSSAI Reg 5(7)' });
+    } else if (typeof md === 'object' && md !== null && md.is_compliant === false) {
+      list.push({ type: 'defect', field: 'mfg_date', message: `Invalid manufacture date format '${mdDate}' (Prescribed: DD/MM/YYYY or MM/YYYY)`, rule: 'FSSAI Reg 5(7)' });
+    }
+
+    // 8. Expiry / Use-by or Best-Before Date (FSSAI Reg 5(8))
+    const exp = fields.expiry_date;
+    const expDate = exp?.expiry_or_period || exp?.raw;
+    if (!exp || !expDate) {
+      list.push({ type: 'missing', field: 'expiry_date', message: 'Expiry / Use-by or Best-Before date missing', rule: 'FSSAI Reg 5(8)' });
+    }
+
+    // 9. Batch/Lot/Code Number (FSSAI Reg 5(9))
+    const batch = fields.batch_number;
+    const batchVal = batch?.value || batch?.raw;
+    if (!batch || !batchVal) {
+      list.push({ type: 'missing', field: 'batch_number', message: 'Batch/Lot/Code number for traceability missing', rule: 'FSSAI Reg 5(9)' });
+    }
+
+    // 10. Manufacturer/Packer/Importer Details (FSSAI Reg 5(10))
     const mfg = fields.manufacturer as any;
     const mfgName = typeof mfg === 'object' && mfg !== null ? mfg.name : (typeof mfg === 'string' ? (mfg as string).trim() : '');
     const mfgAddr = typeof mfg === 'object' && mfg !== null ? (mfg.address || mfg.raw || '') : (typeof mfg === 'string' ? mfg : '');
     const hasPin = typeof mfg === 'object' && mfg !== null ? Boolean(mfg.has_pincode || /\b\d{6}\b/.test(mfgAddr)) : /\b\d{6}\b/.test(mfgAddr);
-
     if (!mfg || !mfgName) {
-      list.push({ type: 'missing', field: 'manufacturer', message: 'Manufacturer name & address omitted', rule: 'Rule 6(1)(a)' });
+      list.push({ type: 'missing', field: 'manufacturer', message: 'Manufacturer name & physical premises address omitted', rule: 'FSSAI Reg 5(10)' });
     } else if (!hasPin && mfgAddr.length < 20) {
-      list.push({ type: 'defect', field: 'manufacturer', message: 'Manufacturer address lacks pin code or district', rule: 'Rule 6(1)(a)' });
+      list.push({ type: 'defect', field: 'manufacturer', message: 'Manufacturer address lacks 6-digit PIN code', rule: 'FSSAI Reg 5(10)' });
     }
 
-    // 2. Generic Name
-    const cName = typeof fields.commodity_name === 'string' ? fields.commodity_name.trim() : (fields.commodity_name as any)?.name || '';
-    if (!cName || cName.toLowerCase() === 'packaged commodity') {
-      list.push({ type: 'missing', field: 'commodity_name', message: 'Generic commodity name missing', rule: 'Rule 6(1)(b)' });
-    }
-
-    // 3. Net Quantity
-    const nq = fields.net_quantity as any;
-    const nqRaw = typeof nq === 'object' && nq !== null ? (nq.raw || (nq.value ? `${nq.value} ${nq.unit || ''}` : '')) : (typeof nq === 'string' ? nq : '');
-    if (!nq || !nqRaw.trim()) {
-      list.push({ type: 'missing', field: 'net_quantity', message: 'Net quantity declaration missing', rule: 'Rule 6(1)(c)' });
-    } else if (typeof nq === 'object' && nq !== null && nq.is_standard === false) {
-      list.push({ type: 'defect', field: 'net_quantity', message: `Illegal non-standard unit '${nq.unit || nqRaw}' (Must use g, kg, ml, l)`, rule: 'Rule 12 & 13' });
-    }
-
-    // 4. Date of Mfg / Pkg
-    const md = fields.mfg_date as any;
-    const mdDate = typeof md === 'object' && md !== null ? (md.date || md.raw || '') : (typeof md === 'string' ? md : '');
-    if (!md || !mdDate.trim()) {
-      list.push({ type: 'missing', field: 'mfg_date', message: 'Month & year of packing missing', rule: 'Rule 6(1)(d)' });
-    } else if (typeof md === 'object' && md !== null && md.is_compliant === false) {
-      list.push({ type: 'defect', field: 'mfg_date', message: `Invalid date format '${mdDate}' (Prescribed: MM/YYYY or Month YYYY)`, rule: 'Rule 6(1)(d)' });
-    }
-
-    // 5. MRP
-    const mrp = fields.mrp as any;
-    const mrpRaw = typeof mrp === 'object' && mrp !== null ? (mrp.raw || (mrp.value ? `Rs. ${mrp.value}` : '')) : (typeof mrp === 'string' ? mrp : '');
-    if (!mrp || !mrpRaw.trim()) {
-      list.push({ type: 'missing', field: 'mrp', message: 'Maximum Retail Price (MRP) missing', rule: 'Rule 6(1)(e)' });
-    } else if (typeof mrp === 'object' && mrp !== null && mrp.includes_taxes === false) {
-      list.push({ type: 'defect', field: 'mrp', message: "MRP lacks mandatory '(inclusive of all taxes)' clause", rule: 'Rule 6(1)(e)' });
-    } else if (typeof mrp === 'object' && mrp !== null && mrp.has_currency_symbol === false) {
-      list.push({ type: 'defect', field: 'mrp', message: "MRP lacks official '₹' or 'Rs.' currency symbol", rule: 'Rule 6(1)(e)' });
-    }
-
-    // 6. Consumer Care
+    // 11. Customer Care Details (FSSAI Reg 5(11))
     const cc = fields.consumer_care as any;
     const ccPhone = typeof cc === 'object' && cc !== null ? (cc.phone || '') : '';
     const ccEmail = typeof cc === 'object' && cc !== null ? (cc.email || '') : '';
     if (!cc || (!ccPhone && !ccEmail && typeof cc === 'object')) {
-      list.push({ type: 'missing', field: 'consumer_care', message: 'Consumer redressal contact details missing', rule: 'Rule 6(1)(n)' });
-    } else {
-      if (!ccEmail) {
-        list.push({ type: 'defect', field: 'consumer_care', message: 'Consumer care email address missing (Mandatory)', rule: 'Rule 6(1)(n)' });
-      }
-      if (!ccPhone) {
-        list.push({ type: 'defect', field: 'consumer_care', message: 'Consumer care phone number missing (Mandatory)', rule: 'Rule 6(1)(n)' });
-      }
+      list.push({ type: 'missing', field: 'consumer_care', message: 'Customer care telephone / helpline contact missing', rule: 'FSSAI Reg 5(11)' });
+    }
+
+    // 12. Storage Instructions (FSSAI Reg 5(13))
+    const storage = fields.storage_instructions;
+    if (!storage || (!storage.is_declared && !storage.instructions && !storage.raw)) {
+      list.push({ type: 'missing', field: 'storage_instructions', message: 'Storage instructions missing (e.g. Store in cool, dry place)', rule: 'FSSAI Reg 5(13)' });
     }
 
     return list;
@@ -873,8 +900,323 @@ export const ScanResultsPage: React.FC<ScanResultsPageProps> = ({
               );
             })()}
 
-            {/* 5. Country of Origin & USP */}
+            {/* FSSAI Logo & 14-Digit Licence Number */}
+            {(() => {
+              const lic = fields.fssai_license;
+              const isMissing = !lic || (!lic.license_number && !lic.raw);
+              const isInvalid = lic && lic.license_number && !lic.is_valid_14_digit;
+              return (
+                <div style={{
+                  border: isMissing ? '2px solid #ef4444' : isInvalid ? '2px solid #f59e0b' : '1px solid var(--border-subtle)',
+                  borderRadius: '10px',
+                  padding: '12px',
+                  background: isMissing ? 'rgba(239, 68, 68, 0.08)' : 'var(--bg-glass-heavy)'
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                    <span style={{ fontSize: '0.76rem', fontWeight: 700, color: isMissing ? '#f87171' : '#60a5fa' }}>
+                      FSSAI Reg 5(6) &bull; FSSAI Logo &amp; Licence Number (14 Digits)
+                    </span>
+                    {isMissing ? (
+                      <span className="badge badge-noncompliant" style={{ fontSize: '0.66rem' }}>MISSING LICENCE</span>
+                    ) : isInvalid ? (
+                      <span className="badge badge-warning" style={{ fontSize: '0.66rem' }}>MUST BE 14 DIGITS</span>
+                    ) : (
+                      <span className="badge badge-compliant" style={{ fontSize: '0.66rem' }}>VERIFIED 14-DIGIT</span>
+                    )}
+                  </div>
+                  <input
+                    type="text"
+                    value={lic?.license_number || lic?.raw || ''}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      const cleanDigits = val.replace(/\D/g, '');
+                      setFields({
+                        ...fields,
+                        fssai_license: {
+                          license_number: cleanDigits || val,
+                          is_valid_14_digit: cleanDigits.length === 14,
+                          has_fssai_logo: true,
+                          raw: val
+                        }
+                      });
+                    }}
+                    placeholder="e.g. 10015043001234 (14-digit FSSAI number)"
+                    style={{
+                      width: '100%',
+                      padding: '8px 10px',
+                      background: 'var(--bg-app)',
+                      border: '1px solid var(--border-card)',
+                      borderRadius: '6px',
+                      color: 'var(--text-primary)',
+                      fontSize: '0.85rem'
+                    }}
+                  />
+                </div>
+              );
+            })()}
+
+            {/* List of Ingredients */}
+            {(() => {
+              const ing = fields.ingredients;
+              const isMissing = !ing || (!ing.raw && (!ing.items || ing.items.length === 0));
+              return (
+                <div style={{
+                  border: isMissing ? '2px solid #ef4444' : '1px solid var(--border-subtle)',
+                  borderRadius: '10px',
+                  padding: '12px',
+                  background: isMissing ? 'rgba(239, 68, 68, 0.08)' : 'var(--bg-glass-heavy)'
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                    <span style={{ fontSize: '0.76rem', fontWeight: 700, color: isMissing ? '#f87171' : '#60a5fa' }}>
+                      FSSAI Reg 5(2) &bull; List of Ingredients (Mandatory)
+                    </span>
+                    {isMissing ? (
+                      <span className="badge badge-noncompliant" style={{ fontSize: '0.66rem' }}>MISSING INGREDIENTS</span>
+                    ) : (
+                      <span className="badge badge-compliant" style={{ fontSize: '0.66rem' }}>DECLARED</span>
+                    )}
+                  </div>
+                  <textarea
+                    rows={2}
+                    value={ing?.raw || (ing?.items ? ing.items.join(', ') : '')}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setFields({
+                        ...fields,
+                        ingredients: {
+                          raw: val,
+                          items: val.split(/[,;]/).map(s => s.trim()).filter(Boolean),
+                          count: val.split(/[,;]/).length,
+                          has_heading: true
+                        }
+                      });
+                    }}
+                    placeholder="e.g. Ingredients: Refined Wheat Flour, Sugar, Edible Vegetable Oil, Butter (2%), Salt"
+                    style={{
+                      width: '100%',
+                      padding: '8px 10px',
+                      background: 'var(--bg-app)',
+                      border: '1px solid var(--border-card)',
+                      borderRadius: '6px',
+                      color: 'var(--text-primary)',
+                      fontSize: '0.85rem'
+                    }}
+                  />
+                </div>
+              );
+            })()}
+
+            {/* Nutritional Information & Veg/Non-Veg Row */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '12px' }}>
+              {/* Nutritional Info */}
+              {(() => {
+                const nutri = fields.nutritional_info;
+                const isMissing = !nutri || !nutri.is_declared;
+                return (
+                  <div style={{
+                    border: isMissing ? '2px solid #ef4444' : '1px solid var(--border-subtle)',
+                    borderRadius: '10px',
+                    padding: '12px',
+                    background: isMissing ? 'rgba(239, 68, 68, 0.08)' : 'var(--bg-glass-heavy)'
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                      <span style={{ fontSize: '0.76rem', fontWeight: 700, color: isMissing ? '#f87171' : '#60a5fa' }}>
+                        FSSAI Reg 5(3) &bull; Nutrition Facts
+                      </span>
+                      {isMissing ? (
+                        <span className="badge badge-noncompliant" style={{ fontSize: '0.66rem' }}>MISSING</span>
+                      ) : (
+                        <span className="badge badge-compliant" style={{ fontSize: '0.66rem' }}>DECLARED</span>
+                      )}
+                    </div>
+                    <input
+                      type="text"
+                      value={nutri?.energy ? `Energy: ${nutri.energy}, Fat: ${nutri.total_fat || 'N/A'}` : (nutri?.raw || '')}
+                      onChange={(e) => {
+                        setFields({
+                          ...fields,
+                          nutritional_info: {
+                            is_declared: Boolean(e.target.value.trim()),
+                            raw: e.target.value,
+                            energy: e.target.value
+                          }
+                        });
+                      }}
+                      placeholder="e.g. Energy: 495 kcal, Protein: 7g, Fat: 22g"
+                      style={{
+                        width: '100%',
+                        padding: '8px 10px',
+                        background: 'var(--bg-app)',
+                        border: '1px solid var(--border-card)',
+                        borderRadius: '6px',
+                        color: 'var(--text-primary)',
+                        fontSize: '0.85rem'
+                      }}
+                    />
+                  </div>
+                );
+              })()}
+
+              {/* Veg / Non-Veg */}
+              {(() => {
+                const veg = fields.veg_non_veg;
+                const isMissing = !veg || (!veg.is_declared && !veg.type && !veg.raw);
+                return (
+                  <div style={{
+                    border: isMissing ? '2px solid #ef4444' : '1px solid var(--border-subtle)',
+                    borderRadius: '10px',
+                    padding: '12px',
+                    background: isMissing ? 'rgba(239, 68, 68, 0.08)' : 'var(--bg-glass-heavy)'
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                      <span style={{ fontSize: '0.76rem', fontWeight: 700, color: isMissing ? '#f87171' : '#60a5fa' }}>
+                        FSSAI Reg 5(5) &bull; Veg / Non-Veg
+                      </span>
+                      {isMissing ? (
+                        <span className="badge badge-noncompliant" style={{ fontSize: '0.66rem' }}>MISSING</span>
+                      ) : (
+                        <span className="badge badge-compliant" style={{ fontSize: '0.66rem' }}>
+                          {veg?.type === 'NON_VEG' ? 'NON-VEG' : 'VEG'}
+                        </span>
+                      )}
+                    </div>
+                    <select
+                      value={veg?.type || (isMissing ? '' : 'VEG')}
+                      onChange={(e) => {
+                        const val = e.target.value as 'VEG' | 'NON_VEG';
+                        setFields({
+                          ...fields,
+                          veg_non_veg: val ? {
+                            type: val,
+                            is_declared: true,
+                            symbol: val === 'VEG' ? 'Green circle in green square' : 'Brown triangle in brown square',
+                            raw: val === 'VEG' ? '100% Vegetarian' : 'Non-Vegetarian'
+                          } : null
+                        });
+                      }}
+                      style={{
+                        width: '100%',
+                        padding: '8px 10px',
+                        background: 'var(--bg-app)',
+                        border: '1px solid var(--border-card)',
+                        borderRadius: '6px',
+                        color: 'var(--text-primary)',
+                        fontSize: '0.85rem'
+                      }}
+                    >
+                      <option value="">Select Symbol Status...</option>
+                      <option value="VEG">🟢 Vegetarian (Green Dot / Circle)</option>
+                      <option value="NON_VEG">🟤 Non-Vegetarian (Brown Triangle)</option>
+                    </select>
+                  </div>
+                );
+              })()}
+            </div>
+
+            {/* Expiry / Best Before & Batch Number Row */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '12px' }}>
+              {/* Expiry Date */}
+              {(() => {
+                const exp = fields.expiry_date;
+                const isMissing = !exp || (!exp.expiry_or_period && !exp.raw);
+                return (
+                  <div style={{
+                    border: isMissing ? '2px solid #ef4444' : '1px solid var(--border-subtle)',
+                    borderRadius: '10px',
+                    padding: '12px',
+                    background: isMissing ? 'rgba(239, 68, 68, 0.08)' : 'var(--bg-glass-heavy)'
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                      <span style={{ fontSize: '0.76rem', fontWeight: 700, color: isMissing ? '#f87171' : '#60a5fa' }}>
+                        FSSAI Reg 5(8) &bull; Expiry / Best Before
+                      </span>
+                      {isMissing ? (
+                        <span className="badge badge-noncompliant" style={{ fontSize: '0.66rem' }}>MISSING</span>
+                      ) : (
+                        <span className="badge badge-compliant" style={{ fontSize: '0.66rem' }}>VERIFIED</span>
+                      )}
+                    </div>
+                    <input
+                      type="text"
+                      value={exp?.expiry_or_period || exp?.raw || ''}
+                      onChange={(e) => {
+                        setFields({
+                          ...fields,
+                          expiry_date: {
+                            expiry_or_period: e.target.value,
+                            raw: e.target.value,
+                            is_compliant: Boolean(e.target.value.trim())
+                          }
+                        });
+                      }}
+                      placeholder="e.g. Best Before 6 months from packing"
+                      style={{
+                        width: '100%',
+                        padding: '8px 10px',
+                        background: 'var(--bg-app)',
+                        border: '1px solid var(--border-card)',
+                        borderRadius: '6px',
+                        color: 'var(--text-primary)',
+                        fontSize: '0.85rem'
+                      }}
+                    />
+                  </div>
+                );
+              })()}
+
+              {/* Batch Number */}
+              {(() => {
+                const batch = fields.batch_number;
+                const isMissing = !batch || (!batch.value && !batch.raw);
+                return (
+                  <div style={{
+                    border: isMissing ? '2px solid #ef4444' : '1px solid var(--border-subtle)',
+                    borderRadius: '10px',
+                    padding: '12px',
+                    background: isMissing ? 'rgba(239, 68, 68, 0.08)' : 'var(--bg-glass-heavy)'
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                      <span style={{ fontSize: '0.76rem', fontWeight: 700, color: isMissing ? '#f87171' : '#60a5fa' }}>
+                        FSSAI Reg 5(9) &bull; Batch / Lot No.
+                      </span>
+                      {isMissing ? (
+                        <span className="badge badge-noncompliant" style={{ fontSize: '0.66rem' }}>MISSING</span>
+                      ) : (
+                        <span className="badge badge-compliant" style={{ fontSize: '0.66rem' }}>VERIFIED</span>
+                      )}
+                    </div>
+                    <input
+                      type="text"
+                      value={batch?.value || batch?.raw || ''}
+                      onChange={(e) => {
+                        setFields({
+                          ...fields,
+                          batch_number: {
+                            value: e.target.value,
+                            raw: e.target.value,
+                            is_compliant: Boolean(e.target.value.trim())
+                          }
+                        });
+                      }}
+                      placeholder="e.g. B24089A"
+                      style={{
+                        width: '100%',
+                        padding: '8px 10px',
+                        background: 'var(--bg-app)',
+                        border: '1px solid var(--border-card)',
+                        borderRadius: '6px',
+                        color: 'var(--text-primary)',
+                        fontSize: '0.85rem'
+                      }}
+                    />
+                  </div>
+                );
+              })()}
+            </div>
+
+            {/* Allergen Declarations & Storage Instructions Row */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+              {/* Allergen Declaration */}
               <div style={{
                 border: '1px solid var(--border-subtle)',
                 borderRadius: '10px',
@@ -882,13 +1224,23 @@ export const ScanResultsPage: React.FC<ScanResultsPageProps> = ({
                 background: 'var(--bg-glass-heavy)'
               }}>
                 <div style={{ fontSize: '0.76rem', fontWeight: 700, color: '#60a5fa', marginBottom: '6px' }}>
-                  Rule 6(1)(m) &bull; Country of Origin
+                  FSSAI Reg 5(12) &bull; Allergen Declaration
                 </div>
                 <input
                   type="text"
-                  value={fields.country_of_origin || ''}
-                  onChange={(e) => setFields({ ...fields, country_of_origin: e.target.value })}
-                  placeholder="e.g. India (Mandatory for imported)"
+                  value={fields.allergen_declaration?.statement || fields.allergen_declaration?.raw || ''}
+                  onChange={(e) => {
+                    setFields({
+                      ...fields,
+                      allergen_declaration: {
+                        is_declared: Boolean(e.target.value.trim()),
+                        has_allergens: true,
+                        statement: e.target.value,
+                        raw: e.target.value
+                      }
+                    });
+                  }}
+                  placeholder="e.g. Contains Wheat and Milk"
                   style={{
                     width: '100%',
                     padding: '8px 10px',
@@ -901,31 +1253,79 @@ export const ScanResultsPage: React.FC<ScanResultsPageProps> = ({
                 />
               </div>
 
-              <div style={{
-                border: '1px solid var(--border-subtle)',
-                borderRadius: '10px',
-                padding: '12px',
-                background: 'var(--bg-glass-heavy)'
-              }}>
-                <div style={{ fontSize: '0.76rem', fontWeight: 700, color: '#60a5fa', marginBottom: '6px' }}>
-                  Rule 6(11) &bull; Unit Sale Price (USP)
-                </div>
-                <input
-                  type="text"
-                  value={fields.unit_sale_price?.raw || ''}
-                  onChange={(e) => updateField('unit_sale_price', 'raw', e.target.value)}
-                  placeholder="e.g. ₹ 0.58 / g"
-                  style={{
-                    width: '100%',
-                    padding: '8px 10px',
-                    background: 'var(--bg-app)',
-                    border: '1px solid var(--border-card)',
-                    borderRadius: '6px',
-                    color: 'var(--text-primary)',
-                    fontSize: '0.85rem'
-                  }}
-                />
+              {/* Storage Instructions */}
+              {(() => {
+                const storage = fields.storage_instructions;
+                const isMissing = !storage || (!storage.is_declared && !storage.instructions && !storage.raw);
+                return (
+                  <div style={{
+                    border: isMissing ? '2px solid #ef4444' : '1px solid var(--border-subtle)',
+                    borderRadius: '10px',
+                    padding: '12px',
+                    background: isMissing ? 'rgba(239, 68, 68, 0.08)' : 'var(--bg-glass-heavy)'
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                      <span style={{ fontSize: '0.76rem', fontWeight: 700, color: isMissing ? '#f87171' : '#60a5fa' }}>
+                        FSSAI Reg 5(13) &bull; Storage Instructions
+                      </span>
+                      {isMissing && (
+                        <span className="badge badge-noncompliant" style={{ fontSize: '0.66rem' }}>MISSING</span>
+                      )}
+                    </div>
+                    <input
+                      type="text"
+                      value={storage?.instructions || storage?.raw || ''}
+                      onChange={(e) => {
+                        setFields({
+                          ...fields,
+                          storage_instructions: {
+                            is_declared: Boolean(e.target.value.trim()),
+                            instructions: e.target.value,
+                            raw: e.target.value
+                          }
+                        });
+                      }}
+                      placeholder="e.g. Store in a cool, dry place"
+                      style={{
+                        width: '100%',
+                        padding: '8px 10px',
+                        background: 'var(--bg-app)',
+                        border: '1px solid var(--border-card)',
+                        borderRadius: '6px',
+                        color: 'var(--text-primary)',
+                        fontSize: '0.85rem'
+                      }}
+                    />
+                  </div>
+                );
+              })()}
+            </div>
+
+            {/* Country of Origin (Reg 5(14)) */}
+            <div style={{
+              border: '1px solid var(--border-subtle)',
+              borderRadius: '10px',
+              padding: '12px',
+              background: 'var(--bg-glass-heavy)'
+            }}>
+              <div style={{ fontSize: '0.76rem', fontWeight: 700, color: '#60a5fa', marginBottom: '6px' }}>
+                FSSAI Reg 5(14) &bull; Country of Origin (Mandatory for Imported)
               </div>
+              <input
+                type="text"
+                value={typeof fields.country_of_origin === 'string' ? fields.country_of_origin : (fields.country_of_origin?.country || '')}
+                onChange={(e) => setFields({ ...fields, country_of_origin: e.target.value })}
+                placeholder="e.g. India (or country of manufacture)"
+                style={{
+                  width: '100%',
+                  padding: '8px 10px',
+                  background: 'var(--bg-app)',
+                  border: '1px solid var(--border-card)',
+                  borderRadius: '6px',
+                  color: 'var(--text-primary)',
+                  fontSize: '0.85rem'
+                }}
+              />
             </div>
 
             {/* Action Buttons */}

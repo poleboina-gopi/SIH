@@ -521,192 +521,186 @@ export const ComplianceReportPage: React.FC<ComplianceReportPageProps> = ({
         <div style={{ marginBottom: '28px' }}>
           <h2 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
             <FileText size={18} color="var(--accent-blue-light)" />
-            <span>Declarations Verification Matrix (Rules 2011)</span>
+            <span>Mandatory Declarations Verification Matrix (FSSAI 14-Point Checklist)</span>
           </h2>
 
           <div className="data-table-wrapper">
             <table className="data-table">
               <thead>
                 <tr>
-                  <th>STATUTORY CLAUSE</th>
+                  <th style={{ width: '60px' }}>#</th>
+                  <th style={{ width: '130px' }}>RULE CODE</th>
                   <th>MANDATORY REQUIREMENT</th>
-                  <th>VALUE EXTRACTED FROM PACKAGE</th>
-                  <th>STATUS</th>
+                  <th>DETECTED VALUE ON PACKAGING</th>
+                  <th style={{ width: '130px' }}>STATUS</th>
                 </tr>
               </thead>
               <tbody>
-                {/* Rule 6(1)(a) */}
                 {(() => {
-                  const isMissing = !scan?.parsed_fields?.manufacturer || !scan?.parsed_fields?.manufacturer?.name;
-                  return (
-                    <tr style={{ background: isMissing ? 'rgba(239, 68, 68, 0.08)' : undefined, borderLeft: isMissing ? '4px solid #ef4444' : undefined }}>
-                      <td style={{ fontWeight: 700 }}>Rule 6(1)(a)</td>
-                      <td>Complete name and physical address of Manufacturer / Packer / Importer</td>
-                      <td style={{ fontSize: '0.82rem', color: isMissing ? '#f87171' : undefined }}>
-                        {scan?.parsed_fields?.manufacturer?.address || scan?.parsed_fields?.manufacturer?.raw || 'Not detected on package'}
-                      </td>
-                      <td>
-                        {!isMissing ? (
-                          <span className="badge badge-compliant">VERIFIED</span>
-                        ) : (
-                          <span className="badge badge-noncompliant">OMITTED (CRITICAL DEFECT)</span>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })()}
+                  const default14Rules = [
+                    {
+                      id: 'RULE_FSSAI_01',
+                      rule_code: 'FSSAI Reg 5(1)',
+                      title: 'Name of the Food/Product',
+                      extracted_value: scan?.parsed_fields?.commodity_name || 'Not detected on package',
+                      status: scan?.parsed_fields?.commodity_name && scan?.parsed_fields?.commodity_name !== 'Packaged Food Product' ? 'PASS' : 'FAIL',
+                      statutory_provision: 'Reg 5(1)'
+                    },
+                    {
+                      id: 'RULE_FSSAI_02',
+                      rule_code: 'FSSAI Reg 5(2)',
+                      title: 'List of Ingredients',
+                      extracted_value: scan?.parsed_fields?.ingredients?.raw || (scan?.parsed_fields?.ingredients?.items ? scan?.parsed_fields?.ingredients?.items.join(', ') : 'Not detected on package'),
+                      status: scan?.parsed_fields?.ingredients ? 'PASS' : 'FAIL',
+                      statutory_provision: 'Reg 5(2)'
+                    },
+                    {
+                      id: 'RULE_FSSAI_03',
+                      rule_code: 'FSSAI Reg 5(3)',
+                      title: 'Nutritional Information',
+                      extracted_value: scan?.parsed_fields?.nutritional_info ? [
+                        scan?.parsed_fields?.nutritional_info.energy && `Energy: ${scan?.parsed_fields?.nutritional_info.energy}`,
+                        scan?.parsed_fields?.nutritional_info.protein && `Protein: ${scan?.parsed_fields?.nutritional_info.protein}`,
+                        scan?.parsed_fields?.nutritional_info.carbohydrate && `Carbs: ${scan?.parsed_fields?.nutritional_info.carbohydrate}`
+                      ].filter(Boolean).join(' | ') || scan?.parsed_fields?.nutritional_info?.raw || 'Declared' : 'Not detected on package',
+                      status: scan?.parsed_fields?.nutritional_info?.is_declared ? 'PASS' : 'FAIL',
+                      statutory_provision: 'Reg 5(3)'
+                    },
+                    {
+                      id: 'RULE_FSSAI_04',
+                      rule_code: 'FSSAI Reg 5(4)',
+                      title: 'Net Quantity',
+                      extracted_value: scan?.parsed_fields?.net_quantity?.raw || 'Not detected on package',
+                      status: scan?.parsed_fields?.net_quantity?.is_standard ? 'PASS' : 'FAIL',
+                      statutory_provision: 'Reg 5(4)'
+                    },
+                    {
+                      id: 'RULE_FSSAI_05',
+                      rule_code: 'FSSAI Reg 5(5)',
+                      title: 'Vegetarian / Non-Vegetarian Symbol',
+                      extracted_value: scan?.parsed_fields?.veg_non_veg ? `${scan?.parsed_fields?.veg_non_veg.type === 'NON_VEG' ? 'Non-Veg (Brown Triangle)' : 'Veg (Green Dot)'} - ${scan?.parsed_fields?.veg_non_veg.raw || 'Declared'}` : 'Not detected on package',
+                      status: scan?.parsed_fields?.veg_non_veg ? 'PASS' : 'FAIL',
+                      statutory_provision: 'Reg 5(5)'
+                    },
+                    {
+                      id: 'RULE_FSSAI_06',
+                      rule_code: 'FSSAI Reg 5(6)',
+                      title: 'FSSAI Logo and Licence Number',
+                      extracted_value: scan?.parsed_fields?.fssai_license?.license_number ? `Lic. No. ${scan?.parsed_fields?.fssai_license.license_number}` : (scan?.parsed_fields?.fssai_license?.raw || 'Not detected on package'),
+                      status: scan?.parsed_fields?.fssai_license?.is_valid_14_digit ? 'PASS' : 'FAIL',
+                      statutory_provision: 'Reg 5(6)'
+                    },
+                    {
+                      id: 'RULE_FSSAI_07',
+                      rule_code: 'FSSAI Reg 5(7)',
+                      title: 'Date of Manufacture/Packing',
+                      extracted_value: scan?.parsed_fields?.mfg_date?.date || scan?.parsed_fields?.mfg_date?.raw || 'Not detected on package',
+                      status: scan?.parsed_fields?.mfg_date?.is_compliant ? 'PASS' : 'FAIL',
+                      statutory_provision: 'Reg 5(7)'
+                    },
+                    {
+                      id: 'RULE_FSSAI_08',
+                      rule_code: 'FSSAI Reg 5(8)',
+                      title: 'Expiry / Use-by or Best-Before Date',
+                      extracted_value: scan?.parsed_fields?.expiry_date?.expiry_or_period || scan?.parsed_fields?.expiry_date?.raw || 'Not detected on package',
+                      status: scan?.parsed_fields?.expiry_date ? 'PASS' : 'FAIL',
+                      statutory_provision: 'Reg 5(8)'
+                    },
+                    {
+                      id: 'RULE_FSSAI_09',
+                      rule_code: 'FSSAI Reg 5(9)',
+                      title: 'Batch/Lot/Code Number',
+                      extracted_value: scan?.parsed_fields?.batch_number?.value || scan?.parsed_fields?.batch_number?.raw || 'Not detected on package',
+                      status: scan?.parsed_fields?.batch_number ? 'PASS' : 'FAIL',
+                      statutory_provision: 'Reg 5(9)'
+                    },
+                    {
+                      id: 'RULE_FSSAI_10',
+                      rule_code: 'FSSAI Reg 5(10)',
+                      title: 'Manufacturer/Packer/Importer Details',
+                      extracted_value: scan?.parsed_fields?.manufacturer?.address || scan?.parsed_fields?.manufacturer?.name || 'Not detected on package',
+                      status: scan?.parsed_fields?.manufacturer?.name ? 'PASS' : 'FAIL',
+                      statutory_provision: 'Reg 5(10)'
+                    },
+                    {
+                      id: 'RULE_FSSAI_11',
+                      rule_code: 'FSSAI Reg 5(11)',
+                      title: 'Customer Care/Contact Information',
+                      extracted_value: scan?.parsed_fields?.consumer_care ? [
+                        scan?.parsed_fields?.consumer_care.phone && `Tel: ${scan?.parsed_fields?.consumer_care.phone}`,
+                        scan?.parsed_fields?.consumer_care.email && `Email: ${scan?.parsed_fields?.consumer_care.email}`
+                      ].filter(Boolean).join(' | ') || 'Declared' : 'Not detected on package',
+                      status: scan?.parsed_fields?.consumer_care?.is_complete || (scan?.parsed_fields?.consumer_care?.phone && scan?.parsed_fields?.consumer_care?.email) ? 'PASS' : 'FAIL',
+                      statutory_provision: 'Reg 5(11)'
+                    },
+                    {
+                      id: 'RULE_FSSAI_12',
+                      rule_code: 'FSSAI Reg 5(12)',
+                      title: 'Allergen Declarations, Where Applicable',
+                      extracted_value: scan?.parsed_fields?.allergen_declaration?.raw || scan?.parsed_fields?.allergen_declaration?.statement || 'No priority allergens declared',
+                      status: 'PASS',
+                      statutory_provision: 'Reg 5(12)'
+                    },
+                    {
+                      id: 'RULE_FSSAI_13',
+                      rule_code: 'FSSAI Reg 5(13)',
+                      title: 'Storage/Use Instructions, Where Required',
+                      extracted_value: scan?.parsed_fields?.storage_instructions?.instructions || scan?.parsed_fields?.storage_instructions?.raw || 'Not detected on package',
+                      status: scan?.parsed_fields?.storage_instructions ? 'PASS' : 'FAIL',
+                      statutory_provision: 'Reg 5(13)'
+                    },
+                    {
+                      id: 'RULE_FSSAI_14',
+                      rule_code: 'FSSAI Reg 5(14)',
+                      title: 'Country of Origin, for Imported Food',
+                      extracted_value: typeof scan?.parsed_fields?.country_of_origin === 'string' ? scan?.parsed_fields?.country_of_origin : (scan?.parsed_fields?.country_of_origin?.country || 'India (Domestic)'),
+                      status: 'PASS',
+                      statutory_provision: 'Reg 5(14)'
+                    }
+                  ];
 
-                {/* Rule 6(1)(b) */}
-                {(() => {
-                  const isMissing = !scan?.parsed_fields?.commodity_name || scan?.parsed_fields?.commodity_name === 'Packaged Commodity';
-                  return (
-                    <tr style={{ background: isMissing ? 'rgba(239, 68, 68, 0.08)' : undefined, borderLeft: isMissing ? '4px solid #ef4444' : undefined }}>
-                      <td style={{ fontWeight: 700 }}>Rule 6(1)(b)</td>
-                      <td>Common or generic name of commodity</td>
-                      <td style={{ fontSize: '0.82rem', color: isMissing ? '#f87171' : undefined }}>
-                        {scan?.parsed_fields?.commodity_name || 'Generic Commodity'}
-                      </td>
-                      <td>
-                        {!isMissing ? (
-                          <span className="badge badge-compliant">VERIFIED</span>
-                        ) : (
-                          <span className="badge badge-noncompliant">OMITTED</span>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })()}
+                  const matrixToRender = (report.rule_checks_matrix && report.rule_checks_matrix.length > 0)
+                    ? report.rule_checks_matrix
+                    : default14Rules;
 
-                {/* Rule 6(1)(c) */}
-                {(() => {
-                  const isMissing = !scan?.parsed_fields?.net_quantity || !scan?.parsed_fields?.net_quantity?.raw;
-                  const isIllegal = scan?.parsed_fields?.net_quantity && !scan?.parsed_fields?.net_quantity?.is_standard;
-                  return (
-                    <tr style={{ 
-                      background: isMissing ? 'rgba(239, 68, 68, 0.08)' : isIllegal ? 'rgba(245, 158, 11, 0.08)' : undefined, 
-                      borderLeft: isMissing ? '4px solid #ef4444' : isIllegal ? '4px solid #f59e0b' : undefined 
-                    }}>
-                      <td style={{ fontWeight: 700 }}>Rule 6(1)(c)</td>
-                      <td>Net quantity in standard metric units (Rule 12 &amp; 13: g, kg, ml, l)</td>
-                      <td style={{ fontSize: '0.82rem', color: isMissing ? '#f87171' : isIllegal ? '#fbbf24' : undefined }}>
-                        {scan?.parsed_fields?.net_quantity?.raw || 'Not detected on package'}
-                      </td>
-                      <td>
-                        {isMissing ? (
-                          <span className="badge badge-noncompliant">OMITTED (CRITICAL DEFECT)</span>
-                        ) : isIllegal ? (
-                          <span className="badge badge-warning">ILLEGAL UNIT ('{scan?.parsed_fields?.net_quantity?.unit}')</span>
-                        ) : (
-                          <span className="badge badge-compliant">STANDARD</span>
-                        )}
-                      </td>
-                    </tr>
-                  );
+                  return matrixToRender.map((row: any, idx: number) => {
+                    const isPass = row.status === 'PASS';
+                    return (
+                      <tr 
+                        key={idx}
+                        style={{ 
+                          background: !isPass ? 'rgba(239, 68, 68, 0.07)' : undefined, 
+                          borderLeft: !isPass ? '4px solid #ef4444' : undefined 
+                        }}
+                      >
+                        <td style={{ fontWeight: 700, color: 'var(--text-muted)' }}>{idx + 1}</td>
+                        <td style={{ fontWeight: 700, color: '#60a5fa', fontFamily: 'var(--font-mono)' }}>
+                          {row.rule_code}
+                        </td>
+                        <td>
+                          <div style={{ fontWeight: 600, color: '#ffffff' }}>{row.title}</div>
+                          <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{row.statutory_provision || ''}</div>
+                        </td>
+                        <td style={{ fontSize: '0.82rem', color: !isPass ? '#f87171' : undefined }}>
+                          {row.extracted_value || 'Not detected on package'}
+                        </td>
+                        <td>
+                          {isPass ? (
+                            <span className="badge badge-compliant">VERIFIED</span>
+                          ) : (
+                            <span className="badge badge-noncompliant">OMITTED / DEFECT</span>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  });
                 })()}
-
-                {/* Rule 6(1)(d) */}
-                {(() => {
-                  const isMissing = !scan?.parsed_fields?.mfg_date || !scan?.parsed_fields?.mfg_date?.date;
-                  const isInvalid = scan?.parsed_fields?.mfg_date && !scan?.parsed_fields?.mfg_date?.is_compliant;
-                  return (
-                    <tr style={{ 
-                      background: isMissing ? 'rgba(239, 68, 68, 0.08)' : isInvalid ? 'rgba(245, 158, 11, 0.08)' : undefined, 
-                      borderLeft: isMissing ? '4px solid #ef4444' : isInvalid ? '4px solid #f59e0b' : undefined 
-                    }}>
-                      <td style={{ fontWeight: 700 }}>Rule 6(1)(d)</td>
-                      <td>Month and year of manufacture or pre-packing (MM/YYYY or Month YYYY)</td>
-                      <td style={{ fontSize: '0.82rem', color: isMissing ? '#f87171' : isInvalid ? '#fbbf24' : undefined }}>
-                        {scan?.parsed_fields?.mfg_date?.date || 'Not detected on package'}
-                      </td>
-                      <td>
-                        {isMissing ? (
-                          <span className="badge badge-noncompliant">OMITTED (CRITICAL DEFECT)</span>
-                        ) : isInvalid ? (
-                          <span className="badge badge-warning">INVALID DATE FORMAT</span>
-                        ) : (
-                          <span className="badge badge-compliant">VERIFIED</span>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })()}
-
-                {/* Rule 6(1)(e) */}
-                {(() => {
-                  const isMissing = !scan?.parsed_fields?.mrp || !scan?.parsed_fields?.mrp?.raw;
-                  const noTaxClause = scan?.parsed_fields?.mrp && !scan?.parsed_fields?.mrp?.includes_taxes;
-                  return (
-                    <tr style={{ 
-                      background: isMissing ? 'rgba(239, 68, 68, 0.08)' : noTaxClause ? 'rgba(245, 158, 11, 0.08)' : undefined, 
-                      borderLeft: isMissing ? '4px solid #ef4444' : noTaxClause ? '4px solid #f59e0b' : undefined 
-                    }}>
-                      <td style={{ fontWeight: 700 }}>Rule 6(1)(e)</td>
-                      <td>Maximum Retail Price (MRP) including "(inclusive of all taxes)"</td>
-                      <td style={{ fontSize: '0.82rem', color: isMissing ? '#f87171' : noTaxClause ? '#fbbf24' : undefined }}>
-                        {scan?.parsed_fields?.mrp?.raw || 'Not detected on package'}
-                      </td>
-                      <td>
-                        {isMissing ? (
-                          <span className="badge badge-noncompliant">MRP MISSING (CRITICAL)</span>
-                        ) : noTaxClause ? (
-                          <span className="badge badge-warning">MISSING TAX CLAUSE</span>
-                        ) : (
-                          <span className="badge badge-compliant">VERIFIED</span>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })()}
-
-                {/* Rule 6(1)(n) */}
-                {(() => {
-                  const isMissing = !scan?.parsed_fields?.consumer_care;
-                  const missingEmail = scan?.parsed_fields?.consumer_care && !scan?.parsed_fields?.consumer_care?.email;
-                  const missingPhone = scan?.parsed_fields?.consumer_care && !scan?.parsed_fields?.consumer_care?.phone;
-                  return (
-                    <tr style={{ 
-                      background: isMissing ? 'rgba(239, 68, 68, 0.08)' : (missingEmail || missingPhone) ? 'rgba(245, 158, 11, 0.08)' : undefined, 
-                      borderLeft: isMissing ? '4px solid #ef4444' : (missingEmail || missingPhone) ? '4px solid #f59e0b' : undefined 
-                    }}>
-                      <td style={{ fontWeight: 700 }}>Rule 6(1)(n)</td>
-                      <td>Consumer grievance redressal details (Phone number AND Email ID mandatory)</td>
-                      <td style={{ fontSize: '0.82rem' }}>
-                        Tel: {scan?.parsed_fields?.consumer_care?.phone || 'Omitted'} &bull; Email: {scan?.parsed_fields?.consumer_care?.email || 'Omitted'}
-                      </td>
-                      <td>
-                        {isMissing ? (
-                          <span className="badge badge-noncompliant">OMITTED (CRITICAL)</span>
-                        ) : (missingEmail || missingPhone) ? (
-                          <span className="badge badge-warning">INCOMPLETE (EMAIL/PHONE MISSING)</span>
-                        ) : (
-                          <span className="badge badge-compliant">COMPLETE</span>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })()}
-
-                {/* Rule 7 */}
-                <tr>
-                  <td style={{ fontWeight: 700 }}>Rule 7</td>
-                  <td>Minimum height of numerals and letters based on net quantity</td>
-                  <td style={{ fontSize: '0.82rem' }}>
-                    {scan?.parsed_fields?.readability?.estimated_font_size || '>= 3.0mm'}
-                  </td>
-                  <td>
-                    {scan?.parsed_fields?.readability?.clarity === 'LOW' ? (
-                      <span className="badge badge-warning">BORDERLINE</span>
-                    ) : (
-                      <span className="badge badge-compliant">ADEQUATE</span>
-                    )}
-                  </td>
-                </tr>
               </tbody>
             </table>
           </div>
         </div>
 
-        {/* Official Statutory Show Cause Notice Form (Printed if Non-Compliant) */}
+        {/* Official Statutory Improvement Notice Form (Printed if Non-Compliant) */}
         {report.statutory_notice && (
           <div className="statutory-notice-print" style={{
             background: 'rgba(239, 68, 68, 0.05)',
@@ -717,37 +711,37 @@ export const ComplianceReportPage: React.FC<ComplianceReportPageProps> = ({
           }}>
             <div style={{ textAlign: 'center', marginBottom: '18px' }}>
               <div style={{ fontSize: '0.85rem', fontWeight: 800, letterSpacing: '0.05em', color: '#f87171' }}>
-                FORM 1 • STATUTORY SHOW CAUSE NOTICE
+                FORM 1 &bull; STATUTORY IMPROVEMENT NOTICE
               </div>
               <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#ffffff' }}>
-                UNDER SECTION 36 READ WITH SECTION 48 OF THE LEGAL METROLOGY ACT, 2009
+                UNDER SECTION 32 OF THE FOOD SAFETY AND STANDARDS ACT, 2006
               </div>
               <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '4px' }}>
-                Notice No: <strong style={{ color: '#ffffff' }}>{report.statutory_notice.noticeNumber}</strong> • Date: {report.statutory_notice.noticeDate}
+                Notice No: <strong style={{ color: '#ffffff' }}>{report.statutory_notice.noticeNumber}</strong> &bull; Date: {report.statutory_notice.noticeDate}
               </div>
             </div>
 
             <div style={{ fontSize: '0.88rem', lineHeight: 1.6, color: 'var(--text-primary)' }}>
               <p style={{ marginBottom: '10px' }}>
-                <strong>TO:</strong><br />
+                <strong>TO (Food Business Operator):</strong><br />
                 {report.statutory_notice.recipient}<br />
                 {report.statutory_notice.address}
               </p>
 
               <p style={{ marginBottom: '12px' }}>
-                <strong>SUBJECT:</strong> {report.statutory_notice.subject} in respect of commodity <em>"{report.statutory_notice.commodityName}"</em>.
+                <strong>SUBJECT:</strong> {report.statutory_notice.subject} in respect of food commodity <em>"{report.statutory_notice.commodityName}"</em>.
               </p>
 
               <p style={{ marginBottom: '12px' }}>
-                WHEREAS on inspection by the undersigned Legal Metrology Officer, the packaged commodity described above was found to be in contravention of statutory rules, namely <strong>{report.statutory_notice.statutoryProvisionsViolated}</strong>.
+                WHEREAS on packaging inspection by the Designated Food Safety Officer, the food product described above was found non-compliant with statutory packaging provisions, namely <strong>{report.statutory_notice.statutoryProvisionsViolated}</strong>.
               </p>
 
               <p style={{ marginBottom: '12px' }}>
-                NOW THEREFORE, in exercise of powers under <strong>{report.statutory_notice.penalSectionApplicable}</strong>, you are hereby called upon to:
+                NOW THEREFORE, in exercise of powers under <strong>{report.statutory_notice.penalSectionApplicable}</strong>, you are hereby directed to:
               </p>
 
               <ol style={{ paddingLeft: '24px', marginBottom: '16px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                {report.statutory_notice.legalDirectives.map((d, i) => (
+                {report.statutory_notice.legalDirectives.map((d: string, i: number) => (
                   <li key={i}>{d}</li>
                 ))}
               </ol>

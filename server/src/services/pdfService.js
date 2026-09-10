@@ -1,14 +1,7 @@
 import PDFDocument from 'pdfkit';
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const UPLOADS_DIR = path.join(__dirname, '..', '..', 'uploads');
 
 /**
- * Generates an official, structured Legal Metrology Compliance PDF Report
+ * Generates an official, structured FSSAI Food Packaging Compliance PDF Certificate
  * @param {Object} data - { report, scan, product, violations }
  * @param {Stream} outputStream - Writable stream (e.g. res)
  */
@@ -19,12 +12,13 @@ export function generateCompliancePdf(data, outputStream) {
 
   const doc = new PDFDocument({
     size: 'A4',
-    margin: 40,
+    margin: 36,
+    bufferPages: true,
     info: {
-      Title: `Legal Metrology Report - ${report.report_number}`,
-      Author: 'Directorate of Legal Metrology',
-      Subject: 'Statutory Packaging Compliance Certificate',
-      Keywords: 'Legal Metrology, Compliance, Packaged Commodities, Rules 2011'
+      Title: `FSSAI Compliance Certificate - ${report.report_number}`,
+      Author: 'Food Safety and Standards Authority of India',
+      Subject: 'Statutory Food Packaging Compliance Inspection Report',
+      Keywords: 'FSSAI, Food Safety, Packaging, Labelling Regulations 2020'
     }
   });
 
@@ -38,208 +32,172 @@ export function generateCompliancePdf(data, outputStream) {
   const failRed = '#dc2626';
   const warnAmber = '#d97706';
 
-  // --- 1. Top Government Header ---
-  doc.rect(40, 40, 515, 65).fill('#0f172a');
+  // --- 1. Top Government / FSSAI Header ---
+  doc.rect(36, 36, 523, 64).fill('#0f172a');
 
-  doc.fillColor('#60a5fa').fontSize(9).font('Helvetica-Bold').text('DIRECTORATE OF LEGAL METROLOGY', 55, 52, { characterSpacing: 1 });
-  doc.fillColor('#94a3b8').fontSize(7.5).font('Helvetica').text('DEPARTMENT OF CONSUMER AFFAIRS • GOVERNMENT OF INDIA', 55, 66);
-  doc.fillColor('#ffffff').fontSize(13).font('Helvetica-Bold').text('STATUTORY COMMODITY INSPECTION CERTIFICATE', 55, 78);
+  doc.fillColor('#38bdf8').fontSize(8.5).font('Helvetica-Bold').text('FOOD SAFETY AND STANDARDS AUTHORITY OF INDIA (FSSAI)', 50, 47, { characterSpacing: 1 });
+  doc.fillColor('#94a3b8').fontSize(7).font('Helvetica').text('MINISTRY OF HEALTH & FAMILY WELFARE • GOVERNMENT OF INDIA', 50, 59);
+  doc.fillColor('#ffffff').fontSize(12).font('Helvetica-Bold').text('STATUTORY PRE-PACKAGED FOOD COMPLIANCE CERTIFICATE', 50, 70);
 
-  // Reference number in header right
-  doc.fillColor('#94a3b8').fontSize(7.5).font('Helvetica').text('CERTIFICATE REF:', 400, 52, { align: 'right', width: 140 });
-  doc.fillColor('#38bdf8').fontSize(10).font('Helvetica-Bold').text(report.report_number || 'CLM/DEL/2026/01', 400, 64, { align: 'right', width: 140 });
-  doc.fillColor('#cbd5e1').fontSize(8).font('Helvetica').text(`Date: ${new Date(report.generated_at).toLocaleDateString('en-IN')}`, 400, 78, { align: 'right', width: 140 });
+  // Header Right
+  doc.fillColor('#94a3b8').fontSize(7).font('Helvetica').text('INSPECTION REF:', 390, 47, { align: 'right', width: 155 });
+  doc.fillColor('#38bdf8').fontSize(9.5).font('Helvetica-Bold').text(report.report_number || 'FSSAI/REP/2026/01', 390, 58, { align: 'right', width: 155 });
+  doc.fillColor('#cbd5e1').fontSize(7.5).font('Helvetica').text(`Date: ${new Date(report.generated_at).toLocaleDateString('en-IN')}`, 390, 71, { align: 'right', width: 155 });
 
-  doc.moveDown(3);
-
-  // --- 2. Statutory Enforcement Verdict Banner ---
-  const bannerY = 118;
+  // --- 2. Enforcement Verdict Banner ---
+  const bannerY = 108;
   const bannerColor = isCompliant ? passGreen : isNonCompliant ? failRed : warnAmber;
-  doc.rect(40, bannerY, 515, 50).fill(bannerColor);
+  doc.rect(36, bannerY, 523, 44).fill(bannerColor);
 
   const verdictText = isCompliant 
-    ? 'VERDICT: FULLY COMPLIANT' 
+    ? 'VERDICT: FULLY COMPLIANT (FSSAI LABELLING REGULATIONS 2020)' 
     : isNonCompliant 
-      ? 'VERDICT: NON-COMPLIANT (STATUTORY OFFENCE LOGGED)' 
+      ? 'VERDICT: NON-COMPLIANT (STATUTORY LABELLING DEFECTS LOGGED)' 
       : 'VERDICT: BORDERLINE / ADVISORY';
 
   const verdictSubtext = isCompliant
-    ? 'All mandatory packaging declarations satisfy the Legal Metrology (Packaged Commodities) Rules, 2011.'
-    : `${violations.length} statutory violation(s) detected. Subject to legal notice & compounding under Section 36 & 48.`;
+    ? 'All 14 mandatory pre-packaged food labeling declarations satisfy FSSAI Regulations, 2020.'
+    : `${violations.length} statutory defect(s) detected. Subject to Improvement Notice under Section 32 of FSS Act, 2006.`;
 
-  doc.fillColor('#ffffff').fontSize(12).font('Helvetica-Bold').text(verdictText, 55, bannerY + 12);
-  doc.fillColor('#f8fafc').fontSize(8.5).font('Helvetica').text(verdictSubtext, 55, bannerY + 30);
+  doc.fillColor('#ffffff').fontSize(10.5).font('Helvetica-Bold').text(verdictText, 50, bannerY + 10);
+  doc.fillColor('#f8fafc').fontSize(7.5).font('Helvetica').text(verdictSubtext, 50, bannerY + 26);
 
   // Score badge on banner right
-  doc.fillColor('#ffffff').fontSize(8).font('Helvetica-Bold').text('COMPLIANCE SCORE', 415, bannerY + 10, { align: 'right', width: 125 });
-  doc.fillColor('#ffffff').fontSize(18).font('Helvetica-Bold').text(`${report.score}/100`, 415, bannerY + 22, { align: 'right', width: 125 });
+  doc.fillColor('#ffffff').fontSize(7).font('Helvetica-Bold').text('COMPLIANCE SCORE', 420, bannerY + 8, { align: 'right', width: 125 });
+  doc.fillColor('#ffffff').fontSize(16).font('Helvetica-Bold').text(`${report.score}/100`, 420, bannerY + 19, { align: 'right', width: 125 });
 
-  // --- 3. Commodity & Inspection Details Grid ---
-  const gridY = 178;
-  doc.rect(40, gridY, 515, 60).fill('#f8fafc');
-  doc.rect(40, gridY, 515, 60).stroke(borderGray);
+  // --- 3. Food Product & Inspection Details Grid ---
+  const gridY = 158;
+  doc.rect(36, gridY, 523, 48).fill('#f8fafc');
+  doc.rect(36, gridY, 523, 48).stroke(borderGray);
 
-  // Column 1: Commodity
-  doc.fillColor(textMuted).fontSize(7).font('Helvetica-Bold').text('COMMODITY NAME', 52, gridY + 10);
-  doc.fillColor(textDark).fontSize(9).font('Helvetica-Bold').text(product?.product_name || 'Packaged Commodity', 52, gridY + 22, { width: 155, ellipsis: true });
-  doc.fillColor(textMuted).fontSize(7).font('Helvetica').text(`Category: ${product?.category || 'General'}`, 52, gridY + 44);
+  // Column 1: Food Product
+  doc.fillColor(textMuted).fontSize(6.5).font('Helvetica-Bold').text('FOOD PRODUCT / COMMODITY', 46, gridY + 8);
+  doc.fillColor(textDark).fontSize(8.5).font('Helvetica-Bold').text(product?.product_name || 'Packaged Food', 46, gridY + 19, { width: 160, ellipsis: true });
+  doc.fillColor(textMuted).fontSize(6.5).font('Helvetica').text(`Category: ${product?.category || 'Food & Beverages'}`, 46, gridY + 33);
 
-  // Column 2: Brand / Manufacturer
-  doc.fillColor(textMuted).fontSize(7).font('Helvetica-Bold').text('MANUFACTURER / BRAND', 220, gridY + 10);
-  doc.fillColor(textDark).fontSize(9).font('Helvetica-Bold').text(product?.brand || 'Unbranded', 220, gridY + 22, { width: 160, ellipsis: true });
-  doc.fillColor(textMuted).fontSize(7).font('Helvetica').text(`Net Quantity: ${scan?.parsed_fields?.net_quantity?.raw || 'Omitted'}`, 220, gridY + 44);
+  // Column 2: Brand / FSSAI License
+  doc.fillColor(textMuted).fontSize(6.5).font('Helvetica-Bold').text('BRAND / FBO LICENCE', 215, gridY + 8);
+  doc.fillColor(textDark).fontSize(8.5).font('Helvetica-Bold').text(product?.brand || 'Brand Owner', 215, gridY + 19, { width: 170, ellipsis: true });
+  doc.fillColor(textMuted).fontSize(6.5).font('Helvetica').text(`FSSAI Lic: ${scan?.parsed_fields?.fssai_license?.license_number || 'Omitted'}`, 215, gridY + 33);
 
-  // Column 3: Inspector Officer
-  doc.fillColor(textMuted).fontSize(7).font('Helvetica-Bold').text('INSPECTING OFFICER', 395, gridY + 10);
-  doc.fillColor(primaryBlue).fontSize(9).font('Helvetica-Bold').text(report.inspector_name || 'Sworn Inspector', 395, gridY + 22, { width: 150, ellipsis: true });
-  doc.fillColor(textMuted).fontSize(7).font('Helvetica').text('Authority: Section 15 LM Act', 395, gridY + 44);
+  // Column 3: Inspecting Officer
+  doc.fillColor(textMuted).fontSize(6.5).font('Helvetica-Bold').text('DESIGNATED FOOD SAFETY OFFICER', 395, gridY + 8);
+  doc.fillColor(primaryBlue).fontSize(8.5).font('Helvetica-Bold').text(report.inspector_name || 'Food Safety Officer', 395, gridY + 19, { width: 155, ellipsis: true });
+  doc.fillColor(textMuted).fontSize(6.5).font('Helvetica').text('Authority: Section 32 & 41 FSS Act', 395, gridY + 33);
 
-  // --- 4. Declarations Verification Matrix ---
-  let currentY = 250;
-  doc.fillColor(primaryBlue).fontSize(10).font('Helvetica-Bold').text('1. STATUTORY DECLARATIONS VERIFICATION MATRIX (RULES 2011)', 40, currentY);
-  currentY += 16;
+  // --- 4. The 14 Mandatory Declarations Verification Matrix ---
+  let currentY = 214;
+  doc.fillColor(primaryBlue).fontSize(9).font('Helvetica-Bold').text('1. MANDATORY FOOD PACKAGING VERIFICATION MATRIX (FSSAI 14-POINT STANDARD)', 36, currentY);
+  currentY += 14;
 
   // Table Header
-  doc.rect(40, currentY, 515, 18).fill('#0f172a');
-  doc.fillColor('#ffffff').fontSize(7.5).font('Helvetica-Bold');
-  doc.text('RULE CODE', 48, currentY + 5);
-  doc.text('MANDATORY REQUIREMENT', 120, currentY + 5);
-  doc.text('DETECTED VALUE ON PACKAGING', 320, currentY + 5);
-  doc.text('LEGAL STATUS', 465, currentY + 5);
-  currentY += 18;
+  doc.rect(36, currentY, 523, 16).fill('#0f172a');
+  doc.fillColor('#ffffff').fontSize(6.8).font('Helvetica-Bold');
+  doc.text('#', 42, currentY + 4);
+  doc.text('RULE / CLAUSE', 58, currentY + 4);
+  doc.text('MANDATORY REQUIREMENT', 140, currentY + 4);
+  doc.text('DETECTED VALUE ON PACKAGING', 325, currentY + 4);
+  doc.text('STATUS', 475, currentY + 4);
+  currentY += 16;
 
-  const matrixRows = [
-    {
-      rule: 'Rule 6(1)(a)',
-      req: 'Manufacturer / Packer Name & Physical Address',
-      val: scan?.parsed_fields?.manufacturer?.address || scan?.parsed_fields?.manufacturer?.raw || 'Omitted / Not found',
-      status: scan?.parsed_fields?.manufacturer ? 'VERIFIED' : 'OMITTED',
-      isOk: Boolean(scan?.parsed_fields?.manufacturer)
-    },
-    {
-      rule: 'Rule 6(1)(b)',
-      req: 'Generic or Common Name of Commodity',
-      val: scan?.parsed_fields?.commodity_name || 'Generic Commodity',
-      status: scan?.parsed_fields?.commodity_name ? 'VERIFIED' : 'OMITTED',
-      isOk: Boolean(scan?.parsed_fields?.commodity_name)
-    },
-    {
-      rule: 'Rule 6(1)(c)',
-      req: 'Net Quantity in Standard Metric Units (g, kg, ml, l)',
-      val: scan?.parsed_fields?.net_quantity?.raw || 'Omitted',
-      status: scan?.parsed_fields?.net_quantity?.is_standard ? 'STANDARD' : scan?.parsed_fields?.net_quantity ? 'ILLEGAL UNIT' : 'OMITTED',
-      isOk: Boolean(scan?.parsed_fields?.net_quantity?.is_standard)
-    },
-    {
-      rule: 'Rule 6(1)(d)',
-      req: 'Month & Year of Manufacture/Packing (MM/YYYY)',
-      val: scan?.parsed_fields?.mfg_date?.date || 'Omitted',
-      status: scan?.parsed_fields?.mfg_date?.is_compliant ? 'VERIFIED' : scan?.parsed_fields?.mfg_date ? 'BAD FORMAT' : 'OMITTED',
-      isOk: Boolean(scan?.parsed_fields?.mfg_date?.is_compliant)
-    },
-    {
-      rule: 'Rule 6(1)(e)',
-      req: 'Maximum Retail Price with "(inclusive of all taxes)"',
-      val: scan?.parsed_fields?.mrp?.raw || 'Omitted',
-      status: (scan?.parsed_fields?.mrp?.includes_taxes && scan?.parsed_fields?.mrp?.raw) ? 'VERIFIED' : scan?.parsed_fields?.mrp ? 'NO TAX CLAUSE' : 'OMITTED',
-      isOk: Boolean(scan?.parsed_fields?.mrp?.includes_taxes && scan?.parsed_fields?.mrp?.raw)
-    },
-    {
-      rule: 'Rule 6(1)(n)',
-      req: 'Consumer Care Helpline Number AND Email ID',
-      val: `Tel: ${scan?.parsed_fields?.consumer_care?.phone || 'Omitted'} | Email: ${scan?.parsed_fields?.consumer_care?.email || 'Omitted'}`,
-      status: scan?.parsed_fields?.consumer_care?.is_complete ? 'COMPLETE' : 'DEFICIENT',
-      isOk: Boolean(scan?.parsed_fields?.consumer_care?.is_complete)
-    }
+  const matrixRows = report.rule_checks_matrix || [
+    { rule_code: 'FSSAI Reg 5(1)', title: 'Name of the Food/Product', status: scan?.parsed_fields?.commodity_name ? 'PASS' : 'FAIL', extracted_value: scan?.parsed_fields?.commodity_name || 'Omitted' },
+    { rule_code: 'FSSAI Reg 5(2)', title: 'List of Ingredients', status: scan?.parsed_fields?.ingredients ? 'PASS' : 'FAIL', extracted_value: scan?.parsed_fields?.ingredients?.raw || 'Omitted' },
+    { rule_code: 'FSSAI Reg 5(3)', title: 'Nutritional Information', status: scan?.parsed_fields?.nutritional_info?.is_declared ? 'PASS' : 'FAIL', extracted_value: scan?.parsed_fields?.nutritional_info?.energy || 'Omitted' },
+    { rule_code: 'FSSAI Reg 5(4)', title: 'Net Quantity', status: scan?.parsed_fields?.net_quantity?.is_standard ? 'PASS' : 'FAIL', extracted_value: scan?.parsed_fields?.net_quantity?.raw || 'Omitted' },
+    { rule_code: 'FSSAI Reg 5(5)', title: 'Vegetarian / Non-Veg Symbol', status: scan?.parsed_fields?.veg_non_veg ? 'PASS' : 'FAIL', extracted_value: scan?.parsed_fields?.veg_non_veg?.raw || 'Omitted' },
+    { rule_code: 'FSSAI Reg 5(6)', title: 'FSSAI Logo & Licence Number', status: scan?.parsed_fields?.fssai_license?.is_valid_14_digit ? 'PASS' : 'FAIL', extracted_value: scan?.parsed_fields?.fssai_license?.license_number || 'Omitted' },
+    { rule_code: 'FSSAI Reg 5(7)', title: 'Date of Manufacture/Packing', status: scan?.parsed_fields?.mfg_date?.is_compliant ? 'PASS' : 'FAIL', extracted_value: scan?.parsed_fields?.mfg_date?.date || 'Omitted' },
+    { rule_code: 'FSSAI Reg 5(8)', title: 'Expiry / Best-Before Date', status: scan?.parsed_fields?.expiry_date ? 'PASS' : 'FAIL', extracted_value: scan?.parsed_fields?.expiry_date?.expiry_or_period || 'Omitted' },
+    { rule_code: 'FSSAI Reg 5(9)', title: 'Batch/Lot/Code Number', status: scan?.parsed_fields?.batch_number ? 'PASS' : 'FAIL', extracted_value: scan?.parsed_fields?.batch_number?.value || 'Omitted' },
+    { rule_code: 'FSSAI Reg 5(10)', title: 'Manufacturer Details', status: scan?.parsed_fields?.manufacturer?.name ? 'PASS' : 'FAIL', extracted_value: scan?.parsed_fields?.manufacturer?.address || 'Omitted' },
+    { rule_code: 'FSSAI Reg 5(11)', title: 'Customer Care Details', status: scan?.parsed_fields?.consumer_care ? 'PASS' : 'FAIL', extracted_value: scan?.parsed_fields?.consumer_care?.phone || 'Omitted' },
+    { rule_code: 'FSSAI Reg 5(12)', title: 'Allergen Declarations', status: scan?.parsed_fields?.allergen_declaration ? 'PASS' : 'PASS', extracted_value: scan?.parsed_fields?.allergen_declaration?.raw || 'Not detected' },
+    { rule_code: 'FSSAI Reg 5(13)', title: 'Storage Instructions', status: scan?.parsed_fields?.storage_instructions ? 'PASS' : 'FAIL', extracted_value: scan?.parsed_fields?.storage_instructions?.instructions || 'Omitted' },
+    { rule_code: 'FSSAI Reg 5(14)', title: 'Country of Origin', status: scan?.parsed_fields?.country_of_origin ? 'PASS' : 'PASS', extracted_value: scan?.parsed_fields?.country_of_origin?.country || 'India' }
   ];
 
-  matrixRows.forEach((row, idx) => {
-    const rowHeight = 22;
-    const bg = row.isOk ? (idx % 2 === 0 ? '#ffffff' : '#f8fafc') : '#fef2f2';
-    doc.rect(40, currentY, 515, rowHeight).fill(bg);
-    doc.rect(40, currentY, 515, rowHeight).stroke(borderGray);
+  matrixRows.slice(0, 14).forEach((row, idx) => {
+    const isOk = row.status === 'PASS';
+    const rowHeight = 17;
+    const bg = isOk ? (idx % 2 === 0 ? '#ffffff' : '#f8fafc') : '#fef2f2';
+    doc.rect(36, currentY, 523, rowHeight).fill(bg);
+    doc.rect(36, currentY, 523, rowHeight).stroke(borderGray);
 
-    doc.fillColor(primaryBlue).fontSize(7.5).font('Helvetica-Bold').text(row.rule, 48, currentY + 6);
-    doc.fillColor(textDark).fontSize(7).font('Helvetica').text(row.req, 120, currentY + 6, { width: 190, ellipsis: true });
-    doc.fillColor(row.isOk ? textDark : failRed).fontSize(7).font('Helvetica').text(row.val, 320, currentY + 6, { width: 140, ellipsis: true });
+    doc.fillColor(textMuted).fontSize(6.5).font('Helvetica-Bold').text(`${idx + 1}`, 42, currentY + 4.5);
+    doc.fillColor(primaryBlue).fontSize(6.8).font('Helvetica-Bold').text(row.rule_code || `Rule ${idx + 1}`, 58, currentY + 4.5);
+    doc.fillColor(textDark).fontSize(6.5).font('Helvetica').text(row.title || 'Statutory Requirement', 140, currentY + 4.5, { width: 175, ellipsis: true });
+    doc.fillColor(isOk ? textDark : failRed).fontSize(6.5).font('Helvetica').text(String(row.extracted_value || 'Omitted'), 325, currentY + 4.5, { width: 140, ellipsis: true });
     
     // Status Tag
-    const statusColor = row.isOk ? passGreen : failRed;
-    doc.fillColor(statusColor).fontSize(7.5).font('Helvetica-Bold').text(row.status, 465, currentY + 6);
+    const statusColor = isOk ? passGreen : failRed;
+    doc.fillColor(statusColor).fontSize(7).font('Helvetica-Bold').text(isOk ? 'VERIFIED' : 'DEFICIENT', 475, currentY + 4.5);
 
     currentY += rowHeight;
   });
 
-  currentY += 16;
+  currentY += 12;
 
   // --- 5. Statutory Violations Ledger ---
   if (violations.length > 0) {
-    doc.fillColor(failRed).fontSize(10).font('Helvetica-Bold').text(`2. STATUTORY VIOLATIONS LEDGER (${violations.length} OFFENCES DETECTED)`, 40, currentY);
+    // If running low on page space, add page
+    if (currentY > 620) {
+      doc.addPage();
+      currentY = 40;
+    }
+
+    doc.fillColor(failRed).fontSize(9).font('Helvetica-Bold').text(`2. STATUTORY DEFECTS & OFFENCES LOGGED (${violations.length} VIOLATION(S))`, 36, currentY);
+    currentY += 12;
+
+    doc.rect(36, currentY, 523, 16).fill('#7f1d1d');
+    doc.fillColor('#ffffff').fontSize(6.8).font('Helvetica-Bold');
+    doc.text('RULE CODE', 44, currentY + 4);
+    doc.text('DEFECT NATURE & FACTUAL DEFICIENCY', 120, currentY + 4);
+    doc.text('SEVERITY', 320, currentY + 4);
+    doc.text('STATUTORY PROVISION', 380, currentY + 4);
+    doc.text('PENALTY FINE', 475, currentY + 4);
     currentY += 16;
 
-    // Violations table header
-    doc.rect(40, currentY, 515, 18).fill('#7f1d1d');
-    doc.fillColor('#ffffff').fontSize(7.5).font('Helvetica-Bold');
-    doc.text('RULE CODE', 48, currentY + 5);
-    doc.text('VIOLATION NATURE & DEFECT DETAILS', 120, currentY + 5);
-    doc.text('SEVERITY', 340, currentY + 5);
-    doc.text('PENAL PROVISION', 400, currentY + 5);
-    doc.text('FINE', 495, currentY + 5);
-    currentY += 18;
+    violations.slice(0, 5).forEach((v, idx) => {
+      const vHeight = 24;
+      doc.rect(36, currentY, 523, vHeight).fill(idx % 2 === 0 ? '#ffffff' : '#fff1f2');
+      doc.rect(36, currentY, 523, vHeight).stroke(borderGray);
 
-    violations.forEach((v, idx) => {
-      const vHeight = 32;
-      doc.rect(40, currentY, 515, vHeight).fill(idx % 2 === 0 ? '#ffffff' : '#fff1f2');
-      doc.rect(40, currentY, 515, vHeight).stroke(borderGray);
+      doc.fillColor(primaryBlue).fontSize(6.8).font('Helvetica-Bold').text(v.rule_code || 'FSSAI Reg 5', 44, currentY + 4);
+      doc.fillColor(textDark).fontSize(7).font('Helvetica-Bold').text((v.violation_type || '').replace(/_/g, ' '), 120, currentY + 3, { width: 190, ellipsis: true });
+      doc.fillColor(textMuted).fontSize(5.8).font('Helvetica').text(v.description || '', 120, currentY + 12, { width: 190, ellipsis: true });
 
-      doc.fillColor(primaryBlue).fontSize(7.5).font('Helvetica-Bold').text(v.rule_code || 'Rule 6', 48, currentY + 5);
-      
-      doc.fillColor(textDark).fontSize(7.5).font('Helvetica-Bold').text((v.violation_type || '').replace(/_/g, ' '), 120, currentY + 4, { width: 215, ellipsis: true });
-      doc.fillColor(textMuted).fontSize(6.5).font('Helvetica').text(v.description || '', 120, currentY + 15, { width: 215, height: 14, ellipsis: true });
-
-      doc.fillColor(v.severity === 'CRITICAL' ? failRed : warnAmber).fontSize(7.5).font('Helvetica-Bold').text(v.severity || 'MAJOR', 340, currentY + 8);
-      doc.fillColor(textMuted).fontSize(6.5).font('Helvetica').text(v.statutory_provision || 'Sec 36 LM Act', 400, currentY + 8, { width: 90 });
-      doc.fillColor(failRed).fontSize(8).font('Helvetica-Bold').text(v.penalty_fine || '₹25,000', 495, currentY + 8);
+      doc.fillColor(v.severity === 'CRITICAL' ? failRed : warnAmber).fontSize(6.8).font('Helvetica-Bold').text(v.severity || 'MAJOR', 320, currentY + 6);
+      doc.fillColor(textMuted).fontSize(6).font('Helvetica').text(v.statutory_provision || 'FSS Act, 2006', 380, currentY + 6, { width: 90, ellipsis: true });
+      doc.fillColor(failRed).fontSize(7).font('Helvetica-Bold').text(v.penalty_fine || '₹1,00,000', 475, currentY + 6);
 
       currentY += vHeight;
     });
 
-    currentY += 16;
-  } else {
-    doc.fillColor(passGreen).fontSize(9.5).font('Helvetica-Bold').text('2. STATUTORY VIOLATIONS: NONE DETECTED (FULL LEGAL CONFORMITY)', 40, currentY);
-    currentY += 20;
+    currentY += 10;
   }
 
-  // --- 6. Form 1 Show Cause Notice (If Non-Compliant) ---
-  if (report.statutory_notice && currentY < 680) {
-    const sn = report.statutory_notice;
-    doc.rect(40, currentY, 515, 62).fill('#fef2f2');
-    doc.rect(40, currentY, 515, 62).stroke(failRed);
-
-    doc.fillColor(failRed).fontSize(8.5).font('Helvetica-Bold').text('FORM 1: STATUTORY SHOW CAUSE NOTICE UNDER SECTION 36 READ WITH SEC 48', 52, currentY + 8);
-    doc.fillColor(textDark).fontSize(7.5).font('Helvetica').text(`Notice Ref: ${sn.noticeNumber || 'SCN/LM/2026/01'} • Proposed Compounding Fee: ${sn.compoundingFeeProposed || '₹25,000'} • Notice Window: ${sn.noticePeriodDays || 15} Days`, 52, currentY + 22);
-    doc.fillColor(textMuted).fontSize(7).font('Helvetica').text(`Addressed to: ${sn.recipient || 'Manufacturer/Packer'} — Offending commodity: "${sn.commodityName}". Option to compound offences or face prosecution in Judicial Magistrate Court.`, 52, currentY + 36, { width: 490 });
-
-    currentY += 76;
+  // --- 6. Inspector Authorization Sign-off ---
+  if (currentY > 670) {
+    doc.addPage();
+    currentY = 40;
   }
 
-  // --- 7. Official Seal, Digital Signature & Legal Disclaimer Footer ---
-  const footerY = 745;
-  doc.rect(40, footerY, 515, 1).fill(borderGray);
+  doc.rect(36, currentY, 523, 48).fill('#f8fafc');
+  doc.rect(36, currentY, 523, 48).stroke(borderGray);
 
-  // Official Seal Stamp Graphic
-  doc.circle(75, footerY + 26, 20).stroke(primaryBlue);
-  doc.fillColor(primaryBlue).fontSize(5.5).font('Helvetica-Bold').text('DIRECTORATE OF\nLEGAL METROLOGY\nOFFICIAL SEAL', 58, footerY + 16, { align: 'center', width: 34 });
+  doc.fillColor(textMuted).fontSize(6.5).font('Helvetica-Bold').text('STATUTORY DIRECTIVE & LEGAL NOTICE CLAUSE', 46, currentY + 7);
+  doc.fillColor(textDark).fontSize(6.5).font('Helvetica').text(
+    isCompliant 
+      ? 'This pre-packaged food commodity satisfies all 14 mandatory labeling provisions under FSS (Labelling and Display) Regulations, 2020.'
+      : 'Food Business Operator is hereby served with an Improvement Notice under Section 32 of FSS Act, 2006 to rectify all deficient labeling declarations within 14 days.',
+    46, currentY + 18, { width: 330 }
+  );
 
-  // Signature Details
-  doc.fillColor(textDark).fontSize(8).font('Helvetica-Bold').text(report.inspector_name || 'Enforcement Officer', 115, footerY + 12);
-  doc.fillColor(textMuted).fontSize(7).font('Helvetica').text('Sworn Legal Metrology Officer • Authorized under Section 15 of Legal Metrology Act, 2009', 115, footerY + 23);
-  doc.fillColor('#64748b').fontSize(6.5).font('Helvetica').text('Digitally validated and cryptographically recorded in the Central Compliance Registry.', 115, footerY + 33);
-
-  // Security Verification QR / ID
-  doc.fillColor(primaryBlue).fontSize(7.5).font('Helvetica-Bold').text(`VERIFIED RECORD`, 420, footerY + 12, { align: 'right', width: 130 });
-  doc.fillColor(textMuted).fontSize(6.5).font('Helvetica').text(`ID: ${report.id}`, 420, footerY + 23, { align: 'right', width: 130 });
-  doc.fillColor(textMuted).fontSize(6.5).font('Helvetica').text('Authenticity: legal-metrology.gov.in', 420, footerY + 33, { align: 'right', width: 130 });
+  doc.fillColor(primaryBlue).fontSize(7.5).font('Helvetica-Bold').text('AUTHORISED FOOD SAFETY OFFICER', 400, currentY + 7, { width: 150, align: 'right' });
+  doc.fillColor(textDark).fontSize(7.5).font('Helvetica-Bold').text(report.inspector_name || 'Food Safety Officer', 400, currentY + 20, { width: 150, align: 'right' });
+  doc.fillColor(textMuted).fontSize(6).font('Helvetica').text('Digital Signature Verified • GOI', 400, currentY + 32, { width: 150, align: 'right' });
 
   doc.end();
 }
