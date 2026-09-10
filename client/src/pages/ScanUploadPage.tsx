@@ -96,25 +96,17 @@ export const ScanUploadPage: React.FC<ScanUploadPageProps> = ({
   initialSample,
   onOcrComplete
 }) => {
-  const [selectedSample, setSelectedSample] = useState<SampleLabel | null>(initialSample || null);
+  const [selectedSample, setSelectedSample] = useState<SampleLabel | null>(null);
   const [activeSide, setActiveSide] = useState<PackageSide>('front');
   const [sideImages, setSideImages] = useState<Record<PackageSide, SideData>>({
-    front: {
-      previewUrl: initialSample?.svgDataUrl || null,
-      imageMeta: initialSample ? {
-        name: `${initialSample.name.replace(/\s+/g, '_')}_front.svg`,
-        size: 'Benchmark Vector',
-        width: 600,
-        height: 420
-      } : null
-    },
+    front: { previewUrl: null, imageMeta: null },
     back: { previewUrl: null, imageMeta: null },
     side: { previewUrl: null, imageMeta: null }
   });
   
-  const [productName, setProductName] = useState(initialSample?.name || '');
-  const [brand, setBrand] = useState(initialSample?.brand || '');
-  const [category, setCategory] = useState(initialSample?.category || 'General Packaged Commodity');
+  const [productName, setProductName] = useState('');
+  const [brand, setBrand] = useState('');
+  const [category, setCategory] = useState('Food & Beverages');
   const [isDragOver, setIsDragOver] = useState(false);
 
   // Active side derived variables
@@ -240,7 +232,7 @@ export const ScanUploadPage: React.FC<ScanUploadPageProps> = ({
 
       // Auto-populate product name from filename if empty
       const baseName = file.name.replace(/\.[^/.]+$/, "").replace(/[-_]/g, " ");
-      if (!productName || productName === 'Table Butter 100g') {
+      if (!productName) {
         setProductName(baseName.charAt(0).toUpperCase() + baseName.slice(1));
       }
     };
@@ -522,7 +514,7 @@ export const ScanUploadPage: React.FC<ScanUploadPageProps> = ({
           Statutory Access Restricted
         </h2>
         <p style={{ color: 'var(--muted-fg)', fontSize: '0.9rem', lineHeight: 1.6, marginBottom: '24px' }}>
-          Under Section 15 of the Legal Metrology Act, 2009, only sworn <strong>Legal Metrology Inspectors</strong> are authorized to upload, scan, and inspect packaging commodities.
+          Under Section 38 of the Food Safety and Standards Act, 2006, only sworn <strong>Food Safety Officers</strong> are authorized to upload, scan, and inspect food packaging commodities.
           <br /><br />
           As an <strong>Administrator / Joint Controller</strong>, your clearance permits access to <strong>Central Analytics</strong>, <strong>Statutory Rule Controls</strong>, and the <strong>Officer Directory</strong>.
         </p>
@@ -921,79 +913,36 @@ export const ScanUploadPage: React.FC<ScanUploadPageProps> = ({
             </div>
           </div>
 
-          {/* Quick Benchmark Comparison Presets (Click for Details) */}
-          <div style={{ marginTop: '16px' }}>
-            <button
-              type="button"
-              onClick={() => setShowBenchmarkDetail(!showBenchmarkDetail)}
-              style={{
-                width: '100%',
-                background: 'rgba(255, 255, 255, 0.03)',
-                border: '1px solid var(--border-subtle)',
-                borderRadius: '8px',
-                padding: '8px 12px',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                color: 'var(--text-secondary)',
-                cursor: 'pointer',
-                fontSize: '0.76rem',
-                fontWeight: 600
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <Sparkles size={13} color="#60a5fa" />
-                <span>Test with Certified Benchmark Commodities</span>
-                {selectedSample && (
-                  <span style={{ color: '#60a5fa', fontWeight: 700 }}>
-                    ({selectedSample.name.split(' ').slice(0, 2).join(' ')})
-                  </span>
-                )}
-              </div>
-              <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>
-                {showBenchmarkDetail ? '▲ Hide' : '▼ View Samples'}
+          {/* 1 Image vs 3 Images Inspection Guidance Card */}
+          <div style={{
+            marginTop: '16px',
+            background: 'linear-gradient(135deg, rgba(56, 189, 248, 0.08) 0%, rgba(30, 58, 138, 0.12) 100%)',
+            border: '1px solid rgba(56, 189, 248, 0.3)',
+            borderRadius: '10px',
+            padding: '14px 16px'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+              <Sparkles size={16} color="#38bdf8" />
+              <span style={{ fontSize: '0.82rem', fontWeight: 800, color: '#ffffff' }}>
+                FSSAI 14-Rule Verification Engine
               </span>
-            </button>
-
-            {showBenchmarkDetail && (
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginTop: '8px' }}>
-                {SAMPLE_LABELS.map((sample) => {
-                  const isSelected = selectedSample?.id === sample.id;
-                  return (
-                    <button
-                      key={sample.id}
-                      type="button"
-                      onClick={() => handleSelectBenchmark(sample)}
-                      style={{
-                        padding: '8px 12px',
-                        borderRadius: '8px',
-                        border: `1px solid ${isSelected ? 'var(--accent-blue)' : 'var(--border-subtle)'}`,
-                        background: isSelected ? 'rgba(37, 99, 235, 0.2)' : 'var(--bg-glass)',
-                        color: isSelected ? '#ffffff' : 'var(--text-secondary)',
-                        textAlign: 'left',
-                        cursor: 'pointer',
-                        fontSize: '0.75rem',
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        transition: 'all 0.15s ease'
-                      }}
-                    >
-                      <span style={{ fontWeight: 700, color: isSelected ? '#60a5fa' : 'var(--text-primary)' }}>
-                        {sample.name.split(' ').slice(0, 3).join(' ')}
-                      </span>
-                      <span style={{
-                        fontSize: '0.65rem',
-                        fontWeight: 700,
-                        color: sample.expectedStatus === 'COMPLIANT' ? '#34d399' : '#f87171'
-                      }}>
-                        {sample.expectedStatus}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            )}
+            </div>
+            <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', margin: 0, lineHeight: 1.5 }}>
+              Upload either <strong style={{ color: '#38bdf8' }}>1 single packaging image</strong> (flat/whole label) or <strong style={{ color: '#38bdf8' }}>up to 3 panel images</strong> (Front, Back, Side). Irrespective of image count, all <strong style={{ color: '#ffffff' }}>14 statutory FSSAI rules</strong> are strictly evaluated and presented in a structured tabular report.
+            </p>
+            <div style={{
+              marginTop: '10px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              fontSize: '0.72rem',
+              color: 'var(--text-muted)'
+            }}>
+              <span>Panels Loaded: <strong style={{ color: hasAnyImage ? '#34d399' : '#f87171' }}>{totalUploadedCount} / 3</strong></span>
+              <span style={{ color: '#60a5fa', fontWeight: 700 }}>
+                {totalUploadedCount === 0 ? 'Upload 1 or 3 Images to Begin' : `${totalUploadedCount} Image${totalUploadedCount > 1 ? 's' : ''} Ready for OCR`}
+              </span>
+            </div>
           </div>
         </div>
 
@@ -1212,7 +1161,7 @@ export const ScanUploadPage: React.FC<ScanUploadPageProps> = ({
                     { step: 1, label: 'Pre-process' },
                     { step: 2, label: 'Tesseract WASM' },
                     { step: 3, label: 'OCR Extraction' },
-                    { step: 4, label: 'Metrology NLP' }
+                    { step: 4, label: '14 FSSAI Rules' }
                   ].map((s) => (
                     <div
                       key={s.step}
@@ -1261,7 +1210,7 @@ export const ScanUploadPage: React.FC<ScanUploadPageProps> = ({
                 <>
                   <RefreshCw size={20} className="animate-spin" />
                   <span>
-                    Executing OCR &amp; Statutory Validation ({uploadedSides.length} panel{uploadedSides.length > 1 ? 's' : ''})...
+                    Executing OCR &amp; Validating All 14 Rules ({uploadedSides.length} panel{uploadedSides.length > 1 ? 's' : ''})...
                   </span>
                 </>
               ) : (
@@ -1269,10 +1218,10 @@ export const ScanUploadPage: React.FC<ScanUploadPageProps> = ({
                   <Sparkles size={20} color="#38bdf8" style={{ filter: 'drop-shadow(0 0 6px rgba(56, 189, 248, 0.8))' }} />
                   <span>
                     {uploadedSides.length > 1
-                      ? `Extract Declarations from ${uploadedSides.length} Panels & Run Statutory Audit`
+                      ? `Extract from ${uploadedSides.length} Panels & Validate All 14 Rules`
                       : uploadedSides.length === 1
-                      ? `Extract Declarations (${uploadedSides[0].toUpperCase()} Panel) & Run Statutory Audit`
-                      : 'Extract Declarations & Run Statutory Audit'}
+                      ? `Extract from 1 Image & Validate All 14 Rules`
+                      : 'Extract Declarations & Validate All 14 Rules'}
                   </span>
                   <ArrowRight size={20} />
                 </>

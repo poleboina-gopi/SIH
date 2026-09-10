@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { 
   Printer, Download, ArrowLeft, ShieldCheck, AlertOctagon, 
-  AlertTriangle, Scale, CheckCircle2, FileText, Send, Share2, CornerDownRight 
+  AlertTriangle, Scale, CheckCircle2, FileText, Send, Share2, CornerDownRight,
+  Filter, Check, XCircle, Sparkles, Shield
 } from 'lucide-react';
 import { api } from '../services/api';
 import { Report, Scan, Violation, User } from '../types';
@@ -32,6 +33,7 @@ export const ComplianceReportPage: React.FC<ComplianceReportPageProps> = ({
   const [exportingFormat, setExportingFormat] = useState<'json' | 'csv' | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [ruleFilter, setRuleFilter] = useState<'ALL' | 'PASS' | 'FAIL'>('ALL');
 
   useEffect(() => {
     loadReport();
@@ -55,7 +57,7 @@ export const ComplianceReportPage: React.FC<ComplianceReportPageProps> = ({
     try {
       await api.downloadReportPdf(
         reportData.report.id,
-        `Legal_Metrology_Report_${reportData.report.report_number || reportData.report.id}.pdf`
+        `FSSAI_Compliance_Report_${reportData.report.report_number || reportData.report.id}.pdf`
       );
     } catch (err: any) {
       alert("Failed to download PDF: " + (err.message || 'Unknown error'));
@@ -275,15 +277,15 @@ export const ComplianceReportPage: React.FC<ComplianceReportPageProps> = ({
               </div>
               <div>
                 <div style={{ fontSize: '0.75rem', fontWeight: 700, letterSpacing: '0.08em', color: 'var(--accent-blue-light)' }}>
-                  DIRECTORATE OF LEGAL METROLOGY
+                  FOOD SAFETY AND STANDARDS AUTHORITY OF INDIA (FSSAI)
                 </div>
                 <div style={{ fontSize: '1.25rem', fontWeight: 800 }}>
-                  STATUTORY COMMODITY INSPECTION CERTIFICATE
+                  STATUTORY FOOD PACKAGING COMPLIANCE CERTIFICATE
                 </div>
               </div>
             </div>
             <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-              Issued pursuant to Powers under Section 15 of Legal Metrology Act, 2009 &amp; Packaged Commodities Rules, 2011.
+              Issued under Food Safety and Standards (Labelling and Display) Regulations, 2020 read with Section 32 of FSS Act, 2006.
             </div>
           </div>
 
@@ -346,8 +348,8 @@ export const ComplianceReportPage: React.FC<ComplianceReportPageProps> = ({
               </div>
               <div style={{ fontSize: '0.85rem', color: isCompliant ? '#6ee7b7' : isNonCompliant ? '#fca5a5' : '#fde68a' }}>
                 {isCompliant 
-                  ? 'All mandatory packaging declarations satisfy the Legal Metrology (Packaged Commodities) Rules, 2011.'
-                  : `${violations.length} statutory violation(s) detected. Subject to penal proceedings under Section 36.`}
+                  ? 'All 14 mandatory packaging declarations satisfy the Food Safety and Standards (Labelling and Display) Regulations, 2020.'
+                  : `${violations.length} statutory defect(s) detected. Subject to statutory proceedings under Section 32 & 52 of FSS Act, 2006.`}
               </div>
             </div>
           </div>
@@ -422,7 +424,7 @@ export const ComplianceReportPage: React.FC<ComplianceReportPageProps> = ({
                     CRITICAL STATUTORY DEFECTS: MANDATORY DECLARATIONS OMITTED
                   </h3>
                   <div style={{ fontSize: '0.8rem', color: '#fca5a5', marginTop: '2px' }}>
-                    {missingViolations.length} essential declaration(s) required under Rule 6 of the Legal Metrology (Packaged Commodities) Rules, 2011 were not found on this packaging.
+                    {missingViolations.length} mandatory declaration(s) required under FSS (Labelling and Display) Regulations, 2020 were omitted or defective on the packaging image(s).
                   </div>
                 </div>
               </div>
@@ -517,188 +519,490 @@ export const ComplianceReportPage: React.FC<ComplianceReportPageProps> = ({
           </div>
         )}
 
-        {/* Statutory Declarations Breakdown Matrix with Visual Missing Field Highlights */}
-        <div style={{ marginBottom: '28px' }}>
-          <h2 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <FileText size={18} color="var(--accent-blue-light)" />
-            <span>Mandatory Declarations Verification Matrix (FSSAI 14-Point Checklist)</span>
-          </h2>
+        {/* Statutory Declarations Breakdown Matrix - Comprehensive 14-Rule Tabular Ledger */}
+        {(() => {
+          const default14Rules = [
+            {
+              id: 'RULE_FSSAI_01',
+              rule_code: 'FSSAI Reg 5(1)',
+              title: 'Name of the Food/Product',
+              extracted_value: scan?.parsed_fields?.commodity_name || 'Not detected on package',
+              status: scan?.parsed_fields?.commodity_name && scan?.parsed_fields?.commodity_name !== 'Packaged Food Product' ? 'PASS' : 'FAIL',
+              statutory_provision: 'Reg 5(1) of FSS Regulations, 2020',
+              description: 'True name or generic description of food omitted',
+              suggested_remedy: 'Print prominent specific or generic food name on front panel',
+              penalty_fine: '₹3,00,000 / Sec 52'
+            },
+            {
+              id: 'RULE_FSSAI_02',
+              rule_code: 'FSSAI Reg 5(2)',
+              title: 'List of Ingredients',
+              extracted_value: scan?.parsed_fields?.ingredients?.raw || (scan?.parsed_fields?.ingredients?.items ? scan?.parsed_fields?.ingredients?.items.join(', ') : 'Not detected on package'),
+              status: scan?.parsed_fields?.ingredients ? 'PASS' : 'FAIL',
+              statutory_provision: 'Reg 5(2) of FSS Regulations, 2020',
+              description: 'Mandatory ingredients list in descending order omitted',
+              suggested_remedy: 'Print complete ingredients list prefixed with "Ingredients:"',
+              penalty_fine: '₹3,00,000 / Sec 52'
+            },
+            {
+              id: 'RULE_FSSAI_03',
+              rule_code: 'FSSAI Reg 5(3)',
+              title: 'Nutritional Information',
+              extracted_value: scan?.parsed_fields?.nutritional_info ? [
+                scan?.parsed_fields?.nutritional_info.energy && `Energy: ${scan?.parsed_fields?.nutritional_info.energy}`,
+                scan?.parsed_fields?.nutritional_info.protein && `Protein: ${scan?.parsed_fields?.nutritional_info.protein}`,
+                scan?.parsed_fields?.nutritional_info.carbohydrate && `Carbs: ${scan?.parsed_fields?.nutritional_info.carbohydrate}`,
+                scan?.parsed_fields?.nutritional_info.total_fat && `Fat: ${scan?.parsed_fields?.nutritional_info.total_fat}`
+              ].filter(Boolean).join(' | ') || scan?.parsed_fields?.nutritional_info?.raw || 'Declared' : 'Not detected on package',
+              status: scan?.parsed_fields?.nutritional_info?.is_declared ? 'PASS' : 'FAIL',
+              statutory_provision: 'Reg 5(3) of FSS Regulations, 2020',
+              description: 'Nutritional facts per 100g/serving omitted',
+              suggested_remedy: 'Declare nutritional panel (Energy, Protein, Carbs, Sugars, Fat, Sodium)',
+              penalty_fine: '₹3,00,000 / Sec 52'
+            },
+            {
+              id: 'RULE_FSSAI_04',
+              rule_code: 'FSSAI Reg 5(4)',
+              title: 'Net Quantity',
+              extracted_value: scan?.parsed_fields?.net_quantity?.raw || 'Not detected on package',
+              status: scan?.parsed_fields?.net_quantity?.is_standard ? 'PASS' : 'FAIL',
+              statutory_provision: 'Reg 5(4) of FSS Regulations, 2020',
+              description: 'Net quantity missing or illegal non-standard unit used',
+              suggested_remedy: 'Declare net quantity using standard metric units (g, kg, ml, l)',
+              penalty_fine: '₹50,000 / Sec 36 LM Act'
+            },
+            {
+              id: 'RULE_FSSAI_05',
+              rule_code: 'FSSAI Reg 5(5)',
+              title: 'Vegetarian / Non-Vegetarian Symbol',
+              extracted_value: scan?.parsed_fields?.veg_non_veg ? `${scan?.parsed_fields?.veg_non_veg.type === 'NON_VEG' ? 'Non-Veg (Brown Triangle)' : 'Veg (Green Dot)'} - ${scan?.parsed_fields?.veg_non_veg.raw || 'Declared'}` : 'Not detected on package',
+              status: scan?.parsed_fields?.veg_non_veg ? 'PASS' : 'FAIL',
+              statutory_provision: 'Reg 5(5) of FSS Regulations, 2020',
+              description: 'Mandatory Veg or Non-Veg symbol omitted',
+              suggested_remedy: 'Affix Green Circle or Brown Triangle logo in square border',
+              penalty_fine: '₹2,00,000 / Sec 58'
+            },
+            {
+              id: 'RULE_FSSAI_06',
+              rule_code: 'FSSAI Reg 5(6)',
+              title: 'FSSAI Logo and Licence Number',
+              extracted_value: scan?.parsed_fields?.fssai_license?.license_number ? `Lic. No. ${scan?.parsed_fields?.fssai_license.license_number}` : (scan?.parsed_fields?.fssai_license?.raw || 'Not detected on package'),
+              status: scan?.parsed_fields?.fssai_license?.is_valid_14_digit ? 'PASS' : 'FAIL',
+              statutory_provision: 'Reg 5(6) of FSS Regulations, 2020',
+              description: 'FSSAI logo or 14-digit licence number omitted/invalid',
+              suggested_remedy: 'Display official FSSAI logo alongside valid 14-digit FBO licence number',
+              penalty_fine: '₹5,00,000 / Sec 63'
+            },
+            {
+              id: 'RULE_FSSAI_07',
+              rule_code: 'FSSAI Reg 5(7)',
+              title: 'Date of Manufacture/Packing',
+              extracted_value: scan?.parsed_fields?.mfg_date?.date || scan?.parsed_fields?.mfg_date?.raw || 'Not detected on package',
+              status: scan?.parsed_fields?.mfg_date?.is_compliant ? 'PASS' : 'FAIL',
+              statutory_provision: 'Reg 5(7) of FSS Regulations, 2020',
+              description: 'Date of manufacture/packing omitted or non-compliant format',
+              suggested_remedy: 'Print clear Mfg Date in DD/MM/YYYY or MM/YYYY format',
+              penalty_fine: '₹2,00,000 / Sec 58'
+            },
+            {
+              id: 'RULE_FSSAI_08',
+              rule_code: 'FSSAI Reg 5(8)',
+              title: 'Expiry / Use-by or Best-Before Date',
+              extracted_value: scan?.parsed_fields?.expiry_date?.expiry_or_period || scan?.parsed_fields?.expiry_date?.raw || 'Not detected on package',
+              status: scan?.parsed_fields?.expiry_date ? 'PASS' : 'FAIL',
+              statutory_provision: 'Reg 5(8) of FSS Regulations, 2020',
+              description: 'Expiry date or Best-Before period omitted',
+              suggested_remedy: 'Declare clear Expiry / Use-by date or Best-Before period',
+              penalty_fine: '₹3,00,000 / Sec 52'
+            },
+            {
+              id: 'RULE_FSSAI_09',
+              rule_code: 'FSSAI Reg 5(9)',
+              title: 'Batch/Lot/Code Number',
+              extracted_value: scan?.parsed_fields?.batch_number?.value || scan?.parsed_fields?.batch_number?.raw || 'Not detected on package',
+              status: scan?.parsed_fields?.batch_number ? 'PASS' : 'FAIL',
+              statutory_provision: 'Reg 5(9) of FSS Regulations, 2020',
+              description: 'Traceability Batch/Lot code number omitted',
+              suggested_remedy: 'Print distinct identification Batch or Lot number',
+              penalty_fine: '₹1,00,000 / Sec 58'
+            },
+            {
+              id: 'RULE_FSSAI_10',
+              rule_code: 'FSSAI Reg 5(10)',
+              title: 'Manufacturer/Packer/Importer Details',
+              extracted_value: scan?.parsed_fields?.manufacturer?.address || scan?.parsed_fields?.manufacturer?.name || 'Not detected on package',
+              status: scan?.parsed_fields?.manufacturer?.name ? 'PASS' : 'FAIL',
+              statutory_provision: 'Reg 5(10) of FSS Regulations, 2020',
+              description: 'Name and complete premises address omitted',
+              suggested_remedy: 'Print full manufacturer/packer name and physical premises address with PIN code',
+              penalty_fine: '₹2,00,000 / Sec 58'
+            },
+            {
+              id: 'RULE_FSSAI_11',
+              rule_code: 'FSSAI Reg 5(11)',
+              title: 'Customer Care/Contact Information',
+              extracted_value: scan?.parsed_fields?.consumer_care ? [
+                scan?.parsed_fields?.consumer_care.phone && `Tel: ${scan?.parsed_fields?.consumer_care.phone}`,
+                scan?.parsed_fields?.consumer_care.email && `Email: ${scan?.parsed_fields?.consumer_care.email}`
+              ].filter(Boolean).join(' | ') || 'Declared' : 'Not detected on package',
+              status: scan?.parsed_fields?.consumer_care?.is_complete || (scan?.parsed_fields?.consumer_care?.phone && scan?.parsed_fields?.consumer_care?.email) ? 'PASS' : 'FAIL',
+              statutory_provision: 'Reg 5(11) of FSS Regulations, 2020',
+              description: 'Consumer grievance helpline phone or email omitted',
+              suggested_remedy: 'Provide consumer care telephone, email, and postal address',
+              penalty_fine: '₹1,00,000 / Sec 58'
+            },
+            {
+              id: 'RULE_FSSAI_12',
+              rule_code: 'FSSAI Reg 5(12)',
+              title: 'Allergen Declarations, Where Applicable',
+              extracted_value: scan?.parsed_fields?.allergen_declaration?.raw || scan?.parsed_fields?.allergen_declaration?.statement || 'No priority allergens declared',
+              status: 'PASS',
+              statutory_provision: 'Reg 5(12) of FSS Regulations, 2020',
+              description: 'Allergen advisory statement omitted',
+              suggested_remedy: 'Declare "Contains: [Allergen]" for priority allergens',
+              penalty_fine: '₹2,00,000 / Sec 58'
+            },
+            {
+              id: 'RULE_FSSAI_13',
+              rule_code: 'FSSAI Reg 5(13)',
+              title: 'Storage/Use Instructions, Where Required',
+              extracted_value: scan?.parsed_fields?.storage_instructions?.instructions || scan?.parsed_fields?.storage_instructions?.raw || 'Not detected on package',
+              status: scan?.parsed_fields?.storage_instructions ? 'PASS' : 'FAIL',
+              statutory_provision: 'Reg 5(13) of FSS Regulations, 2020',
+              description: 'Mandatory storage or usage instructions omitted',
+              suggested_remedy: 'Print clear storage instructions, e.g. "Store in a cool, dry place"',
+              penalty_fine: '₹1,00,000 / Sec 58'
+            },
+            {
+              id: 'RULE_FSSAI_14',
+              rule_code: 'FSSAI Reg 5(14)',
+              title: 'Country of Origin, for Imported Food',
+              extracted_value: typeof scan?.parsed_fields?.country_of_origin === 'string' ? scan?.parsed_fields?.country_of_origin : (scan?.parsed_fields?.country_of_origin?.country || 'India (Domestic Manufacture)'),
+              status: 'PASS',
+              statutory_provision: 'Reg 5(14) of FSS Regulations, 2020',
+              description: 'Country of origin omitted on imported food',
+              suggested_remedy: 'State "Country of Origin: [Country]" on packaging',
+              penalty_fine: '₹3,00,000 / Sec 52'
+            }
+          ];
 
-          <div className="data-table-wrapper">
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th style={{ width: '60px' }}>#</th>
-                  <th style={{ width: '130px' }}>RULE CODE</th>
-                  <th>MANDATORY REQUIREMENT</th>
-                  <th>DETECTED VALUE ON PACKAGING</th>
-                  <th style={{ width: '130px' }}>STATUS</th>
-                </tr>
-              </thead>
-              <tbody>
-                {(() => {
-                  const default14Rules = [
-                    {
-                      id: 'RULE_FSSAI_01',
-                      rule_code: 'FSSAI Reg 5(1)',
-                      title: 'Name of the Food/Product',
-                      extracted_value: scan?.parsed_fields?.commodity_name || 'Not detected on package',
-                      status: scan?.parsed_fields?.commodity_name && scan?.parsed_fields?.commodity_name !== 'Packaged Food Product' ? 'PASS' : 'FAIL',
-                      statutory_provision: 'Reg 5(1)'
-                    },
-                    {
-                      id: 'RULE_FSSAI_02',
-                      rule_code: 'FSSAI Reg 5(2)',
-                      title: 'List of Ingredients',
-                      extracted_value: scan?.parsed_fields?.ingredients?.raw || (scan?.parsed_fields?.ingredients?.items ? scan?.parsed_fields?.ingredients?.items.join(', ') : 'Not detected on package'),
-                      status: scan?.parsed_fields?.ingredients ? 'PASS' : 'FAIL',
-                      statutory_provision: 'Reg 5(2)'
-                    },
-                    {
-                      id: 'RULE_FSSAI_03',
-                      rule_code: 'FSSAI Reg 5(3)',
-                      title: 'Nutritional Information',
-                      extracted_value: scan?.parsed_fields?.nutritional_info ? [
-                        scan?.parsed_fields?.nutritional_info.energy && `Energy: ${scan?.parsed_fields?.nutritional_info.energy}`,
-                        scan?.parsed_fields?.nutritional_info.protein && `Protein: ${scan?.parsed_fields?.nutritional_info.protein}`,
-                        scan?.parsed_fields?.nutritional_info.carbohydrate && `Carbs: ${scan?.parsed_fields?.nutritional_info.carbohydrate}`
-                      ].filter(Boolean).join(' | ') || scan?.parsed_fields?.nutritional_info?.raw || 'Declared' : 'Not detected on package',
-                      status: scan?.parsed_fields?.nutritional_info?.is_declared ? 'PASS' : 'FAIL',
-                      statutory_provision: 'Reg 5(3)'
-                    },
-                    {
-                      id: 'RULE_FSSAI_04',
-                      rule_code: 'FSSAI Reg 5(4)',
-                      title: 'Net Quantity',
-                      extracted_value: scan?.parsed_fields?.net_quantity?.raw || 'Not detected on package',
-                      status: scan?.parsed_fields?.net_quantity?.is_standard ? 'PASS' : 'FAIL',
-                      statutory_provision: 'Reg 5(4)'
-                    },
-                    {
-                      id: 'RULE_FSSAI_05',
-                      rule_code: 'FSSAI Reg 5(5)',
-                      title: 'Vegetarian / Non-Vegetarian Symbol',
-                      extracted_value: scan?.parsed_fields?.veg_non_veg ? `${scan?.parsed_fields?.veg_non_veg.type === 'NON_VEG' ? 'Non-Veg (Brown Triangle)' : 'Veg (Green Dot)'} - ${scan?.parsed_fields?.veg_non_veg.raw || 'Declared'}` : 'Not detected on package',
-                      status: scan?.parsed_fields?.veg_non_veg ? 'PASS' : 'FAIL',
-                      statutory_provision: 'Reg 5(5)'
-                    },
-                    {
-                      id: 'RULE_FSSAI_06',
-                      rule_code: 'FSSAI Reg 5(6)',
-                      title: 'FSSAI Logo and Licence Number',
-                      extracted_value: scan?.parsed_fields?.fssai_license?.license_number ? `Lic. No. ${scan?.parsed_fields?.fssai_license.license_number}` : (scan?.parsed_fields?.fssai_license?.raw || 'Not detected on package'),
-                      status: scan?.parsed_fields?.fssai_license?.is_valid_14_digit ? 'PASS' : 'FAIL',
-                      statutory_provision: 'Reg 5(6)'
-                    },
-                    {
-                      id: 'RULE_FSSAI_07',
-                      rule_code: 'FSSAI Reg 5(7)',
-                      title: 'Date of Manufacture/Packing',
-                      extracted_value: scan?.parsed_fields?.mfg_date?.date || scan?.parsed_fields?.mfg_date?.raw || 'Not detected on package',
-                      status: scan?.parsed_fields?.mfg_date?.is_compliant ? 'PASS' : 'FAIL',
-                      statutory_provision: 'Reg 5(7)'
-                    },
-                    {
-                      id: 'RULE_FSSAI_08',
-                      rule_code: 'FSSAI Reg 5(8)',
-                      title: 'Expiry / Use-by or Best-Before Date',
-                      extracted_value: scan?.parsed_fields?.expiry_date?.expiry_or_period || scan?.parsed_fields?.expiry_date?.raw || 'Not detected on package',
-                      status: scan?.parsed_fields?.expiry_date ? 'PASS' : 'FAIL',
-                      statutory_provision: 'Reg 5(8)'
-                    },
-                    {
-                      id: 'RULE_FSSAI_09',
-                      rule_code: 'FSSAI Reg 5(9)',
-                      title: 'Batch/Lot/Code Number',
-                      extracted_value: scan?.parsed_fields?.batch_number?.value || scan?.parsed_fields?.batch_number?.raw || 'Not detected on package',
-                      status: scan?.parsed_fields?.batch_number ? 'PASS' : 'FAIL',
-                      statutory_provision: 'Reg 5(9)'
-                    },
-                    {
-                      id: 'RULE_FSSAI_10',
-                      rule_code: 'FSSAI Reg 5(10)',
-                      title: 'Manufacturer/Packer/Importer Details',
-                      extracted_value: scan?.parsed_fields?.manufacturer?.address || scan?.parsed_fields?.manufacturer?.name || 'Not detected on package',
-                      status: scan?.parsed_fields?.manufacturer?.name ? 'PASS' : 'FAIL',
-                      statutory_provision: 'Reg 5(10)'
-                    },
-                    {
-                      id: 'RULE_FSSAI_11',
-                      rule_code: 'FSSAI Reg 5(11)',
-                      title: 'Customer Care/Contact Information',
-                      extracted_value: scan?.parsed_fields?.consumer_care ? [
-                        scan?.parsed_fields?.consumer_care.phone && `Tel: ${scan?.parsed_fields?.consumer_care.phone}`,
-                        scan?.parsed_fields?.consumer_care.email && `Email: ${scan?.parsed_fields?.consumer_care.email}`
-                      ].filter(Boolean).join(' | ') || 'Declared' : 'Not detected on package',
-                      status: scan?.parsed_fields?.consumer_care?.is_complete || (scan?.parsed_fields?.consumer_care?.phone && scan?.parsed_fields?.consumer_care?.email) ? 'PASS' : 'FAIL',
-                      statutory_provision: 'Reg 5(11)'
-                    },
-                    {
-                      id: 'RULE_FSSAI_12',
-                      rule_code: 'FSSAI Reg 5(12)',
-                      title: 'Allergen Declarations, Where Applicable',
-                      extracted_value: scan?.parsed_fields?.allergen_declaration?.raw || scan?.parsed_fields?.allergen_declaration?.statement || 'No priority allergens declared',
-                      status: 'PASS',
-                      statutory_provision: 'Reg 5(12)'
-                    },
-                    {
-                      id: 'RULE_FSSAI_13',
-                      rule_code: 'FSSAI Reg 5(13)',
-                      title: 'Storage/Use Instructions, Where Required',
-                      extracted_value: scan?.parsed_fields?.storage_instructions?.instructions || scan?.parsed_fields?.storage_instructions?.raw || 'Not detected on package',
-                      status: scan?.parsed_fields?.storage_instructions ? 'PASS' : 'FAIL',
-                      statutory_provision: 'Reg 5(13)'
-                    },
-                    {
-                      id: 'RULE_FSSAI_14',
-                      rule_code: 'FSSAI Reg 5(14)',
-                      title: 'Country of Origin, for Imported Food',
-                      extracted_value: typeof scan?.parsed_fields?.country_of_origin === 'string' ? scan?.parsed_fields?.country_of_origin : (scan?.parsed_fields?.country_of_origin?.country || 'India (Domestic)'),
-                      status: 'PASS',
-                      statutory_provision: 'Reg 5(14)'
-                    }
-                  ];
+          const sourceMatrix = (report.rule_checks_matrix && report.rule_checks_matrix.length > 0)
+            ? report.rule_checks_matrix
+            : default14Rules;
 
-                  const matrixToRender = (report.rule_checks_matrix && report.rule_checks_matrix.length > 0)
-                    ? report.rule_checks_matrix
-                    : default14Rules;
+          // Merge backend evaluation details with complete statutory defaults
+          const mergedMatrix = sourceMatrix.map((item: any, i: number) => {
+            const fallback = default14Rules[i] || {};
+            return {
+              ...fallback,
+              ...item,
+              rule_code: item.rule_code || fallback.rule_code,
+              title: item.title || fallback.title,
+              status: item.status || fallback.status || 'FAIL',
+              statutory_provision: item.statutory_provision || fallback.statutory_provision,
+              extracted_value: item.extracted_value || fallback.extracted_value || 'Not detected on package',
+              description: item.description || item.defect || fallback.description,
+              suggested_remedy: item.suggested_action || item.suggested_remedy || fallback.suggested_remedy,
+              penalty_fine: item.penalty_fine || fallback.penalty_fine || '₹1,00,000'
+            };
+          });
 
-                  return matrixToRender.map((row: any, idx: number) => {
-                    const isPass = row.status === 'PASS';
-                    return (
-                      <tr 
-                        key={idx}
-                        style={{ 
-                          background: !isPass ? 'rgba(239, 68, 68, 0.07)' : undefined, 
-                          borderLeft: !isPass ? '4px solid #ef4444' : undefined 
-                        }}
-                      >
-                        <td style={{ fontWeight: 700, color: 'var(--text-muted)' }}>{idx + 1}</td>
-                        <td style={{ fontWeight: 700, color: '#60a5fa', fontFamily: 'var(--font-mono)' }}>
-                          {row.rule_code}
-                        </td>
-                        <td>
-                          <div style={{ fontWeight: 600, color: '#ffffff' }}>{row.title}</div>
-                          <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{row.statutory_provision || ''}</div>
-                        </td>
-                        <td style={{ fontSize: '0.82rem', color: !isPass ? '#f87171' : undefined }}>
-                          {row.extracted_value || 'Not detected on package'}
-                        </td>
-                        <td>
-                          {isPass ? (
-                            <span className="badge badge-compliant">VERIFIED</span>
-                          ) : (
-                            <span className="badge badge-noncompliant">OMITTED / DEFECT</span>
-                          )}
-                        </td>
-                      </tr>
-                    );
-                  });
-                })()}
-              </tbody>
-            </table>
-          </div>
-        </div>
+          const totalRulesCount = mergedMatrix.length;
+          const validatedCount = mergedMatrix.filter((r: any) => r.status === 'PASS').length;
+          const notValidatedCount = mergedMatrix.filter((r: any) => r.status === 'FAIL').length;
+
+          const filteredRows = mergedMatrix.filter((r: any) => {
+            if (ruleFilter === 'PASS') return r.status === 'PASS';
+            if (ruleFilter === 'FAIL') return r.status === 'FAIL';
+            return true;
+          });
+
+          return (
+            <div style={{ marginBottom: '32px' }}>
+              {/* Section Title & Subtitle */}
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: '16px',
+                flexWrap: 'wrap',
+                gap: '12px'
+              }}>
+                <div>
+                  <h2 style={{ fontSize: '1.2rem', fontWeight: 800, margin: 0, display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <Scale size={22} color="#38bdf8" />
+                    <span>14-Point Statutory FSSAI Verification Ledger</span>
+                  </h2>
+                  <p style={{ color: 'var(--text-secondary)', fontSize: '0.8rem', margin: '4px 0 0' }}>
+                    Statutory compliance audit under FSS (Labelling and Display) Regulations, 2020. Evaluated from uploaded packaging image(s).
+                  </p>
+                </div>
+
+                {/* Filter Pills */}
+                <div style={{
+                  display: 'flex',
+                  gap: '6px',
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  padding: '4px',
+                  borderRadius: '10px',
+                  border: '1px solid var(--border-subtle)'
+                }}>
+                  <button
+                    type="button"
+                    onClick={() => setRuleFilter('ALL')}
+                    style={{
+                      padding: '6px 14px',
+                      borderRadius: '8px',
+                      border: 'none',
+                      fontSize: '0.78rem',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      background: ruleFilter === 'ALL' ? 'var(--accent-blue)' : 'transparent',
+                      color: ruleFilter === 'ALL' ? '#ffffff' : 'var(--text-secondary)',
+                      transition: 'all 0.15s ease'
+                    }}
+                  >
+                    All 14 Rules ({totalRulesCount})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setRuleFilter('PASS')}
+                    style={{
+                      padding: '6px 14px',
+                      borderRadius: '8px',
+                      border: 'none',
+                      fontSize: '0.78rem',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      background: ruleFilter === 'PASS' ? '#059669' : 'transparent',
+                      color: ruleFilter === 'PASS' ? '#ffffff' : '#34d399',
+                      transition: 'all 0.15s ease'
+                    }}
+                  >
+                    ✅ Validated ({validatedCount})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setRuleFilter('FAIL')}
+                    style={{
+                      padding: '6px 14px',
+                      borderRadius: '8px',
+                      border: 'none',
+                      fontSize: '0.78rem',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      background: ruleFilter === 'FAIL' ? '#dc2626' : 'transparent',
+                      color: ruleFilter === 'FAIL' ? '#ffffff' : '#f87171',
+                      transition: 'all 0.15s ease'
+                    }}
+                  >
+                    ❌ Not Validated ({notValidatedCount})
+                  </button>
+                </div>
+              </div>
+
+              {/* Summary Metric Counters */}
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))',
+                gap: '12px',
+                marginBottom: '18px'
+              }}>
+                <div style={{
+                  background: 'var(--bg-glass-heavy)',
+                  border: '1px solid var(--border-subtle)',
+                  borderRadius: '10px',
+                  padding: '14px 18px',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center'
+                }}>
+                  <div>
+                    <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 700 }}>TOTAL RULES AUDITED</div>
+                    <div style={{ fontSize: '1.45rem', fontWeight: 800, color: '#ffffff' }}>14 Rules</div>
+                  </div>
+                  <span className="badge badge-secondary" style={{ fontSize: '0.68rem' }}>Statutory Matrix</span>
+                </div>
+
+                <div style={{
+                  background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(6, 78, 59, 0.2) 100%)',
+                  border: '1px solid rgba(16, 185, 129, 0.4)',
+                  borderRadius: '10px',
+                  padding: '14px 18px',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center'
+                }}>
+                  <div>
+                    <div style={{ fontSize: '0.7rem', color: '#6ee7b7', fontWeight: 700 }}>VALIDATED (PASS)</div>
+                    <div style={{ fontSize: '1.45rem', fontWeight: 800, color: '#34d399' }}>{validatedCount} / 14</div>
+                  </div>
+                  <span className="badge badge-compliant" style={{ fontSize: '0.68rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <CheckCircle2 size={12} /> Satisfied
+                  </span>
+                </div>
+
+                <div style={{
+                  background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.12) 0%, rgba(127, 29, 29, 0.2) 100%)',
+                  border: '1px solid rgba(239, 68, 68, 0.4)',
+                  borderRadius: '10px',
+                  padding: '14px 18px',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center'
+                }}>
+                  <div>
+                    <div style={{ fontSize: '0.7rem', color: '#fca5a5', fontWeight: 700 }}>NOT VALIDATED (FAIL)</div>
+                    <div style={{ fontSize: '1.45rem', fontWeight: 800, color: '#f87171' }}>{notValidatedCount} / 14</div>
+                  </div>
+                  <span className="badge badge-noncompliant" style={{ fontSize: '0.68rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <AlertTriangle size={12} /> Action Needed
+                  </span>
+                </div>
+              </div>
+
+              {/* Comprehensive Tabular Form */}
+              <div className="data-table-wrapper" style={{ boxShadow: '0 8px 30px rgba(0,0,0,0.4)', borderRadius: '10px', overflow: 'hidden' }}>
+                <table className="data-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
+                  <thead>
+                    <tr style={{ background: '#0a1020' }}>
+                      <th style={{ width: '45px', textAlign: 'center' }}>#</th>
+                      <th style={{ width: '220px' }}>STATUTORY RULE &amp; REGULATION</th>
+                      <th style={{ width: '160px' }}>VALIDATION STATUS</th>
+                      <th style={{ width: '250px' }}>EXTRACTED VALUE ON PACKAGING</th>
+                      <th>DEFECT DIAGNOSIS &amp; STATUTORY REMEDY</th>
+                      <th style={{ width: '135px' }}>STATUTORY FINE</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredRows.map((row: any, idx: number) => {
+                      const isPass = row.status === 'PASS';
+                      return (
+                        <tr 
+                          key={idx}
+                          style={{ 
+                            background: !isPass ? 'rgba(239, 68, 68, 0.08)' : (idx % 2 === 0 ? 'rgba(255, 255, 255, 0.015)' : 'transparent'), 
+                            borderLeft: !isPass ? '4px solid #ef4444' : '4px solid #10b981',
+                            transition: 'background 0.15s ease'
+                          }}
+                        >
+                          <td style={{ fontWeight: 800, color: 'var(--text-muted)', textAlign: 'center' }}>
+                            {idx + 1}
+                          </td>
+                          <td>
+                            <div style={{ fontWeight: 700, color: '#ffffff', fontSize: '0.88rem' }}>
+                              {row.title}
+                            </div>
+                            <div style={{ fontSize: '0.72rem', color: '#60a5fa', fontFamily: 'var(--font-mono)', marginTop: '2px' }}>
+                              {row.rule_code}
+                            </div>
+                            <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>
+                              {row.statutory_provision || 'FSS Regulations, 2020'}
+                            </div>
+                          </td>
+                          <td>
+                            {isPass ? (
+                              <span style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '5px',
+                                padding: '5px 12px',
+                                borderRadius: '6px',
+                                fontSize: '0.74rem',
+                                fontWeight: 800,
+                                background: 'rgba(16, 185, 129, 0.18)',
+                                border: '1px solid #10b981',
+                                color: '#34d399'
+                              }}>
+                                <CheckCircle2 size={13} />
+                                VALIDATED (PASS)
+                              </span>
+                            ) : (
+                              <span style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '5px',
+                                padding: '5px 12px',
+                                borderRadius: '6px',
+                                fontSize: '0.74rem',
+                                fontWeight: 800,
+                                background: 'rgba(239, 68, 68, 0.22)',
+                                border: '1px solid #ef4444',
+                                color: '#f87171'
+                              }}>
+                                <AlertOctagon size={13} />
+                                NOT VALIDATED (FAIL)
+                              </span>
+                            )}
+                          </td>
+                          <td>
+                            {isPass ? (
+                              <div style={{
+                                fontSize: '0.8rem',
+                                color: '#e2e8f0',
+                                background: 'rgba(0, 0, 0, 0.3)',
+                                padding: '6px 10px',
+                                borderRadius: '6px',
+                                border: '1px solid rgba(255, 255, 255, 0.08)',
+                                wordBreak: 'break-word',
+                                lineHeight: 1.35
+                              }}>
+                                {row.extracted_value}
+                              </div>
+                            ) : (
+                              <div style={{
+                                fontSize: '0.78rem',
+                                color: '#fca5a5',
+                                background: 'rgba(239, 68, 68, 0.12)',
+                                padding: '6px 10px',
+                                borderRadius: '6px',
+                                border: '1px dashed rgba(239, 68, 68, 0.4)',
+                                wordBreak: 'break-word',
+                                lineHeight: 1.35
+                              }}>
+                                ⚠️ {row.extracted_value && row.extracted_value !== 'Not detected on package' 
+                                  ? row.extracted_value 
+                                  : 'Not detected on uploaded packaging image(s)'}
+                              </div>
+                            )}
+                          </td>
+                          <td>
+                            {isPass ? (
+                              <div style={{ fontSize: '0.78rem', color: '#94a3b8', lineHeight: 1.4 }}>
+                                <span style={{ color: '#34d399', fontWeight: 700 }}>✓ Verified: </span>
+                                {row.suggested_remedy || 'Satisfies mandatory packaging declaration under FSS Regulations, 2020.'}
+                              </div>
+                            ) : (
+                              <div>
+                                <div style={{ marginBottom: '3px', fontSize: '0.8rem', fontWeight: 700, color: '#fecaca' }}>
+                                  {row.description || row.defect || 'Mandatory statutory declaration missing or non-compliant.'}
+                                </div>
+                                <div style={{ fontSize: '0.75rem', color: '#93c5fd', lineHeight: 1.35 }}>
+                                  <strong style={{ color: '#60a5fa' }}>Remedy:</strong> {row.suggested_remedy || 'Rectify packaging label in accordance with FSSAI regulations.'}
+                                </div>
+                              </div>
+                            )}
+                          </td>
+                          <td>
+                            {isPass ? (
+                              <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#34d399' }}>
+                                Nil (Compliant)
+                              </span>
+                            ) : (
+                              <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#facc15' }}>
+                                {row.penalty_fine || '₹2,00,000'}
+                              </span>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          );
+        })()}
 
         {/* Official Statutory Improvement Notice Form (Printed if Non-Compliant) */}
         {report.statutory_notice && (
@@ -789,17 +1093,17 @@ export const ComplianceReportPage: React.FC<ComplianceReportPageProps> = ({
                     textAlign: 'center',
                     color: 'var(--text-muted)'
                   }}>
-                    OFFICIAL SEAL<br />LEGAL METROLOGY
+                    OFFICIAL SEAL<br />FSSAI ENFORCEMENT
                   </div>
                 </div>
 
                 <div style={{ textAlign: 'right' }}>
                   <div style={{ fontWeight: 700, color: '#ffffff' }}>{report.inspector_name}</div>
                   <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>
-                    Inspector / Enforcement Officer, Legal Metrology
+                    Food Safety Officer / Designated Officer, FSSAI
                   </div>
                   <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-                    Digitally Sealed through Legal Metrology Compliance System
+                    Digitally Sealed through FSSAI Statutory Compliance System
                   </div>
                 </div>
               </div>
