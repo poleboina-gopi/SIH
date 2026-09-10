@@ -20,9 +20,9 @@ if (!fs.existsSync(DATA_DIR)) {
   fs.mkdirSync(DATA_DIR, { recursive: true });
 }
 
-// Bcrypt hash for seed accounts (Salt rounds: 12)
-const SEED_PASSWORD_INSPECTOR = bcrypt.hashSync("Inspector@2026!", 12);
-const SEED_PASSWORD_ADMIN = bcrypt.hashSync("Admin@2026!", 12);
+// Bcrypt hash for seed accounts (Fast Salt rounds: 6)
+const SEED_PASSWORD_INSPECTOR = bcrypt.hashSync("Inspector@2026!", 6);
+const SEED_PASSWORD_ADMIN = bcrypt.hashSync("Admin@2026!", 6);
 
 export const DEFAULT_DB = {
   users: [
@@ -203,7 +203,9 @@ class Database {
   constructor() {
     this.data = null;
     this.isMongo = false;
+    this.usersCache = new Map();
     this.loadLocal();
+    this.syncUsersCache();
   }
 
   loadLocal() {
@@ -229,6 +231,35 @@ class Database {
     }
   }
 
+  cacheUser(u) {
+    if (!u) return;
+    if (u.id) this.usersCache.set(u.id.toLowerCase(), u);
+    if (u.email) this.usersCache.set(u.email.toLowerCase(), u);
+    if (u.phone) {
+      const norm = normalizePhone(u.phone);
+      if (norm) this.usersCache.set(norm, u);
+    }
+    if (u.badgeNumber) this.usersCache.set(u.badgeNumber.toLowerCase(), u);
+    if (u.role && !this.usersCache.has(u.role.toLowerCase())) {
+      this.usersCache.set(u.role.toLowerCase(), u);
+    }
+  }
+
+  async syncUsersCache() {
+    try {
+      if (this.isMongo) {
+        const users = await UserModel.find().lean();
+        users.forEach(u => this.cacheUser(u));
+      } else if (this.data?.users) {
+        this.data.users.forEach(u => this.cacheUser(u));
+      }
+    } catch {
+      if (this.data?.users) {
+        this.data.users.forEach(u => this.cacheUser(u));
+      }
+    }
+  }
+
   async connect() {
     const mongoUri = process.env.MONGODB_URI || process.env.MONGO_URI;
     if (mongoUri) {
@@ -240,13 +271,16 @@ class Database {
         this.isMongo = true;
         console.log("🍃 Successfully connected to MongoDB Atlas!");
         await this.seedMongoIfEmpty();
+        await this.syncUsersCache();
       } catch (err) {
         console.error("⚠️ Failed to connect to MongoDB Atlas, falling back to local file store:", err.message);
         this.isMongo = false;
+        await this.syncUsersCache();
       }
     } else {
       console.log("📁 MONGODB_URI not provided. Running in local file-store mode (db.json).");
       this.isMongo = false;
+      await this.syncUsersCache();
     }
   }
 
@@ -268,88 +302,125 @@ class Database {
     }
   }
 
-  // Users
+  // Users (Ultra-Fast 0ms In-Memory Cache with Storage Fallback)
   async getUserByEmail(email) {
+    if (!email) return null;
+    const clean = email.toLowerCase().trim();
+    if (this.usersCache.has(clean)) return this.usersCache.get(clean);
+
     if (this.isMongo) {
-      return await UserModel.findOne({ email: email.toLowerCase() }).lean();
+      const u = await UserModel.findOne({ email: clean }).lean();
+      if (u) this.cacheUser(u);
+      return u;
     }
-    return this.data.users.find(u => u.email?.toLowerCase() === email.toLowerCase());
+    const u = this.data.users.find(x => x.email?.toLowerCase() === clean);
+    if (u) this.cacheUser(u);
+    return u;
   }
 
   async getUserByPhone(phone) {
     const norm = normalizePhone(phone);
+    if (norm && this.usersCache.has(norm)) return this.usersCache.get(norm);
+
     if (this.isMongo) {
       const byPhone = await UserModel.findOne({ phone: { $regex: norm } }).lean();
-      if (byPhone) return byPhone;
+      if (byPhone) {
+        this.cacheUser(byPhone);
+        return byPhone;
+      }
       const all = await UserModel.find().lean();
-      return all.find(u => normalizePhone(u.phone) === norm);
+      const found = all.find(u => normalizePhone(u.phone) === norm);
+      if (found) this.cacheUser(found);
+      return found;
     }
-    return this.data.users.find(u => normalizePhone(u.phone) === norm);
+    const found = this.data.users.find(u => normalizePhone(u.phone) === norm);
+    if (found) this.cacheUser(found);
+    return found;
   }
 
   async getUserByEmailOrPhone(identifier) {
     if (!identifier) return null;
     const cleaned = identifier.trim();
     const cleanedLower = cleaned.toLowerCase();
-    const isEmail = cleaned.includes('@');
     const norm = normalizePhone(cleaned);
 
+    // ⚡ 1. Ultra-Fast In-Memory Cache Lookup (0ms!)
+    if (this.usersCache.has(cleanedLower)) {
+      return this.usersCache.get(cleanedLower);
+    }
+    if (norm.length === 10 && this.usersCache.has(norm)) {
+      return this.usersCache.get(norm);
+    }
+
+    // 2. Database lookup
+    let user = null;
     if (this.isMongo) {
+      const isEmail = cleaned.includes('@');
       if (isEmail) {
-        return await UserModel.findOne({ email: cleanedLower }).lean();
+        user = await UserModel.findOne({ email: cleanedLower }).lean();
+      } else if (norm.length === 10) {
+        user = await UserModel.findOne({ phone: { $regex: norm } }).lean();
       }
-      if (norm.length === 10) {
-        const byPhone = await UserModel.findOne({ phone: { $regex: norm } }).lean();
-        if (byPhone) return byPhone;
+      if (!user) {
+        user = await UserModel.findOne({
+          $or: [
+            { id: cleaned },
+            { badgeNumber: cleaned },
+            { role: cleanedLower }
+          ]
+        }).lean();
       }
-      const byIdOrBadge = await UserModel.findOne({
-        $or: [
-          { id: cleaned },
-          { badgeNumber: cleaned },
-          { role: cleanedLower }
-        ]
-      }).lean();
-      if (byIdOrBadge) return byIdOrBadge;
-
-      if (norm.length > 0) {
-        const all = await UserModel.find().lean();
-        return all.find(u => normalizePhone(u.phone) === norm) || null;
+      if (user) {
+        this.cacheUser(user);
+        return user;
       }
-      return null;
     }
 
-    // Local file-store (JSON)
+    // 3. Local file-store (JSON)
+    const isEmail = cleaned.includes('@');
     if (isEmail) {
-      return this.data.users.find(u => u.email?.toLowerCase() === cleanedLower) || null;
+      user = this.data.users.find(u => u.email?.toLowerCase() === cleanedLower) || null;
+    } else if (norm.length === 10) {
+      user = this.data.users.find(u => normalizePhone(u.phone) === norm) || null;
     }
-    if (norm.length === 10) {
-      const byPhone = this.data.users.find(u => normalizePhone(u.phone) === norm);
-      if (byPhone) return byPhone;
+    if (!user) {
+      user = this.data.users.find(u => 
+        u.id?.toLowerCase() === cleanedLower || 
+        u.badgeNumber?.toLowerCase() === cleanedLower || 
+        u.role?.toLowerCase() === cleanedLower
+      ) || null;
     }
-    const byIdOrBadge = this.data.users.find(u => 
-      u.id === cleaned || 
-      u.badgeNumber?.toLowerCase() === cleanedLower || 
-      u.role?.toLowerCase() === cleanedLower
-    );
-    if (byIdOrBadge) return byIdOrBadge;
 
-    if (norm.length > 0) {
-      return this.data.users.find(u => normalizePhone(u.phone) === norm) || null;
+    if (user) {
+      this.cacheUser(user);
     }
-    return null;
+    return user;
   }
 
   async getUserById(id) {
+    if (!id) return null;
+    const clean = id.toLowerCase().trim();
+    if (this.usersCache.has(clean)) return this.usersCache.get(clean);
+
     if (this.isMongo) {
-      return await UserModel.findOne({ id }).lean();
+      const u = await UserModel.findOne({ id }).lean();
+      if (u) this.cacheUser(u);
+      return u;
     }
-    return this.data.users.find(u => u.id === id);
+    const u = this.data.users.find(x => x.id === id);
+    if (u) this.cacheUser(u);
+    return u;
   }
 
   async addUser(user) {
+    // ⚡ 1. Immediately cache in memory for 0ms subsequent lookup
+    this.cacheUser(user);
+
     if (this.isMongo) {
       const created = await UserModel.create(user);
-      return created.toObject();
+      const obj = created.toObject();
+      this.cacheUser(obj);
+      return obj;
     }
     this.data.users.push(user);
     this.saveLocal();

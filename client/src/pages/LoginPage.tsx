@@ -193,9 +193,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
       });
 
       setSuccessMsg('Officer account registered successfully! Redirecting...');
-      setTimeout(() => {
-        onLoginSuccess(res.user);
-      }, 700);
+      onLoginSuccess(res.user);
     } catch (err: any) {
       setError(err.message || 'Registration failed. Please try again.');
     } finally {
