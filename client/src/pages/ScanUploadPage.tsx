@@ -568,6 +568,27 @@ export const ScanUploadPage: React.FC<ScanUploadPageProps> = ({
               OCR Extraction Notice
             </div>
             <div>{ocrError}</div>
+            {/session expired|token|sign in/i.test(ocrError) && (
+              <div style={{ marginTop: '10px' }}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    api.logout();
+                    window.location.reload();
+                  }}
+                  className="btn btn-primary"
+                  style={{
+                    padding: '6px 14px',
+                    fontSize: '0.8rem',
+                    background: '#ef4444',
+                    borderColor: '#dc2626',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Sign In Again Now →
+                </button>
+              </div>
+            )}
             {manualTextFallback && (
               <div style={{ marginTop: '10px' }}>
                 <span style={{ fontSize: '0.8rem', color: '#e2e8f0' }}>

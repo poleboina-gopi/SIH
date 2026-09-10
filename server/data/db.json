@@ -29,6 +29,24 @@
   ],
   "products": [
     {
+      "id": "prod_1789044642403",
+      "product_name": "Mystery Snack",
+      "brand": "Local Snacks",
+      "category": "Snacks",
+      "image_url": "/uploads/sample_placeholder.png",
+      "uploaded_by": "usr_inspector_01",
+      "created_at": "2026-09-10T12:50:42.403Z"
+    },
+    {
+      "id": "prod_1789044642297",
+      "product_name": "Britannia Good Day Butter Cookies",
+      "brand": "Britannia",
+      "category": "Confectionery & Biscuits",
+      "image_url": "/uploads/sample_placeholder.png",
+      "uploaded_by": "usr_inspector_01",
+      "created_at": "2026-09-10T12:50:42.297Z"
+    },
+    {
       "id": "prod_1789044011254",
       "product_name": "Mystery Snack",
       "brand": "Local Snacks",
@@ -93,6 +111,173 @@
     }
   ],
   "scans": [
+    {
+      "id": "scan_1789044642405",
+      "product_id": "prod_1789044642403",
+      "extracted_text": "\nMystery Snack\nNet Qty: 250 gms\nMfd: 01/2024\nBatch: B101\nMade by: Local Snacks, Market Road.\n",
+      "parsed_fields": {
+        "commodity_name": "Mystery Snack",
+        "ingredients": null,
+        "nutritional_info": null,
+        "net_quantity": {
+          "value": 250,
+          "unit": "gms",
+          "standardized_unit": "g",
+          "raw": "250 gms",
+          "is_standard": false,
+          "error": "Illegal non-standard symbol 'gms'. Standard symbol for gram is 'g' (no 's', no period)."
+        },
+        "veg_non_veg": null,
+        "fssai_license": null,
+        "mfg_date": {
+          "date": "01/2024",
+          "raw": "Mfd: 01/2024",
+          "format": "MM/YYYY",
+          "is_compliant": true,
+          "error": null
+        },
+        "expiry_date": null,
+        "batch_number": {
+          "value": "B101",
+          "raw": "Batch: B101",
+          "is_compliant": true
+        },
+        "manufacturer": {
+          "raw": "Mfd: 01/2024",
+          "name": "Mfd: 01/2024",
+          "address": "Mfd: 01/2024",
+          "has_pincode": false
+        },
+        "consumer_care": null,
+        "allergen_declaration": null,
+        "storage_instructions": null,
+        "country_of_origin": null,
+        "mrp": null,
+        "unit_sale_price": null,
+        "readability": {
+          "clarity": "HIGH",
+          "word_count": 16
+        }
+      },
+      "compliance_status": "NON_COMPLIANT",
+      "compliance_score": 0,
+      "inspector_id": "usr_inspector_01",
+      "created_at": "2026-09-10T12:50:42.405Z"
+    },
+    {
+      "id": "scan_1789044642299",
+      "product_id": "prod_1789044642297",
+      "extracted_text": "\nBRITANNIA GOOD DAY BUTTER COOKIES\n100% VEGETARIAN\nIngredients: Refined Wheat Flour (Maida), Sugar, Edible Vegetable Oil (Palm), Butter (2%), Invert Sugar Syrup, Milk Solids, Iodised Salt, Raising Agents.\nAllergen Information: Contains Wheat and Milk. May contain traces of Nuts and Soy.\nNutritional Information per 100g (Approx.):\nEnergy: 495 kcal\nProtein: 7.0 g\nCarbohydrate: 68.0 g\nTotal Sugars: 24.5 g\nAdded Sugars: 22.0 g\nTotal Fat: 22.0 g\nSaturated Fat: 11.0 g\nTrans Fat: 0.1 g\nSodium: 310 mg\nNet Weight: 120 g\nBatch No: B24089A\nDate of Pkd: 15/08/2024\nBest Before: 6 months from packaging\nManufactured By: Britannia Industries Limited, Plot 14, Whitefield Road, Bengaluru - 560066, Karnataka, India.\nFor Feedback & Complaints, Call: 1800-425-4449, Email: feedback@britindia.com, Consumer Care Cell, Bengaluru.\nStorage Instructions: Store in a cool, hygienic and dry place. Keep away from direct sunlight.\nCountry of Origin: India\nfssai Lic. No. 10015043001234\n",
+      "parsed_fields": {
+        "commodity_name": "BRITANNIA GOOD DAY BUTTER COOKIES",
+        "ingredients": {
+          "raw": "Refined Wheat Flour (Maida), Sugar, Edible Vegetable Oil (Palm), Butter (2%), Invert Sugar Syrup, Milk Solids, Iodised Salt, Raising Agents.",
+          "items": [
+            "Refined Wheat Flour (Maida)",
+            "Sugar",
+            "Edible Vegetable Oil (Palm)",
+            "Butter (2%)",
+            "Invert Sugar Syrup",
+            "Milk Solids",
+            "Iodised Salt",
+            "Raising Agents."
+          ],
+          "count": 8,
+          "has_heading": true
+        },
+        "nutritional_info": {
+          "is_declared": true,
+          "per_unit": "per 100g",
+          "energy": "495 kcal",
+          "protein": "7.0 g",
+          "carbohydrate": "68.0 g",
+          "total_sugars": "24.5 g",
+          "added_sugars": "22.0 g",
+          "total_fat": "22.0 g",
+          "saturated_fat": "11.0 g",
+          "trans_fat": "0.1 g",
+          "sodium": "310 mg",
+          "raw": "Nutritional Information per 100g (Approx.): Energy: 495 kcal Protein: 7.0 g Carbohydrate: 68.0 g Total Sugars: 24.5 g Added Sugars: 22.0 g Total Fat: 22.0 g Saturated Fat: 11.0 g Trans Fat: 0.1 g Sodium: 310 mg Net Weight: 120 g Batch No: B24089A Date of Pkd: 15/08/2024 Be"
+        },
+        "net_quantity": {
+          "value": 120,
+          "unit": "g",
+          "standardized_unit": "g",
+          "raw": "120 g",
+          "is_standard": true,
+          "error": null
+        },
+        "veg_non_veg": {
+          "type": "VEG",
+          "symbol": "Green circle inside green square",
+          "is_declared": true,
+          "raw": "100% VEGETARIAN"
+        },
+        "fssai_license": {
+          "license_number": "10015043001234",
+          "is_valid_14_digit": true,
+          "has_fssai_logo": true,
+          "raw": "Lic. No. 10015043001234",
+          "error": null
+        },
+        "mfg_date": {
+          "date": "15/08/2024",
+          "raw": "Pkd: 15/08/2024",
+          "format": "DD/MM/YYYY",
+          "is_compliant": true,
+          "error": null
+        },
+        "expiry_date": {
+          "expiry_or_period": "6 months",
+          "raw": "Best Before: 6 months",
+          "type": "BEST_BEFORE",
+          "is_compliant": true
+        },
+        "batch_number": {
+          "value": "B24089A",
+          "raw": "Batch No: B24089A",
+          "is_compliant": true
+        },
+        "manufacturer": {
+          "raw": "Britannia Industries Limited, Plot 14, Whitefield Road, Bengaluru - 560066, Karnataka, India.",
+          "name": "Britannia Industries Limited",
+          "address": "Britannia Industries Limited, Plot 14, Whitefield Road, Bengaluru - 560066, Karnataka, India.",
+          "has_pincode": true
+        },
+        "consumer_care": {
+          "phone": "1800-425-4449",
+          "email": "feedback@britindia.com",
+          "address": "& Complaints, Call: 1800-425-4449, Email: feedback@britindia.com, Consumer Care Cell, Bengaluru.",
+          "is_complete": true
+        },
+        "allergen_declaration": {
+          "is_declared": true,
+          "has_allergens": true,
+          "statement": "Allergen Information: Contains Wheat and Milk",
+          "raw": "Allergen Information: Contains Wheat and Milk"
+        },
+        "storage_instructions": {
+          "is_declared": true,
+          "instructions": "Storage Instructions: Store in a cool, hygienic and dry place",
+          "raw": "Storage Instructions: Store in a cool, hygienic and dry place"
+        },
+        "country_of_origin": {
+          "country": "India",
+          "is_imported": false,
+          "raw": "Country of Origin: India\nfssai Lic"
+        },
+        "mrp": null,
+        "unit_sale_price": null,
+        "readability": {
+          "clarity": "HIGH",
+          "word_count": 144
+        }
+      },
+      "compliance_status": "COMPLIANT",
+      "compliance_score": 100,
+      "inspector_id": "usr_inspector_01",
+      "created_at": "2026-09-10T12:50:42.299Z"
+    },
     {
       "id": "scan_1789044011255",
       "product_id": "prod_1789044011254",
@@ -675,9 +860,514 @@
       "penalty_fine": "₹1,00,000",
       "field": "storage_instructions",
       "created_at": "2026-09-10T12:40:11.265Z"
+    },
+    {
+      "id": "viol_1789044642406_871",
+      "scan_id": "scan_1789044642405",
+      "rule_code": "FSSAI Reg 5(2)",
+      "violation_type": "MISSING_INGREDIENTS_LIST",
+      "severity": "CRITICAL",
+      "description": "Package lacks mandatory 'Ingredients:' declaration listing ingredients in descending order of weight.",
+      "statutory_provision": "Regulation 5(2) of FSS (Labelling and Display) Regulations, 2020",
+      "suggested_action": "Add complete ingredients list prefixed with 'Ingredients:' on packaging label",
+      "penalty_fine": "₹3,00,000",
+      "field": "ingredients",
+      "created_at": "2026-09-10T12:50:42.406Z"
+    },
+    {
+      "id": "viol_1789044642407_798",
+      "scan_id": "scan_1789044642405",
+      "rule_code": "FSSAI Reg 5(3)",
+      "violation_type": "MISSING_NUTRITIONAL_INFO",
+      "severity": "CRITICAL",
+      "description": "Package omits mandatory nutritional facts per 100g/100ml (Energy, Protein, Carbs, Sugars, Fat, Sodium).",
+      "statutory_provision": "Regulation 5(3) of FSS (Labelling and Display) Regulations, 2020",
+      "suggested_action": "Declare nutritional information panel per 100g/100ml as mandated by FSSAI",
+      "penalty_fine": "₹3,00,000",
+      "field": "nutritional_info",
+      "created_at": "2026-09-10T12:50:42.407Z"
+    },
+    {
+      "id": "viol_1789044642410_135",
+      "scan_id": "scan_1789044642405",
+      "rule_code": "FSSAI Reg 5(4)",
+      "violation_type": "ILLEGAL_NET_QUANTITY_UNIT",
+      "severity": "CRITICAL",
+      "description": "Net quantity uses illegal non-standard symbol 'gms'. Illegal non-standard symbol 'gms'. Standard symbol for gram is 'g' (no 's', no period).",
+      "statutory_provision": "Regulation 5(4) of FSS Regulations, 2020",
+      "suggested_action": "Replace non-standard unit with 'g'",
+      "penalty_fine": "₹25,000",
+      "field": "net_quantity",
+      "created_at": "2026-09-10T12:50:42.410Z"
+    },
+    {
+      "id": "viol_1789044642411_546",
+      "scan_id": "scan_1789044642405",
+      "rule_code": "FSSAI Reg 5(5)",
+      "violation_type": "MISSING_VEG_NONVEG_LOGO",
+      "severity": "CRITICAL",
+      "description": "Package omits mandatory Vegetarian (green circle in square) or Non-Vegetarian (brown triangle in square) logo / declaration.",
+      "statutory_provision": "Regulation 5(5) of FSS (Labelling and Display) Regulations, 2020",
+      "suggested_action": "Affix standard FSSAI Green circle or Brown triangle logo in prominent square border",
+      "penalty_fine": "₹2,00,000",
+      "field": "veg_non_veg",
+      "created_at": "2026-09-10T12:50:42.412Z"
+    },
+    {
+      "id": "viol_1789044642413_70",
+      "scan_id": "scan_1789044642405",
+      "rule_code": "FSSAI Reg 5(6)",
+      "violation_type": "MISSING_FSSAI_LICENSE",
+      "severity": "CRITICAL",
+      "description": "Package omits mandatory FSSAI logo and 14-digit food business operator licence number ('Lic. No.').",
+      "statutory_provision": "Regulation 5(6) of FSS Regulations, 2020 read with Section 63 FSS Act, 2006",
+      "suggested_action": "Display valid 14-digit FSSAI licence number prefixed with 'Lic. No.' alongside FSSAI logo",
+      "penalty_fine": "₹5,00,000 & Prosecution",
+      "field": "fssai_license",
+      "created_at": "2026-09-10T12:50:42.413Z"
+    },
+    {
+      "id": "viol_1789044642414_129",
+      "scan_id": "scan_1789044642405",
+      "rule_code": "FSSAI Reg 5(8)",
+      "violation_type": "MISSING_EXPIRY_DATE",
+      "severity": "CRITICAL",
+      "description": "Package omits mandatory 'Best Before' date or 'Expiry Date' / 'Use By' declaration.",
+      "statutory_provision": "Regulation 5(8) of FSS Regulations, 2020 read with Section 59 FSS Act",
+      "suggested_action": "Clearly state 'Best Before [Date/Period]' or 'Expiry Date' on label",
+      "penalty_fine": "₹5,00,000",
+      "field": "expiry_date",
+      "created_at": "2026-09-10T12:50:42.414Z"
+    },
+    {
+      "id": "viol_1789044642415_151",
+      "scan_id": "scan_1789044642405",
+      "rule_code": "FSSAI Reg 5(10)",
+      "violation_type": "INCOMPLETE_MANUFACTURER_ADDRESS",
+      "severity": "MAJOR",
+      "description": "Incomplete manufacturer address declared ('Mfd: 01/2024'). 6-digit postal PIN code is missing.",
+      "statutory_provision": "Regulation 5(10) of FSS (Labelling and Display) Regulations, 2020",
+      "suggested_action": "Include complete physical address with postal PIN code",
+      "penalty_fine": "₹1,00,000",
+      "field": "manufacturer",
+      "created_at": "2026-09-10T12:50:42.415Z"
+    },
+    {
+      "id": "viol_1789044642416_813",
+      "scan_id": "scan_1789044642405",
+      "rule_code": "FSSAI Reg 5(11)",
+      "violation_type": "MISSING_CUSTOMER_CARE",
+      "severity": "MAJOR",
+      "description": "Package omits mandatory consumer grievance redressal telephone helpline and email contact details.",
+      "statutory_provision": "Regulation 5(11) of FSS Regulations, 2020 & Consumer Protection Act, 2019",
+      "suggested_action": "Print customer care phone/helpline and official complaint email on the package",
+      "penalty_fine": "₹1,00,000",
+      "field": "consumer_care",
+      "created_at": "2026-09-10T12:50:42.416Z"
+    },
+    {
+      "id": "viol_1789044642418_742",
+      "scan_id": "scan_1789044642405",
+      "rule_code": "FSSAI Reg 5(13)",
+      "violation_type": "MISSING_STORAGE_INSTRUCTIONS",
+      "severity": "MAJOR",
+      "description": "Package lacks clear storage conditions (e.g., 'Store in a cool and dry place' or 'Refrigerate after opening') essential to maintain food safety and quality.",
+      "statutory_provision": "Regulation 5(13) of FSS (Labelling and Display) Regulations, 2020",
+      "suggested_action": "Declare appropriate storage instructions, e.g., 'Store in a cool, dry place away from direct sunlight'",
+      "penalty_fine": "₹1,00,000",
+      "field": "storage_instructions",
+      "created_at": "2026-09-10T12:50:42.418Z"
     }
   ],
   "reports": [
+    {
+      "id": "rep_1789044642419",
+      "scan_id": "scan_1789044642405",
+      "report_number": "FSSAI/REP/2026/6623",
+      "status": "NON_COMPLIANT",
+      "score": 0,
+      "inspector_id": "usr_inspector_01",
+      "inspector_name": "Vamsi Krishna",
+      "statutory_notice": {
+        "noticeNumber": "FSSAI/INSP/2026/2611",
+        "noticeDate": "2026-09-10",
+        "recipient": "Mfd: 01/2024",
+        "address": "Mfd: 01/2024",
+        "subject": "Statutory Improvement Notice under Section 32 of Food Safety and Standards Act, 2006",
+        "commodityName": "Mystery Snack",
+        "violationsCount": 9,
+        "statutoryProvisionsViolated": "FSSAI Reg 5(2), FSSAI Reg 5(3), FSSAI Reg 5(4), FSSAI Reg 5(5), FSSAI Reg 5(6), FSSAI Reg 5(8), FSSAI Reg 5(10), FSSAI Reg 5(11), FSSAI Reg 5(13)",
+        "penalSectionApplicable": "Section 32, Section 52 & Section 53 of Food Safety and Standards Act, 2006",
+        "compoundingFeeProposed": "₹9,00,000",
+        "noticePeriodDays": 14,
+        "legalDirectives": [
+          "Rectify all labeling deficiencies listed above within 14 days of receipt of this Improvement Notice under Section 32 of FSS Act, 2006.",
+          "Immediately withhold further dispatch/sale of offending non-compliant packaging batches until over-stickered or compliant labels are approved.",
+          "Show cause before the Designated Food Safety Officer why legal proceedings should not be initiated before the Adjudicating Officer."
+        ]
+      },
+      "rule_checks_matrix": [
+        {
+          "id": "RULE_FSSAI_01",
+          "rule_code": "FSSAI Reg 5(1)",
+          "title": "Name of the Food/Product",
+          "status": "PASS",
+          "severity": "CRITICAL",
+          "statutory_provision": "Regulation 5(1) of FSS Regulations, 2020",
+          "extracted_value": "Mystery Snack",
+          "defect": null,
+          "suggested_remedy": "Verified compliant"
+        },
+        {
+          "rule_code": "FSSAI Reg 5(2)",
+          "rule_id": "RULE_FSSAI_02",
+          "title": "List of Ingredients",
+          "violation_type": "MISSING_INGREDIENTS_LIST",
+          "severity": "CRITICAL",
+          "description": "Package lacks mandatory 'Ingredients:' declaration listing ingredients in descending order of weight.",
+          "statutory_provision": "Regulation 5(2) of FSS (Labelling and Display) Regulations, 2020",
+          "penalty_fine": "₹3,00,000",
+          "field": "ingredients",
+          "suggested_action": "Add complete ingredients list prefixed with 'Ingredients:' on packaging label",
+          "status": "FAIL",
+          "extracted_value": "Not detected on package"
+        },
+        {
+          "rule_code": "FSSAI Reg 5(3)",
+          "rule_id": "RULE_FSSAI_03",
+          "title": "Nutritional Information",
+          "violation_type": "MISSING_NUTRITIONAL_INFO",
+          "severity": "CRITICAL",
+          "description": "Package omits mandatory nutritional facts per 100g/100ml (Energy, Protein, Carbs, Sugars, Fat, Sodium).",
+          "statutory_provision": "Regulation 5(3) of FSS (Labelling and Display) Regulations, 2020",
+          "penalty_fine": "₹3,00,000",
+          "field": "nutritional_info",
+          "suggested_action": "Declare nutritional information panel per 100g/100ml as mandated by FSSAI",
+          "status": "FAIL",
+          "extracted_value": "Not detected on package"
+        },
+        {
+          "rule_code": "FSSAI Reg 5(4)",
+          "rule_id": "RULE_FSSAI_04",
+          "title": "Net Quantity",
+          "violation_type": "ILLEGAL_NET_QUANTITY_UNIT",
+          "severity": "CRITICAL",
+          "description": "Net quantity uses illegal non-standard symbol 'gms'. Illegal non-standard symbol 'gms'. Standard symbol for gram is 'g' (no 's', no period).",
+          "statutory_provision": "Regulation 5(4) of FSS Regulations, 2020",
+          "penalty_fine": "₹25,000",
+          "field": "net_quantity",
+          "suggested_action": "Replace non-standard unit with 'g'",
+          "status": "FAIL",
+          "extracted_value": "250 gms"
+        },
+        {
+          "rule_code": "FSSAI Reg 5(5)",
+          "rule_id": "RULE_FSSAI_05",
+          "title": "Vegetarian / Non-Vegetarian Symbol",
+          "violation_type": "MISSING_VEG_NONVEG_LOGO",
+          "severity": "CRITICAL",
+          "description": "Package omits mandatory Vegetarian (green circle in square) or Non-Vegetarian (brown triangle in square) logo / declaration.",
+          "statutory_provision": "Regulation 5(5) of FSS (Labelling and Display) Regulations, 2020",
+          "penalty_fine": "₹2,00,000",
+          "field": "veg_non_veg",
+          "suggested_action": "Affix standard FSSAI Green circle or Brown triangle logo in prominent square border",
+          "status": "FAIL",
+          "extracted_value": "Not detected on package"
+        },
+        {
+          "rule_code": "FSSAI Reg 5(6)",
+          "rule_id": "RULE_FSSAI_06",
+          "title": "FSSAI Logo and Licence Number",
+          "violation_type": "MISSING_FSSAI_LICENSE",
+          "severity": "CRITICAL",
+          "description": "Package omits mandatory FSSAI logo and 14-digit food business operator licence number ('Lic. No.').",
+          "statutory_provision": "Regulation 5(6) of FSS Regulations, 2020 read with Section 63 FSS Act, 2006",
+          "penalty_fine": "₹5,00,000 & Prosecution",
+          "field": "fssai_license",
+          "suggested_action": "Display valid 14-digit FSSAI licence number prefixed with 'Lic. No.' alongside FSSAI logo",
+          "status": "FAIL",
+          "extracted_value": "Not detected on package"
+        },
+        {
+          "id": "RULE_FSSAI_07",
+          "rule_code": "FSSAI Reg 5(7)",
+          "title": "Date of Manufacture/Packing",
+          "status": "PASS",
+          "severity": "CRITICAL",
+          "statutory_provision": "Regulation 5(7) of FSS Regulations, 2020",
+          "extracted_value": "01/2024",
+          "defect": null,
+          "suggested_remedy": "Verified compliant date format"
+        },
+        {
+          "rule_code": "FSSAI Reg 5(8)",
+          "rule_id": "RULE_FSSAI_08",
+          "title": "Expiry / Use-by or Best-Before Date",
+          "violation_type": "MISSING_EXPIRY_DATE",
+          "severity": "CRITICAL",
+          "description": "Package omits mandatory 'Best Before' date or 'Expiry Date' / 'Use By' declaration.",
+          "statutory_provision": "Regulation 5(8) of FSS Regulations, 2020 read with Section 59 FSS Act",
+          "penalty_fine": "₹5,00,000",
+          "field": "expiry_date",
+          "suggested_action": "Clearly state 'Best Before [Date/Period]' or 'Expiry Date' on label",
+          "status": "FAIL",
+          "extracted_value": "Not detected on package"
+        },
+        {
+          "id": "RULE_FSSAI_09",
+          "rule_code": "FSSAI Reg 5(9)",
+          "title": "Batch/Lot/Code Number",
+          "status": "PASS",
+          "severity": "MAJOR",
+          "statutory_provision": "Regulation 5(9) of FSS Regulations, 2020",
+          "extracted_value": "B101",
+          "defect": null,
+          "suggested_remedy": "Verified traceability code"
+        },
+        {
+          "rule_code": "FSSAI Reg 5(10)",
+          "rule_id": "RULE_FSSAI_10",
+          "title": "Manufacturer/Packer/Importer Details",
+          "violation_type": "INCOMPLETE_MANUFACTURER_ADDRESS",
+          "severity": "MAJOR",
+          "description": "Incomplete manufacturer address declared ('Mfd: 01/2024'). 6-digit postal PIN code is missing.",
+          "statutory_provision": "Regulation 5(10) of FSS (Labelling and Display) Regulations, 2020",
+          "penalty_fine": "₹1,00,000",
+          "field": "manufacturer",
+          "suggested_action": "Include complete physical address with postal PIN code",
+          "status": "FAIL",
+          "extracted_value": "Mfd: 01/2024"
+        },
+        {
+          "rule_code": "FSSAI Reg 5(11)",
+          "rule_id": "RULE_FSSAI_11",
+          "title": "Customer Care/Contact Information",
+          "violation_type": "MISSING_CUSTOMER_CARE",
+          "severity": "MAJOR",
+          "description": "Package omits mandatory consumer grievance redressal telephone helpline and email contact details.",
+          "statutory_provision": "Regulation 5(11) of FSS Regulations, 2020 & Consumer Protection Act, 2019",
+          "penalty_fine": "₹1,00,000",
+          "field": "consumer_care",
+          "suggested_action": "Print customer care phone/helpline and official complaint email on the package",
+          "status": "FAIL",
+          "extracted_value": "Not detected on package"
+        },
+        {
+          "id": "RULE_FSSAI_12",
+          "rule_code": "FSSAI Reg 5(12)",
+          "title": "Allergen Declarations, Where Applicable",
+          "status": "PASS",
+          "severity": "MAJOR",
+          "statutory_provision": "Regulation 5(12) of FSS Regulations, 2020",
+          "extracted_value": "No priority allergens detected",
+          "defect": null,
+          "suggested_remedy": "Verified compliant"
+        },
+        {
+          "rule_code": "FSSAI Reg 5(13)",
+          "rule_id": "RULE_FSSAI_13",
+          "title": "Storage/Use Instructions, Where Required",
+          "violation_type": "MISSING_STORAGE_INSTRUCTIONS",
+          "severity": "MAJOR",
+          "description": "Package lacks clear storage conditions (e.g., 'Store in a cool and dry place' or 'Refrigerate after opening') essential to maintain food safety and quality.",
+          "statutory_provision": "Regulation 5(13) of FSS (Labelling and Display) Regulations, 2020",
+          "penalty_fine": "₹1,00,000",
+          "field": "storage_instructions",
+          "suggested_action": "Declare appropriate storage instructions, e.g., 'Store in a cool, dry place away from direct sunlight'",
+          "status": "FAIL",
+          "extracted_value": "Not detected on package"
+        },
+        {
+          "id": "RULE_FSSAI_14",
+          "rule_code": "FSSAI Reg 5(14)",
+          "title": "Country of Origin, for Imported Food",
+          "status": "PASS",
+          "severity": "MAJOR",
+          "statutory_provision": "Regulation 5(14) of FSS Regulations, 2020",
+          "extracted_value": "India (Domestic Manufacture)",
+          "defect": null,
+          "suggested_remedy": "Verified country of origin"
+        }
+      ],
+      "rule_checks_summary": {
+        "total_rules_checked": 14,
+        "rules_passed": 5,
+        "rules_failed": 9
+      },
+      "generated_at": "2026-09-10T12:50:42.419Z"
+    },
+    {
+      "id": "rep_1789044642300",
+      "scan_id": "scan_1789044642299",
+      "report_number": "FSSAI/REP/2026/7706",
+      "status": "COMPLIANT",
+      "score": 100,
+      "inspector_id": "usr_inspector_01",
+      "inspector_name": "Vamsi Krishna",
+      "statutory_notice": null,
+      "rule_checks_matrix": [
+        {
+          "id": "RULE_FSSAI_01",
+          "rule_code": "FSSAI Reg 5(1)",
+          "title": "Name of the Food/Product",
+          "status": "PASS",
+          "severity": "CRITICAL",
+          "statutory_provision": "Regulation 5(1) of FSS Regulations, 2020",
+          "extracted_value": "BRITANNIA GOOD DAY BUTTER COOKIES",
+          "defect": null,
+          "suggested_remedy": "Verified compliant"
+        },
+        {
+          "id": "RULE_FSSAI_02",
+          "rule_code": "FSSAI Reg 5(2)",
+          "title": "List of Ingredients",
+          "status": "PASS",
+          "severity": "CRITICAL",
+          "statutory_provision": "Regulation 5(2) of FSS Regulations, 2020",
+          "extracted_value": "Refined Wheat Flour (Maida), Sugar, Edible Vegetable Oil (Palm), Butter (2%), Invert Sugar Syrup, Milk Solids, Iodised Salt, Raising Agents.",
+          "defect": null,
+          "suggested_remedy": "Verified compliant"
+        },
+        {
+          "id": "RULE_FSSAI_03",
+          "rule_code": "FSSAI Reg 5(3)",
+          "title": "Nutritional Information",
+          "status": "PASS",
+          "severity": "CRITICAL",
+          "statutory_provision": "Regulation 5(3) of FSS Regulations, 2020",
+          "extracted_value": "Energy: 495 kcal | Protein: 7.0 g | Carbs: 68.0 g | Fat: 22.0 g",
+          "defect": null,
+          "suggested_remedy": "Verified compliant"
+        },
+        {
+          "id": "RULE_FSSAI_04",
+          "rule_code": "FSSAI Reg 5(4)",
+          "title": "Net Quantity",
+          "status": "PASS",
+          "severity": "CRITICAL",
+          "statutory_provision": "Regulation 5(4) of FSS Regulations, 2020",
+          "extracted_value": "120 g",
+          "defect": null,
+          "suggested_remedy": "Verified standard unit"
+        },
+        {
+          "id": "RULE_FSSAI_05",
+          "rule_code": "FSSAI Reg 5(5)",
+          "title": "Vegetarian / Non-Vegetarian Symbol",
+          "status": "PASS",
+          "severity": "CRITICAL",
+          "statutory_provision": "Regulation 5(5) of FSS Regulations, 2020",
+          "extracted_value": "Vegetarian (Green Circle) - 100% VEGETARIAN",
+          "defect": null,
+          "suggested_remedy": "Verified compliant"
+        },
+        {
+          "id": "RULE_FSSAI_06",
+          "rule_code": "FSSAI Reg 5(6)",
+          "title": "FSSAI Logo and Licence Number",
+          "status": "PASS",
+          "severity": "CRITICAL",
+          "statutory_provision": "Regulation 5(6) of FSS Regulations, 2020",
+          "extracted_value": "Lic. No. 10015043001234",
+          "defect": null,
+          "suggested_remedy": "Verified 14-digit FSSAI licence"
+        },
+        {
+          "id": "RULE_FSSAI_07",
+          "rule_code": "FSSAI Reg 5(7)",
+          "title": "Date of Manufacture/Packing",
+          "status": "PASS",
+          "severity": "CRITICAL",
+          "statutory_provision": "Regulation 5(7) of FSS Regulations, 2020",
+          "extracted_value": "15/08/2024",
+          "defect": null,
+          "suggested_remedy": "Verified compliant date format"
+        },
+        {
+          "id": "RULE_FSSAI_08",
+          "rule_code": "FSSAI Reg 5(8)",
+          "title": "Expiry / Use-by or Best-Before Date",
+          "status": "PASS",
+          "severity": "CRITICAL",
+          "statutory_provision": "Regulation 5(8) of FSS Regulations, 2020",
+          "extracted_value": "6 months",
+          "defect": null,
+          "suggested_remedy": "Verified expiry/best-before declaration"
+        },
+        {
+          "id": "RULE_FSSAI_09",
+          "rule_code": "FSSAI Reg 5(9)",
+          "title": "Batch/Lot/Code Number",
+          "status": "PASS",
+          "severity": "MAJOR",
+          "statutory_provision": "Regulation 5(9) of FSS Regulations, 2020",
+          "extracted_value": "B24089A",
+          "defect": null,
+          "suggested_remedy": "Verified traceability code"
+        },
+        {
+          "id": "RULE_FSSAI_10",
+          "rule_code": "FSSAI Reg 5(10)",
+          "title": "Manufacturer/Packer/Importer Details",
+          "status": "PASS",
+          "severity": "CRITICAL",
+          "statutory_provision": "Regulation 5(10) of FSS Regulations, 2020",
+          "extracted_value": "Britannia Industries Limited, Plot 14, Whitefield Road, Bengaluru - 560066, Karnataka, India.",
+          "defect": null,
+          "suggested_remedy": "Verified manufacturer premises"
+        },
+        {
+          "id": "RULE_FSSAI_11",
+          "rule_code": "FSSAI Reg 5(11)",
+          "title": "Customer Care/Contact Information",
+          "status": "PASS",
+          "severity": "MAJOR",
+          "statutory_provision": "Regulation 5(11) of FSS Regulations, 2020",
+          "extracted_value": "Tel: 1800-425-4449, Email: feedback@britindia.com",
+          "defect": null,
+          "suggested_remedy": "Verified redressal channels"
+        },
+        {
+          "id": "RULE_FSSAI_12",
+          "rule_code": "FSSAI Reg 5(12)",
+          "title": "Allergen Declarations, Where Applicable",
+          "status": "PASS",
+          "severity": "MAJOR",
+          "statutory_provision": "Regulation 5(12) of FSS Regulations, 2020",
+          "extracted_value": "Allergen Information: Contains Wheat and Milk",
+          "defect": null,
+          "suggested_remedy": "Verified compliant"
+        },
+        {
+          "id": "RULE_FSSAI_13",
+          "rule_code": "FSSAI Reg 5(13)",
+          "title": "Storage/Use Instructions, Where Required",
+          "status": "PASS",
+          "severity": "MAJOR",
+          "statutory_provision": "Regulation 5(13) of FSS Regulations, 2020",
+          "extracted_value": "Storage Instructions: Store in a cool, hygienic and dry place",
+          "defect": null,
+          "suggested_remedy": "Verified storage conditions"
+        },
+        {
+          "id": "RULE_FSSAI_14",
+          "rule_code": "FSSAI Reg 5(14)",
+          "title": "Country of Origin, for Imported Food",
+          "status": "PASS",
+          "severity": "MAJOR",
+          "statutory_provision": "Regulation 5(14) of FSS Regulations, 2020",
+          "extracted_value": "India",
+          "defect": null,
+          "suggested_remedy": "Verified country of origin"
+        }
+      ],
+      "rule_checks_summary": {
+        "total_rules_checked": 14,
+        "rules_passed": 14,
+        "rules_failed": 0
+      },
+      "generated_at": "2026-09-10T12:50:42.300Z"
+    },
     {
       "id": "rep_1789044011266",
       "scan_id": "scan_1789044011255",

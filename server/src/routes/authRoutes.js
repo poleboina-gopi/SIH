@@ -146,7 +146,7 @@ router.post('/register', async (req, res) => {
     const token = jwt.sign(
       { id: saved.id, email: saved.email, role: saved.role, name: saved.name },
       JWT_SECRET,
-      { expiresIn: '24h' }
+      { expiresIn: '7d' }
     );
 
     const { password: _, ...safeUser } = saved;
@@ -204,7 +204,7 @@ router.post('/login', async (req, res) => {
     const token = jwt.sign(
       { id: user.id, email: user.email, role: user.role, name: user.name },
       JWT_SECRET,
-      { expiresIn: '24h' }
+      { expiresIn: '7d' }
     );
 
     const { password: _, ...safeUser } = user;
